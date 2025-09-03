@@ -1,0 +1,35 @@
+services:
+    terranova:
+        hostname: terranova
+        build: .
+        volumes:
+            - /etc/terranova/:/etc/terranova/
+            - /etc/terranova/settings.js:/terranova/static/settings.js
+        ports:
+            - 9999:80
+    elasticsearch:
+        hostname: elastic
+        container_name: elasticsearch
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "curl -fs http://localhost:9200/_cluster/health?wait_for_status=green&timeout=5s || exit 1",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+        image: elasticsearch:9.0.2
+        ports:
+            - 9200:9200
+        environment:
+            discovery.type: "single-node"
+            ES_JAVA_OPTS: "-Xmx750m -Xms750m"
+            ELASTIC_USERNAME: elastic
+            ELASTIC_PASSWORD: DkIedPPSCb
+            xpack.security.enabled: false
+        deploy:
+            resources:
+                limits:
+                    memory: 4G

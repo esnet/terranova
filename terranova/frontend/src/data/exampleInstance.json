@@ -1,0 +1,61 @@
+{
+    "initialViewStrategy": "viewport",
+    "startLat": 50,
+    "startLng": -100,
+    "startZoom": 4.5,
+    "viewportTopLeftLat": 52,
+    "viewportTopLeftLng": -135.33,
+    "viewportBottomRightLat": 22.13,
+    "viewportBottomRightLng": -58.52,
+    "background": "rgba(244, 244, 244, 0.1)",
+
+    "editMode": false,
+
+    "showSidebar": false,
+    "showViewControls": true,
+    "showLegend": false,
+
+    "enableScrolling": true,
+
+    "enableEditing": false,
+    "enableNodeAnimation": false,
+    "enableEdgeAnimation": false,
+
+    "zIndexBase": 10,
+
+    "layers": [
+        {
+            "name": "Site Topology",
+            "color": "rgb(203, 203, 203)",
+            "edgeWidth": 5,
+            "pathOffset": 1,
+            "nodeWidth": 1.5,
+
+            "jsonFromUrl": false,
+
+            "endpointId": "pops"
+        },
+        {
+            "name": "Core Topology",
+            "color": "rgb(153, 153, 153)",
+            "edgeWidth": 4,
+            "pathOffset": 2.5,
+            "nodeWidth": 2,
+
+            "jsonFromUrl": false,
+
+            "endpointId": "pops"
+        },
+        {
+            "name": "Peer Topology",
+            "color": "yellow",
+            "edgeWidth": 6.5,
+            "pathOffset": 2,
+            "nodeWidth": 1.5,
+
+            "jsonFromUrl": false,
+
+            "endpointId": "pops"
+        }
+    ]
+}

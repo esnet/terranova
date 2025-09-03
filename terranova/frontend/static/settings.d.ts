@@ -1,0 +1,15 @@
+export declare const API_URL: string;
+export declare const OIDC_REDIRECT_URI: string;
+export declare const OIDC_LOGOUT_REDIRECT_URI: string;
+export declare const OIDC_CLIENT_ID: string;
+export declare const OIDC_AUTHORITY: string;
+export declare const LAYER_LIMIT: number;
+export declare const CACHE_DURATION_IN_SECONDS: number;
+export declare const TOOLTIP_TTL: number;
+export declare const READ_WRITE_SCOPE: string;
+export declare const READ_SCOPE: string;
+export declare const PUBLISH_SCOPE: string;
+export declare const ADMIN_SCOPE: string;
+export declare const AUTH_BACKEND: string;
+export declare const AUTH_SESSION_STORAGE: boolean;
+export declare const GOOGLE_SHEETS_CREDENTIAL_SOURCE: string;

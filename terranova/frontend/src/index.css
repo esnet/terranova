@@ -1,0 +1,744 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ##### Browser Overrides ##### */
+:where(html, body, div#root, .App) { @apply h-screen; }
+
+/* ##### Typography ##### */
+.tn-text,
+p {
+    @apply font-sans text-color-text font-normal;
+}
+
+a {
+    @apply font-sans font-normal text-color-text-link hover:text-color-text-link-hover focus:text-color-text-link-focused active:text-color-text-link-active;
+}
+
+.monospace {
+    @apply font-mono;
+}
+
+.tn-bold,
+strong {
+    @apply font-semibold;
+}
+
+label {
+    @apply font-sans tn-bold text-color-text text-sm inline-block pr-2 my-2;
+}
+
+h1,h2,h3,h4,h5 {
+    @apply font-sans tn-bold py-4
+}
+h1 {
+    @apply text-5xl ;
+}
+h1.title {
+    @apply font-extrabold text-color-text-alt-2;
+}
+h2 {
+    @apply text-4xl;
+}
+h3 {
+    @apply text-3xl;
+}
+
+h4 {
+    @apply text-2xl;
+}
+h5 {
+    @apply text-xl;
+}
+h6 {
+    @apply tn-text text-lg;
+}
+:where(h1,h2,h3,h4,h5,h6){
+    @apply text-color-text; /* default heading color applied with 'zero-specificity' (override-able) :where selector */
+}
+
+.highlight {
+    @apply text-color-text-alt-2;
+}
+.aside {
+    @apply text-color-text-alt;
+}
+
+/* ##### Components ##### */
+
+/* ----- MAIN LAYOUT COMPONENTS ----- */
+
+/* -- The Backdrop "Curtain" -- */
+.backdrop {
+    @apply w-full sm:flex pt-12;
+}
+:where(.backdrop) {
+    @apply bg-color-layer-1 min-h-screen pl-0 sm:pl-72;
+}
+.homepage-back {
+    @apply fixed z-[-1] w-full pt-24 pb-12 pr-0 sm:pr-72 mx-auto bg-tn-layer-1 grid place-items-center h-screen;
+}
+.homepage-logo {
+    @apply w-3/4 h-3/4 bg-terranova-logo-grey bg-contain bg-no-repeat bg-center opacity-80;
+}
+
+/* -- Left-side Panel -- */
+.toolbar {
+    @apply flex-initial w-full h-12 py-[0.4rem] px-2 sm:px-4 sm:pt-8 sm:pb-12 bg-color-layer-2 sm:w-72 sm:h-full fixed [left:0];
+}
+
+/* -- Main Content Panel -- */
+.main-content {
+    @apply min-h-full w-full sm:mx-auto sm:max-w-6xl  p-2 pt-12 sm:pt-2;
+}
+:where(.main-content) {
+    @apply bg-color-layer-3 border border-color-layer-division;
+}
+
+/* ---- Compound Component Help Classes ---- */
+.compound {
+    @apply relative flex-wrap
+}
+
+:where(.compound) {
+    @apply justify-between flex items-stretch
+}
+
+/* ---- Block Element Spacing ---- */
+th {
+    @apply px-2 py-2;
+}
+td {
+    @apply px-2 py-2;
+}
+
+/* ---- Tag-level Components ---- */
+select {
+    @apply py-1 px-2 bg-color-surface-input rounded border-2 border-color-border-alt stroke-esnetblack-300 font-sans focus:outline-color-outline focus:outline-1 focus:outline-offset-0 focus:outline;
+}
+:where(select){
+    @apply min-w-fit;
+}
+
+fieldset {
+    @apply rounded border border-dotted border-color-border-alt p-3 pt-0
+}
+
+fieldset.content-sidebar {
+    @apply p-6 pt-2 pb-12 rounded-xl mt-6;
+}
+
+fieldset > legend {
+    @apply -ml-2 p-2
+}
+
+fieldset:where(.subgroup) {
+    @apply rounded border border-dotted border-color-border-alt p-3 pt-0
+}
+
+fieldset:where(.subgroup) > legend {
+    @apply p-2 -ml-2 text-esnetblue-600
+}
+
+input[type="checkbox"].switch {
+    @apply mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-esnetwhite-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-esnetblue-400 checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-esnetblue-400 checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-esnetblue-400 checked:focus:bg-esnetblue-400 checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-esnetblue-400 dark:checked:after:bg-esnetblue-400 dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca];
+}
+
+input[type=range] {
+    @apply h-1.5 cursor-pointer appearance-none rounded-lg border-transparent bg-esnetwhite-800 my-auto accent-color-button-secondary
+}
+
+input[type="text"],
+input[type="password"],
+input[type="search"],
+input[type="email"],
+input[type="number"],
+input[type="url"],
+input[type="tel"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="time"],
+input[type="week"] {
+    @apply px-2 py-1 bg-color-surface-input border-2 border-color-border-alt stroke-esnetblack-300 font-sans rounded focus:rounded focus:outline-color-outline focus:outline-offset-0 focus:outline;
+}
+
+input[type="text"]:disabled {
+    @apply text-esnetblack-100;
+}
+
+textarea {
+    @apply px-2 py-2 bg-color-surface-input border-2 border-color-border-alt stroke-esnetblack-300 rounded focus:outline-color-outline focus:outline-offset-0 focus:outline;
+}
+
+.invalid, input:focus.invalid, textarea:focus.invalid {
+    @apply border-red-500 outline-2 outline-red-500;
+}
+label.invalid {
+    @apply py-0 text-red-500 text-xs mt-0 block;
+}
+
+/* ----- Multi-Select Input ----- */
+.multi-select-list {
+    @apply border-color-border-alt border-2 rounded bg-color-surface-input;
+}
+
+select[multiple] option::before {
+    /* content: "☐"; unicode css code: \2610 */
+    content: "\2610";
+    width: 1.3em;
+    text-align: center;
+    display: inline-block;
+}
+
+select[multiple] option:checked::before {
+    /* content: "☑"; unicode css code: \2611 */
+    content: "\2611";
+}
+
+select[multiple] {
+    @apply pl-0 pr-2 indent-0.5 text-base bg-no-repeat appearance-none;
+}
+
+/* ---- Buttons ---- */
+.btn,
+input[type="submit"],
+input[type="button"],
+button {
+    @apply bg-color-button border-2 font-semibold rounded-md shadow-sm 
+     focus:outline-none focus:ring-2 focus:ring-color-outline
+    focus:ring-opacity-75 cursor-pointer;
+}
+:where(.btn),
+input:where([type="submit"], input[type="button"]),
+button {
+    @apply py-1 px-4 text-color-text border-color-border hover:bg-color-button-hover active:bg-color-button-active; /* allow overrides for text and border color */
+}
+
+.btn.noborder
+input[type="submit"].noborder,
+input[type="button"].noborder,
+button.noborder {
+    @apply border-none shadow-none;
+}
+
+.btn.primary,
+input[type="submit"].primary,
+input[type="button"].primary,
+button.primary {
+    @apply bg-color-button-primary hover:bg-color-button-primary-hover hover:text-white hover:stroke-white 
+    active:bg-color-button-primary-active focus:outline-none;
+}
+.btn.secondary,
+input[type="submit"].secondary,
+input[type="button"].secondary,
+button.secondary {
+    @apply bg-color-button-secondary text-white  hover:bg-color-button-secondary-hover hover:text-esnetblue-50 active:bg-color-button-secondary-active 
+    focus:outline-none;
+}
+.btn.warning,
+input[type="submit"].warning,
+input[type="button"].warning,
+button.warning {
+    @apply bg-color-button-warning text-white hover:bg-color-button-warning-hover active:bg-color-button-warning-active
+}
+
+/* ---- Icons and Icon Buttons ---- */
+.icon {
+    @apply bg-transparent border-2 rounded-md
+}
+:where(.icon){
+    @apply border-transparent stroke-color-icon p-1 inline-block w-8 h-8;
+}
+:where(.icon:hover){
+    @apply bg-esnetblack-900/20 stroke-color-icon-active;
+}
+.icon.btn {
+    @apply shadow-none;
+}
+:where(.icon.btn){
+    @apply px-1 border-transparent;
+}
+.icon.btn.bordered {
+    @apply border-teal-500;
+}
+:where(.icon.lg) {
+    @apply w-10 h-10;
+}
+:where(.icon.sm) {
+    @apply w-7 h-7;
+}
+:where(.icon.tiny) {
+    @apply w-6 h-6;
+}
+.icon.btn.attached {
+    @apply rounded-none rounded-r text-right relative right-0.5 h-9 w-9 inline-block justify-self-end bg-esnetblue-300 border-2 hover:bg-esnetblue-200 active:bg-esnetblue-500 focus:outline-none focus:ring-2 focus:ring-color-outline focus:ring-opacity-75 cursor-pointer;
+}
+:where(.icon.btn.attached){
+    @apply border-esnetblack-900 stroke-esnetblack-900 /* allow icon to be recolored */
+}
+
+/* ---- Class-based Components ---- */
+
+.main-top-bar {
+    @apply text-esnetwhite-500 bg-teal-700 text-2xl border-none h-12 px-4 py-1 w-full flex fixed z-[1000] align-middle drop-shadow-md
+}
+
+.top-bar nav {
+    @apply [z-index:1000] ;
+}
+
+.panel {
+    @apply mb-6;
+}
+
+.panel-body {
+    @apply bg-color-surface-tertiary p-4;
+}
+
+.panel-header {
+    @apply bg-color-surface-primary rounded-t-xl px-4 py-2 text-white text-lg font-normal;
+}
+
+.panel-footer {
+    @apply bg-color-surface-secondary rounded-b-xl px-4 py-2 text-white;
+}
+
+.read-only-warning { 
+    @apply fixed w-full left-72 top-12 bg-mauve-100 px-4 py-1 z-[999];
+}
+
+.modal-background {
+    @apply fixed grid w-full h-screen place-items-center top-0 left-0 z-[2000] bg-esnetblack-900/40;
+}
+.modal-dialog {
+    @apply w-6/12;
+}
+
+.output-preview {
+    @apply my-2 bg-esnetblack-400 h-4 rounded-md px-4 py-2 h-72 text-white w-full monospace text-sm;
+} 
+
+/** -- widgets -- */
+
+.tooltip-box {
+    @apply bg-esnetblack-900 text-esnetwhite-100 h-6 px-2 rounded-md;
+}
+:where(.tooltip-box) { @apply relative; }
+
+
+/** -- Form types -- */
+
+#dataset-editor-sidebar > label {
+    @apply mb-1;
+}
+/** -- Specific form overrides for map editor -- */
+.dialog-form.tight-form-func h2 { @apply text-xl py-0 }
+.dialog-form.tight-form-func textarea, 
+.dialog-form.tight-form-func select { @apply border border-color-border-alt }
+.dialog-form.tight-form-func input { @apply border border-color-border-alt }
+.dialog-form.tight-form-func td, 
+.dialog-form.tight-form-func tr { @apply py-0 }
+
+/* -- Navigation Links -- */
+.nav-list .nav-head {
+    @apply pb-6;
+}
+.nav-list .nav-head > a {
+    @apply text-2xl font-semibold text-color-text p-1
+}
+
+.nav-list .tab-group {
+    @apply pl-6
+}
+.nav-list .tab-group a,  .nav-list .tab-group .collapsible span {
+    @apply text-teal-700 text-lg font-semibold hover:font-bold hover:text-teal-400 cursor-pointer;
+}
+
+.nav-list .tab-group .sub-group {
+    @apply ml-6
+}
+.nav-list .tab-group .sub-group:hover .icon {
+    @apply stroke-teal-400
+}
+.nav-list .tab-group .sub-group .icon {
+    @apply w-6 h-6 stroke-teal-700 -ml-4 -mt-1;
+}
+.nav-list .tab-group .sub-group:hover a {
+    @apply font-semibold text-teal-400
+}
+.nav-list .tab-group .sub-group a {
+    @apply text-base text-teal-700 font-normal hover:font-semibold hover:text-teal-400
+}
+
+.nav-list .icon {
+    @apply w-9 h-9;
+}
+.nav-list .tab-group:hover .collapsible .icon {
+    @apply stroke-teal-400;
+}
+.nav-list .tab-group:hover span {
+    @apply  font-bold text-teal-400
+}
+
+.nav-list .collapsible .icon.sm {
+    @apply w-5 h-5 p-0 -ml-2 mt-1 mr-1 stroke-teal-700;
+}
+:where(.nav-list .icon){
+    @apply stroke-esnetblack-700;
+}
+
+.message-box {
+    @apply bg-esnetblue-700 text-white px-4 py-1 rounded-xl mb-2;
+}
+
+table.data-table td, table.data-table th {
+    @apply bg-white border whitespace-nowrap max-w-2xl py-1 overflow-hidden;
+}
+
+/* -- Library Card -- */
+/* TODO: This should probably be generalized */
+.library-card {
+    @apply p-4
+}
+.library-card fieldset {
+    @apply rounded-xl pb-4 bg-color-surface-input p-4
+}
+.library-card a {
+    @apply inline-block text-xl font-semibold px-1 my-auto
+}
+.library-card span {
+    @apply inline-block my-auto align-baseline
+}
+.library-card .name {
+    @apply compound align-baseline mb-auto justify-start flex w-3/4
+}
+.library-card .name span {
+    @apply inline-block text-xl w-auto flex-none pr-2 my-auto 
+}
+.library-card tr {
+    @apply w-full text-left
+}
+
+/* -- SVG Preview for Template Editor -- */
+.template-preview { 
+    @apply mx-auto bg-white border;
+}
+:where(.template-preview) {
+    @apply w-64 h-64
+}
+.template-preview svg * { 
+    transform-box: fill-box;
+}
+.template-preview svg > g {
+    transform-origin: center;
+}
+
+/* ##### Specific Page/Layout Overrides ##### */
+
+/* ----Main Page----*/
+.main-page {
+    @apply h-full bg-center bg-no-repeat bg-contain bg-clip-content;
+}
+
+.main-page h3 {
+    @apply font-sans font-bold text-3xl py-4 text-esnetblue-500;
+}
+.main-page a {
+    @apply font-sans font-semibold text-esnetmist-600 text-xl hover:font-bold hover:text-esnetblue-500 focus:font-bold focus:text-color-text-alt-2;
+}
+
+.main-content-header {
+    @apply bg-teal-600 px-4 py-2 text-white text-lg font-semibold;
+}
+
+.main-content-body {
+    @apply bg-white p-4 font-sans text-black;
+}
+
+/* Main Page Panel */
+.main-page-panel {
+    @apply m-3 py-2 px-6 pb-12 h-auto rounded-xl
+}
+:where(.main-page-panel) {
+    @apply bg-tn-layer-3;
+}
+:where(.main-page-panel h3) {
+    @apply text-teal-700;
+}
+:where(.main-page-panel p) {
+    @apply text-esnetblack-900;
+}
+:where(.main-page-panel h4) {
+    @apply text-esnetblack-500;
+}
+.main-page-panel td {
+    @apply pl-0 pr-3 py-2;
+}
+
+
+.leaflet-control-attribution { @apply hidden; }
+
+/* "corridor" top bar */
+.top-bar nav {
+    @apply bg-color-button-secondary w-full fixed z-[1000];
+}
+.top-bar .container {
+    @apply mx-auto max-w-full px-4 sm:px-6 lg:px-8 flex h-12 items-center justify-between;
+}
+.top-bar .loading {
+    @apply flex items-center text-base font-medium text-color-text;
+}
+.top-bar .centered {
+    @apply flex items-center;
+}
+.top-bar .navigation-item { 
+    @apply px-3 py-1 rounded-md text-lg font-medium text-color-text-link-reverse
+        hover:text-color-text-link-reverse-hover
+}
+.top-bar .bell-icon {
+    all: unset;
+    @apply rounded-full bg-color-button-secondary p-1 text-color-text-link-reverse
+        outline-none ring-0
+        hover:outline-none hover:ring-2 hover:ring-offset-2 hover:ring-offset-teal-800
+        focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-teal-800
+        hover:text-color-text-link-reverse-hover
+}
+.top-bar .profile-button {
+    all: unset;
+    @apply flex max-w-xs items-center rounded-full bg-color-button-secondary text-sm
+        outline-none ring-0
+        hover:outline-none hover:ring-2 hover:ring-offset-2 hover:ring-offset-teal-800
+        focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-teal-800
+}
+.top-bar .esnet-logo {
+    all: unset;
+    @apply mt-1 h-7 w-7 drop-shadow-md rounded-full
+    hover:outline-none hover:ring-2 hover:ring-offset-2 hover:ring-offset-teal-800
+    focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-teal-800
+}
+
+
+
+
+
+
+
+/* TODO: Refactor */
+
+@layer components {
+    /********** icon toggle button ***********/
+    .btn.toggle,
+    input[type="submit"].toggle,
+    input[type="button"].toggle,
+    button.toggle {
+        @apply bg-transparent p-1 inline-block cursor-pointer border-none shadow-none hover:bg-esnetblack-900/10;
+    }
+    .btn.toggle:focus,
+    input[type="submit"].toggle:focus,
+    input[type="button"].toggle:focus,
+    button.toggle:focus {
+        @apply outline outline-2 outline-transparent;
+        --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+        --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+        box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+        --tw-ring-color: rgb(125 223 250 / var(--tw-ring-opacity));
+        --tw-ring-opacity: 0.75;
+    }
+
+    .btn.toggle .icon, .btn.toggle.md .icon,
+    input[type="submit"].toggle .icon, input[type="submit"].toggle.md .icon,
+    input[type="button"].toggle .icon, input[type="button"].toggle.md .icon,
+    button.toggle .icon, button.toggle.md .icon {
+        @apply w-9 px-3 h-9 cursor-pointer;
+    }
+    .btn.toggle.sm .icon,
+    input[type="submit"].toggle.sm .icon,
+    input[type="button"].toggle.sm .icon,
+    button.toggle.sm .icon {
+        /* @apply -mt-[0.5rem] w-6 px-3 h-6 cursor-pointer; */
+        @apply w-6 px-3 h-6 cursor-pointer [mask-size:contain];
+    }
+    .toggle .icon {
+        @apply w-8 h-8; /* icon sizing and lack of repeat */
+    }
+
+    .btn.toggle input[type="checkbox"],
+    input[type="submit"].toggle input[type="checkbox"],
+    input[type="button"].toggle input[type="checkbox"],
+    button.toggle input[type="checkbox"] {
+        @apply hidden; /* hide state contolling input */
+    }
+
+    .btn.toggle .icon-container,
+    input[type="submit"].toggle .icon-container,
+    input[type="button"].toggle .icon-container,
+    button.toggle .icon-container {
+        @apply p-0 m-0;
+    }
+
+    /********** icon swaptoggle button ***********/
+    .btn.swaptoggle,
+    input[type="button"].swaptoggle,
+    input[type="submit"].swaptoggle,
+    button.swaptoggle {
+        @apply bg-transparent p-1 inline-block cursor-pointer border-none shadow-none hover:shadow-none hover:border-none hover:bg-esnetblack-900/20;
+    }
+
+    .btn.swaptoggle .icon, .btn.swaptoggle.md .icon,
+    input[type="submit"].swaptoggle .icon, input[type="submit"].swaptoggle.md .icon,
+    input[type="button"].swaptoggle .icon, input[type="button"].swaptoggle.md .icon,
+    button.swaptoggle .icon, button.swaptoggle.md .icon {
+        @apply pl-1 pr-1 h-9 w-9 cursor-pointer;
+    }
+    .btn.swaptoggle.sm .icon,
+    input[type="submit"].swaptoggle.sm .icon,
+    input[type="button"].swaptoggle.sm .icon,
+    button.swaptoggle.sm .icon {
+        @apply w-6 px-3 h-6 cursor-pointer [mask-size:contain];
+    }
+    .swaptoggle .icon {
+        @apply w-8 h-8 bg-no-repeat [mask-repeat:no-repeat] bg-cover [mask-size:cover]; /* icon sizing and lack of repeat */
+    }
+
+    .btn.swaptoggle input[type="checkbox"],
+    input[type="submit"].swaptoggle input[type="checkbox"],
+    input[type="button"].swaptoggle input[type="checkbox"],
+    button.swaptoggle input[type="checkbox"] {
+        @apply hidden; /* hide state contolling input */
+    }
+
+    .btn.swaptoggle .icon-container,
+    input[type="submit"].swaptoggle .icon-container,
+    input[type="button"].swaptoggle .icon-container,
+    button.swaptoggle .icon-container {
+        @apply p-0 m-0;
+    }
+
+    /* CSS props common to both check on/off states */
+    .toggle label > span {
+        @apply [mask-repeat:no-repeat] [mask-position:center] [mask-position-y:2px] [-webkit-mask-position-y:2px]  cursor-pointer align-middle inline-block;
+    }
+
+    /* control highlight color when checked, hide when unchecked */
+    .toggle .checkbox:checked ~ label > .on {
+        @apply inline-block bg-esnetblue-200;
+    }
+    .toggle .checkbox:not(:checked) ~ label > .on {
+        @apply hidden;
+    }
+
+    /* control highlight color when unchecked, hide when checked */
+    .toggle .checkbox:not(:checked) ~ label > .off {
+        @apply inline-block bg-esnetwhite-900;
+    }
+    .toggle .checkbox:checked ~ label > .off {
+        @apply hidden;
+    }
+
+    .swaptoggle label > span {
+        @apply bg-no-repeat bg-contain cursor-pointer align-middle inline-block;
+    }
+
+    /* control icon visibility when checked, hide when unchecked */
+    .swaptoggle .checkbox:checked ~ label > .on {
+        @apply inline-block;
+    }
+    .swaptoggle .checkbox:not(:checked) ~ label > .on {
+        @apply hidden;
+    }
+
+    /* control icon visibility when unchecked, hide when checked */
+    .swaptoggle .checkbox:not(:checked) ~ label > .off {
+        @apply inline-block;
+    }
+    .swaptoggle .checkbox:checked ~ label > .off {
+        @apply hidden;
+    }
+
+    /********** panel-element and panel-element-set-containers ***********/
+    .panel-element-set-container .panel-element {
+        @apply flex mb-2;
+    }
+    .panel-element-set-container .panel-element .panel-element-row {
+        @apply flex flex-row justify-start gap-5 items-center;
+    }
+    .panel-element-set-container .panel-element-row-container .panel-element-row {
+        @apply flex flex-row justify-start gap-5 items-center mb-2;
+    }
+    .panel-element-set-container .panel-element-row-container .right-justified {
+        @apply flex flex-row gap-5 items-center justify-end;
+    }
+    .panel-element-set-container select:first-of-type {
+        @apply w-36;
+    }
+    .panel-element-set-container select:nth-of-type(2) {
+        @apply w-44;
+    }
+    .panel-element-set-container select:nth-of-type(3) {
+        @apply w-44;
+    }
+    .panel-element-set-container .clause {
+        @apply w-12;
+    }
+    .panel-element-set-container .field-value {
+        @apply w-44;
+    }
+    .panel-element-set-container .json-expr {
+        /* @apply w-150; */
+        @apply w-[53.5rem];
+    }
+    .panel-element-set-container .right-justified label {
+        @apply text-right grow;
+    }
+
+    /* Label/Readonly URL Text Field/Action Button */
+    .clipboard-copy-input .input-container {
+        @apply inline-flex w-full;
+    }
+    .clipboard-copy-input .input-container input[type="url"] {
+        @apply inline-block self-end w-full rounded-tr-none rounded-br-none pr-0;
+    }
+    .clipboard-copy-input .input-container .action-realtime-dataset-url-btn {
+        @apply rounded-none rounded-r text-right relative right-0.5 h-9 w-9 inline-block justify-self-end bg-contain bg-no-repeat p-0 bg-origin-padding bg-center border-esnetblack-300 pl-0.5;
+    }
+    .clipboard-copy-input .input-container .action-realtime-dataset-url-btn:hover svg {
+        @apply stroke-black;
+    }
+
+    /* Color select control */
+    .compound input[type="color"] {
+        @apply self-center inline-block mr-2 border-color-border-alt stroke-esnetblack-300 rounded focus:rounded cursor-pointer p-0 justify-start;
+    }
+    .compound input[type="color"] + label {
+        @apply font-normal justify-start mt-1 mb-0;
+    }
+
+    /****************************** Searchable Dropdown Multiselect *****************************/
+
+    .searchable-multiselect {
+        @apply h-9 relative;
+    }
+    .searchable-multiselect input[type="search"] {
+        @apply focus:outline-none;
+    }
+    .searchable-multiselect select {
+        @apply border-color-border-alt border-2 rounded rounded-tl-none bg-color-surface-input absolute -mt-[0.15rem] z-10;
+    }
+
+    .searchable-multiselect .compound-query-criterion input[type="search"],
+    .searchable-multiselect .compound-query-criterion > select {
+        @apply w-48 rounded-none h-9;
+    }
+
+    .searchable-multiselect:not(:focus-within) select {
+        @apply hidden;
+    }
+
+    .searchable-multiselect :focus-within ~ select,
+    .searchable-multiselect select:focus-within {
+        @apply block focus:outline-none;
+    }
+    .searchable-multiselect:focus-within input[type="search"] {
+        @apply rounded-b-none;
+    }
+}

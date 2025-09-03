@@ -1,0 +1,41 @@
+{
+    "name": "terranova-frontend",
+    "private": true,
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "npm run build-css && vite",
+        "build-static-overwrites": "echo 'copy static files...' && rm -Rf dist/static && mkdir dist/static && cp node_modules/esnet-networkmap-panel/src/components/lib/* dist/static",
+        "build-css": "tailwindcss --input src/index.css --output dist/terranova.css --config tailwind.config.cjs",
+        "watch-css": "tailwindcss --input src/index.css --output dist/terranova.css --config tailwind.config.cjs --watch",
+        "build": "npm run build-css && npm run build-js && npm run build-static-overwrites",
+        "build-js": "tsc && vite build --mode=production",
+        "build-test-static-overwrites": "echo 'copy static files to dist-test...' && rm -Rf dist-test/static && mkdir dist-test/static && cp node_modules/esnet-networkmap-panel/src/components/lib/* dist-test/static && cp static/settings.js dist-test/static/settings.js",
+        "build-test-js": "vite build -c vite.config.test.ts --mode=production",
+        "build-test": "npm run build-css && npm run build-test-js && npm run build-test-static-overwrites",
+        "preview": "vite preview",
+        "generate-client": "openapi --input http://localhost:8000/openapi.json --output ../client/typescript"
+    },
+    "dependencies": {
+        "@esnet/esnet-tokens": "^0.2.0",
+        "esnet-networkmap-panel": "^3.0.0-beta5",
+        "keycloak-js": "^22.0.0",
+        "lodash": "^4.17.21",
+        "lucide-react": "^0.274.0",
+        "lucide-static": "^0.263.0",
+        "jwt-decode": "^3.1.2",
+        "oidc-client-ts": "^2.2.4",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-oidc-context": "^2.2.2",
+        "react-router-dom": "^6.11.1"
+    },
+    "devDependencies": {
+        "@types/react": "^18.0.28",
+        "@types/react-dom": "^18.0.11",
+        "@vitejs/plugin-react": "^3.1.0",
+        "openapi-typescript-codegen": "^0.25.0",
+        "typescript": "^4.9.3",
+        "vite": "^4.2.0"
+    }
+}

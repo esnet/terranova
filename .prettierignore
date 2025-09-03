@@ -1,0 +1,17 @@
+# ignore fixtures and data:
+tests/fixtures
+tests
+
+# ignore docs
+*.md
+
+# ignore some config files:
+.gitignore
+.pre-commit-config.yaml
+SAMPLE_CONFIG.yml
+
+terranova/frontend/tailwind.config.cjs
+terranova/frontend/tsconfig.json
+terranova/frontend/tsconfig.node.json
+terranova/frontend/vite.config.ts
+terranova/frontend/src/index.css

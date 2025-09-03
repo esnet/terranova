@@ -1,0 +1,15 @@
+__pycache__
+.DS_Store
+*.sqlite
+*.egg-info
+*~
+.eggs
+*.code-workspace
+.vscode
+config.yml
+build
+*.cache
+dist-test
+
+venv*
+credentials.json
