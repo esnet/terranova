@@ -1,27 +1,34 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.cjs";
 
+
+@utility tn-text {
+    @apply font-sans text-color-text font-normal;
+}
+
+@utility monospace {
+    @apply font-mono;
+}
+
+@utility tn-bold {
+    @apply font-semibold;
+}
+
+@layer base {
 /* ##### Browser Overrides ##### */
 :where(html, body, div#root, .App) { @apply h-screen; }
 
 /* ##### Typography ##### */
-.tn-text,
 p {
-    @apply font-sans text-color-text font-normal;
+    @apply tn-text
 }
 
 a {
     @apply font-sans font-normal text-color-text-link hover:text-color-text-link-hover focus:text-color-text-link-focused active:text-color-text-link-active;
 }
 
-.monospace {
-    @apply font-mono;
-}
-
-.tn-bold,
 strong {
-    @apply font-semibold;
+    @apply tn-bold;
 }
 
 label {
@@ -63,6 +70,7 @@ h6 {
 .aside {
     @apply text-color-text-alt;
 }
+}
 
 /* ##### Components ##### */
 
@@ -96,12 +104,12 @@ h6 {
 }
 
 /* ---- Compound Component Help Classes ---- */
-.compound {
-    @apply relative flex-wrap
+@utility compound {
+    @apply relative flex-wrap;
 }
 
 :where(.compound) {
-    @apply justify-between flex items-stretch
+    @apply justify-between flex items-stretch;
 }
 
 /* ---- Block Element Spacing ---- */
@@ -205,8 +213,7 @@ input[type="submit"],
 input[type="button"],
 button {
     @apply bg-color-button border-2 font-semibold rounded-md shadow-sm 
-     focus:outline-none focus:ring-2 focus:ring-color-outline
-    focus:ring-opacity-75 cursor-pointer;
+     focus:outline-none focus:ring-2 focus:ring-color-outline/75 cursor-pointer;
 }
 :where(.btn),
 input:where([type="submit"], input[type="button"]),
@@ -271,7 +278,7 @@ button.warning {
     @apply w-6 h-6;
 }
 .icon.btn.attached {
-    @apply rounded-none rounded-r text-right relative right-0.5 h-9 w-9 inline-block justify-self-end bg-esnetblue-300 border-2 hover:bg-esnetblue-200 active:bg-esnetblue-500 focus:outline-none focus:ring-2 focus:ring-color-outline focus:ring-opacity-75 cursor-pointer;
+    @apply rounded-none rounded-r text-right relative right-0.5 h-9 w-9 inline-block justify-self-end bg-esnetblue-300 border-2 hover:bg-esnetblue-200 active:bg-esnetblue-500 focus:outline-none focus:ring-2 focus:ring-color-outline/75 cursor-pointer;
 }
 :where(.icon.btn.attached){
     @apply border-esnetblack-900 stroke-esnetblack-900 /* allow icon to be recolored */
@@ -516,10 +523,6 @@ table.data-table td, table.data-table th {
     hover:outline-none hover:ring-2 hover:ring-offset-2 hover:ring-offset-teal-800
     focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-teal-800
 }
-
-
-
-
 
 
 

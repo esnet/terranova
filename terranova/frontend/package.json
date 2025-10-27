@@ -17,13 +17,14 @@
         "generate-client": "openapi --input http://localhost:8000/openapi.json --output ../client/typescript"
     },
     "dependencies": {
-        "@esnet/esnet-tokens": "^0.2.0",
+        "@esnet/esnet-tokens": "file:../../../packets-terranova/design-tokens",
+        "@esnet/packets-ui": "file:../../../packets-terranova/ui",
         "esnet-networkmap-panel": "^3.0.0-beta5",
+        "jwt-decode": "^3.1.2",
         "keycloak-js": "^22.0.0",
         "lodash": "^4.17.21",
-        "lucide-react": "^0.274.0",
+        "lucide-react": "^0.525.0",
         "lucide-static": "^0.263.0",
-        "jwt-decode": "^3.1.2",
         "oidc-client-ts": "^2.2.4",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
@@ -31,10 +32,12 @@
         "react-router-dom": "^6.11.1"
     },
     "devDependencies": {
+        "@tailwindcss/cli": "^4.1.14",
         "@types/react": "^18.0.28",
         "@types/react-dom": "^18.0.11",
         "@vitejs/plugin-react": "^3.1.0",
         "openapi-typescript-codegen": "^0.25.0",
+        "tailwindcss": "^4.1.14",
         "typescript": "^4.9.3",
         "vite": "^4.2.0"
     }

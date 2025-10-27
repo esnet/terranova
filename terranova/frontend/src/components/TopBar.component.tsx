@@ -341,8 +341,6 @@ export function LoadingPlaceholderMenu() {
 import { createElement, Fragment, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 
-import "corridor-css-esnet/dist/corridor.css";
-
 const fetchJSON = (input: string, config: any | undefined) => {
     return fetch(input, config).then((response) => {
         if (response.ok) {
