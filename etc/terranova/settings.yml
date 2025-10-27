@@ -3,7 +3,8 @@ environment: dev
 elastic:
   username: elastic
   password: DkIedPPSCb
-  url: http://elastic:9200
+  # url: http://elastic:9200
+  url: http://localhost:9200
   indices:
     template:
       read: terranova-template
