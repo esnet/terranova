@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
+import tailwindcss from '@tailwindcss/vite';
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from 'node:url';
 
@@ -14,7 +15,7 @@ export default ({ mode }) => {
     // import.meta.env.VITE_PORT available here with: process.env.VITE_PORT
 
     return defineConfig({
-      plugins: [react()],
+      plugins: [react(), tailwindcss()],
       build: {
           sourcemap: true,
           outDir: "./dist",

@@ -8,7 +8,8 @@ module.exports = {
     "../corridor-esnet/index.html",
     "../corridor-esnet/src/**/*.{js,ts,jsx,tsx}",
     "../../src/**/*.{js,ts,jsx,tsx}",
-    "../../src/**/*.{jpg,png,svg,jpeg,gif,ico}"
+    "../../src/**/*.{jpg,png,svg,jpeg,gif,ico}",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     fontFamily: {

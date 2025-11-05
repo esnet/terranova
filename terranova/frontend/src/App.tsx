@@ -3,7 +3,7 @@ import oidcConfig from "./OIDCConfig";
 import { AuthenticationProvider } from "./AuthService";
 import { AuthProvider as OIDCAuthProvider } from "react-oidc-context";
 
-import "../dist/terranova.css";
+import "@esnet/packets-ui/style.css";
 
 import { Protected } from "./components/ProtectedRoute.component";
 
@@ -111,7 +111,7 @@ function App() {
     ]);
     return (
         <>
-            <div className="App">
+            <div className="App packets-ui">
                 <OIDCAuthProvider {...oidcConfig}>
                     <AuthenticationProvider>
                         <RouterProvider router={router} />

@@ -4,7 +4,7 @@
     "version": "1.0.0",
     "type": "module",
     "scripts": {
-        "dev": "npm run build-css && vite",
+        "dev": "vite",
         "build-static-overwrites": "echo 'copy static files...' && rm -Rf dist/static && mkdir dist/static && cp node_modules/esnet-networkmap-panel/src/components/lib/* dist/static",
         "build-css": "tailwindcss --input src/index.css --output dist/terranova.css --config tailwind.config.cjs",
         "watch-css": "tailwindcss --input src/index.css --output dist/terranova.css --config tailwind.config.cjs --watch",
@@ -14,7 +14,7 @@
         "build-test-js": "vite build -c vite.config.test.ts --mode=production",
         "build-test": "npm run build-css && npm run build-test-js && npm run build-test-static-overwrites",
         "preview": "vite preview",
-        "generate-client": "openapi --input http://localhost:8000/openapi.json --output ../client/typescript"
+        "generate-client": "@hey-api/openapi-ts -i http://localhost:8000/openapi.json -o ../client/typescript"
     },
     "dependencies": {
         "@esnet/esnet-tokens": "file:../../../packets-terranova/design-tokens",
@@ -32,13 +32,15 @@
         "react-router-dom": "^6.11.1"
     },
     "devDependencies": {
+        "@hey-api/openapi-ts": "^0.87.0",
         "@tailwindcss/cli": "^4.1.14",
+        "@tailwindcss/vite": "^4.1.16",
+        "@types/node": "^24.10.0",
         "@types/react": "^18.0.28",
         "@types/react-dom": "^18.0.11",
         "@vitejs/plugin-react": "^3.1.0",
-        "openapi-typescript-codegen": "^0.25.0",
-        "tailwindcss": "^4.1.14",
-        "typescript": "^4.9.3",
-        "vite": "^4.2.0"
+        "tailwindcss": "^4.1.16",
+        "typescript": "^5.9.3",
+        "vite": "^7.2.0"
     }
 }
