@@ -8,6 +8,10 @@ function ProfileMenu() {
     const [open, setOpen] = useState(false);
     const links = [
         {
+            name: "Settings",
+            href: "/settings",
+        },
+        {
             name: "Sign out",
             href: "/logout",
         },
