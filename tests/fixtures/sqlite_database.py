@@ -1,5 +1,5 @@
 import pytest
-from terranova.datasources.esdb.fetcher import CacheWriter
+from terranova.datasources.google_sheets.fetcher import CacheWriter
 
 # from terranova.logging import logger
 

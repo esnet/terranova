@@ -22,14 +22,17 @@ run:
 run_api:
 	uvicorn terranova.api:app --reload
 
-.PHONY: build-test
-build-test:
+.PHONY: frontend-test
+frontend-test:
 	cd ${FRONTEND_DIR} && npm install && npm run build-css && npm run build-test
 
 # make test: test the frontend and API. Both are accomplished with pytest.
-.PHONY: test
-test: build-test
+.PHONY: api-test
+api-test:
 	TERRANOVA_CONF=$(TEST_CONFIG) python3 -m pytest -v
+
+.PHONY: test
+test: frontend-test api-test
 
 .PHONY: test_anonymous_api_access
 test_anonymous_api_access:
