@@ -1,3 +1,7 @@
+"""
+Spawn a frontend server to be used in tests. This file is executed in a fixture in conftest.py, see that.
+"""
+
 import os
 import posixpath
 from urllib.parse import unquote
@@ -56,7 +60,7 @@ if __name__ == "__main__":
     HOST = "127.0.0.1"
     PORT = 5173
     server = http.server.HTTPServer((HOST, PORT), RequestHandler)
-    print("Serving HTTP on %s:%s" % (HOST, PORT))
+    print("Serving HTTP frontend testing server on %s:%s" % (HOST, PORT))
     try:
         server.serve_forever()
     except KeyboardInterrupt:

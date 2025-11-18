@@ -24,9 +24,12 @@ run_api:
 
 .PHONY: frontend-test
 frontend-test:
-	cd ${FRONTEND_DIR} && npm install && npm run build-css && npm run build-test
+	@echo "Building frontend..."
+	@cd ${FRONTEND_DIR} && yarn install && yarn run build-test
+	@cd ../..
+	pytest tests/frontend
+# 	pytest tests/frontend --headed
 
-# make test: test the frontend and API. Both are accomplished with pytest.
 .PHONY: api-test
 api-test:
 	TERRANOVA_CONF=$(TEST_CONFIG) python3 -m pytest -v

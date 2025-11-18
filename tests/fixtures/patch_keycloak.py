@@ -1,4 +1,4 @@
-from terranova.settings import TEST_JWT_KEY
+from terranova.settings import TEST_JWT_KEY, AUTH_BACKEND
 import pytest
 
 
@@ -6,6 +6,10 @@ import pytest
 # to Keycloak so that unit tests do not depend on an instance of it at runtime
 @pytest.fixture(autouse=True)
 def patch_keycloak(monkeypatch, readonly_jwt, readwrite_jwt, no_roles_jwt):
+    if AUTH_BACKEND != "keycloak":
+        # print("Backend authentication mode is not keycloak, skipping keycloak fixture.")
+        return
+
     import terranova
 
     # Instead of talking to keycloak for its pub key, use the test jwt key which
