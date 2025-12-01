@@ -6,7 +6,7 @@ def test_has_title(page):
     expect(page).to_have_title("Terranova")
 
 
-def test_topbar(page, login):
+def test_navbar(page, login):
     page.get_by_role("img", name="avatar").hover()
     settings_link = page.get_by_role("navigation").get_by_role("link", name="Settings")
     expect(settings_link).to_be_visible()
