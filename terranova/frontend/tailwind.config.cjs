@@ -1,4 +1,5 @@
 import * as tokens from "@esnet/esnet-tokens";
+import * as packetsTailwindConfig from "@esnet/esnet-tokens/tailwind.config.js"
 
 module.exports = {
   content: [
@@ -7,7 +8,8 @@ module.exports = {
     "../corridor-esnet/index.html",
     "../corridor-esnet/src/**/*.{js,ts,jsx,tsx}",
     "../../src/**/*.{js,ts,jsx,tsx}",
-    "../../src/**/*.{jpg,png,svg,jpeg,gif,ico}"
+    "../../src/**/*.{jpg,png,svg,jpeg,gif,ico}",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     fontFamily: {
@@ -15,6 +17,7 @@ module.exports = {
       mono: ["Martian Mono", "monospace"]
     },
     extend: {
+      ...packetsTailwindConfig.theme.extend,
       screens: { "3xl": {"min": "1791px"} },
       colors: {
         "tn-layer": {

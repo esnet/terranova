@@ -1,6 +1,7 @@
 from terranova import datasources as datasources_module
 import pkgutil
 import inspect
+import importlib
 from pydantic import BaseModel
 from enum import Enum
 from typing import Union
@@ -24,7 +25,7 @@ class DatasourceRegistry(dict):
             path=datasources_module.__path__, prefix=datasources_module.__name__ + "."
         ):
             name_lookup = name.split(".")[-1]
-            module = importer.find_module(name).load_module(name)
+            module = importlib.import_module(name)
 
             # test that assertions are here for a given plugin
 

@@ -27,7 +27,7 @@ export const DatasetEditorQueryPanel = (props: DatasetEditorQueryPanelProps) => 
         controller.setProperty("query.filters", currentFilters);
     };
 
-    let [lastTimer, setLastTimer] = useState<number | undefined>(undefined);
+    let [lastTimer, setLastTimer] = useState<any | undefined>(undefined);
     // we will fetch the set of query endpoints from the API.
     // we also need to track its loading state.
     let [queryEndpointsLoading, setQueryEndpointsLoading] = useState<boolean>(true);

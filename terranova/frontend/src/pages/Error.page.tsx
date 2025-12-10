@@ -1,5 +1,4 @@
 import { useRouteError, isRouteErrorResponse } from "react-router-dom";
-import { Corridor } from "corridor-esnet";
 
 export function ErrorPage() {
     const error: any = useRouteError();
@@ -7,7 +6,6 @@ export function ErrorPage() {
     if (isRouteErrorResponse(error)) {
         return (
             <div className="error-page bg-esnetblue-50">
-                <Corridor />
                 <br />
                 <center>
                     <h1>Oops!</h1>
@@ -24,7 +22,6 @@ export function ErrorPage() {
         console.error(error);
         return (
             <div className="error-page bg-esnetblue-50">
-                <Corridor />
                 <br />
                 <center>
                     <h1>Oops!</h1>
