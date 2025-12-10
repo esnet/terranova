@@ -1,5 +1,8 @@
 from terranova.settings import TEST_JWT_KEY, AUTH_BACKEND
 import pytest
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # These fixtures are not used directly. They exist only to patch out the function calls
@@ -7,7 +10,7 @@ import pytest
 @pytest.fixture(autouse=True)
 def patch_keycloak(monkeypatch, readonly_jwt, readwrite_jwt, no_roles_jwt):
     if AUTH_BACKEND != "keycloak":
-        # print("Backend authentication mode is not keycloak, skipping keycloak fixture.")
+        logger.debug("Backend authentication mode is not keycloak, skipping keycloak fixture.")
         return
 
     import terranova
