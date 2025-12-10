@@ -1,5 +1,8 @@
 import pytest
 from terranova.datasources.google_sheets.fetcher import CacheWriter
+from terranova.settings import (
+    GOOGLE_SHEETS_TABLE_NAME,
+)
 
 # from terranova.logging import logger
 
@@ -543,7 +546,8 @@ def sqlite_database():
     writer = CacheWriter()
 
     # remap to format that we're expecting in CacheWriter {id: circuit}
+    _TEST_ID = "test-sheet-id"
     kv_circuits = [circuit for circuit in CIRCUITS]
-    writer.insert(kv_circuits, "circuit")
+    writer.insert(_TEST_ID, kv_circuits, GOOGLE_SHEETS_TABLE_NAME)
 
     return 1

@@ -6,7 +6,7 @@
         - Layers / Maps created by the user
     If a user isn't logged in, this should redirect or show the login page
 */
-import { TopBar } from "../components/TopBar.component";
+import { NavBar } from "../components/NavBar";
 import { Outlet } from "react-router-dom";
 import { LeftSideBar } from "../components/LeftSideBar.component";
 import { UserDataContextProvider } from "../context/UserDataContextProvider";
@@ -33,7 +33,7 @@ export function Home() {
             auth?.user?.scope &&
             auth.user.scope.indexOf(READ_SCOPE) >= 0 ? (
                 <>
-                    <TopBar />
+                    <NavBar />
                     <ReadOnlyWarning />
                     <UserDataContextProvider>
                         <LastEditedContextProvider>

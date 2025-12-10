@@ -38,11 +38,11 @@ test: frontend-test api-test
 
 # run tests in a headed browser, allowing better analysis of test failures
 .PHONY: frontend-test-headed
-frontend-test-headed:
+frontend-test-headed: build
 	pytest tests/frontend --headed
 
 .PHONY: frontend-test
-frontend-test:
+frontend-test: build
 	pytest tests/frontend
 
 .PHONY: api-test
