@@ -45,6 +45,15 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
 
         # this is a react SPA app. By default, vend index.html for all routes
         output_path = os.path.join(root, "index.html")
+
+        # or if it was something in /public, which is placed in the same directory as index.html
+        # this is a bad solution, an alternative request handler must be implemented or imported
+        # sometimes a resource like image.png is requested, which must be returned, other times it's a path, in which index.html should be...
+        # this is a poor temporary patch to filter that
+        # TODO: FIX THIS
+        if "svg" in path or "png" in path or "jpg" in path:
+            output_path = normalize_path(path, root)
+
         # unless the route is listed in STATIC_ROUTES. In that case...
         for pattern in STATIC_ROUTES:
             if path.startswith(pattern):

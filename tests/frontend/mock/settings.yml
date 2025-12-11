@@ -1,0 +1,41 @@
+version: "0.0.1"
+environment: dev
+
+elastic:
+  username: elastic
+  password: DkIedPPSCb
+  url: http://localhost:9200
+  indices:
+    template:
+      read: terranova-template
+      write: terranova-template
+    map:
+      read: terranova-map
+      write: terranova-map
+    dataset:
+      read: terranova-dataset
+      write: terranova-dataset
+    userdata:
+      read: terranova-userdata
+      write: terranova-userdata
+    sheets_settings:
+      read: terranova-sheets
+      write: terranova-sheets
+
+datasources:
+  google_sheets:
+    credential_type: static
+    cache_file: google_sheets.sqlite
+    static:
+        token_files:
+          - /etc/terranova/private_jwt.json
+
+auth:
+  backend: basic
+  read_scope: "terranova:maps:read"
+  write_scope: "terranova:maps:write"
+  publish_scope: "terranova:maps:publish"
+  admin_scope: "terranova:admin"
+
+basic_auth:
+  db_filename: /var/tmp/basic_auth.sqlite
