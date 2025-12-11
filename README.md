@@ -3,6 +3,7 @@
 An app for building and editing maps
 
 - [Getting Started](#getting-started)
+- [Development](#development)
 
 ## Getting Started
 
@@ -58,3 +59,26 @@ cd terranova  # change directory to the repo you just cloned
 docker compose build  # this command builds the terranova docker image
 docker compose up  # this command starts the elasticsearch and terranova image
 ```
+
+## Development
+
+For development, the Makefile is used to encapsulate all commands that may be needed to run any part of the project. You'll need to run the following in seperate shells.
+
+Start Elasticsearch
+```sh
+docker compose up
+```
+
+Run the Python API
+```sh
+make run_api
+```
+
+Run the Node frontend development server
+```sh
+make run_frontend
+```
+
+These will automatically install all necessary Node modules and Python packages. Both Python API and frontend will reload on change.
+
+Additional useful Makefile targets include `make test` to test both frontend and backend (may have to install Playwright headless browsers), and `make build` to produce the frontend build.
