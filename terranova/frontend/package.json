@@ -5,15 +5,11 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
+        "build-css": "tailwindcss --input src/index.css --output dist/terranova.css --config tailwind.config.js",
         "build-static-overwrites": "echo 'copy static files...' && rm -Rf dist/static && mkdir dist/static && cp node_modules/esnet-networkmap-panel/src/components/lib/* dist/static",
-        "build-css": "tailwindcss --input src/index.css --output dist/terranova.css --config tailwind.config.cjs",
-        "watch-css": "tailwindcss --input src/index.css --output dist/terranova.css --config tailwind.config.cjs --watch",
-        "build": "npm run build-css && npm run build-js && npm run build-static-overwrites",
-        "build-js": "tsc && vite build --mode=production",
+        "build": "vite build --mode=production && pnpm run build-static-overwrites",
         "build-test-static-overwrites": "echo 'copy static files to dist-test...' && rm -Rf dist-test/static && mkdir dist-test/static && cp node_modules/esnet-networkmap-panel/src/components/lib/* dist-test/static && cp static/settings.js dist-test/static/settings.js",
-        "build-test-js": "vite build -c vite.config.test.ts --mode=production",
-        "build-test": "npm run build-css && npm run build-test-js && npm run build-test-static-overwrites",
-        "preview": "vite preview",
+        "build-test": "vite build -c vite.config.test.ts --mode=production && pnpm run build-test-static-overwrites",
         "generate-client": "@hey-api/openapi-ts -i http://localhost:8000/openapi.json -o ../client/typescript"
     },
     "dependencies": {
@@ -32,7 +28,7 @@
         "react-router-dom": "^6.11.1"
     },
     "devDependencies": {
-        "@hey-api/openapi-ts": "^0.87.0",
+        "@hey-api/openapi-ts": "^0.86.0",
         "@tailwindcss/cli": "^4.1.14",
         "@tailwindcss/vite": "^4.1.16",
         "@types/node": "^24.10.0",

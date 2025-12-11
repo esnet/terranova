@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 var settingsPath = 'static/settings.js';
 var settingsURL = fileURLToPath(new URL(settingsPath, import.meta.url));
+// External settings module to be provided during Docker compose
 console.log("Building with external settings module with relative path: ", settingsPath);
 
 // https://vitejs.dev/config/
@@ -20,11 +21,7 @@ export default ({ mode }) => {
           sourcemap: true,
           outDir: "./dist",
           rollupOptions: {
-              external: [
-                "/static/d3.min.js",
-                "d3.min.js",
-                settingsURL,
-              ]
+                external: ["/static/d3.min.js", "d3.min.js", settingsURL],
           }
       },
     });
