@@ -11,5 +11,6 @@ build
 *.cache
 dist-test
 
+.venv
 venv*
 credentials.json
