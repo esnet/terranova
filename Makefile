@@ -75,6 +75,8 @@ run_staging:
 
 
 # ----- UTILITY/ENVIRONMENT TARGETS -----
+install: venv node_modules
+
 # these targets ensure that the node modules are installed
 $(FRONTEND_DIR)/node_modules:
 	@cd $(FRONTEND_DIR) && pnpm i
