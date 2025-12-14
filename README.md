@@ -62,23 +62,39 @@ docker compose up  # this command starts the elasticsearch and terranova image
 
 ## Development
 
-For development, the Makefile is used to encapsulate all commands that may be needed to run any part of the project. You'll need to run the following in seperate shells.
+To develop Terranova, you'll still need to do all of the above, stopping at building a Docker image.
 
-Start Elasticsearch
+### Prerequisites
+
+Various libraries and packages used in Terranova have other dependencies that may need to be installed. These specifically include:
+
+- [`pygraphviz`](https://pygraphviz.github.io/), needing [`graphviz`](https://pygraphviz.github.io/documentation/stable/install.html). If you are on a Mac, you make encounter an error failing to build the pygraphviz wheel. To resolve this, you'll need to comment out pygraphviz in requirements.txt, allowing all other packages to install, then follow these [instructions](https://pygraphviz.github.io/documentation/stable/install.html#macos) to resolve.
+
+- [`Elasticsearch`](https://www.elastic.co/docs/deploy-manage/deploy/self-managed/local-development-installation-quickstart). TODO: Add elasticsearch installation and setup instructions. In the meantime, you comment out the `terranova` service in the Docker compose file, and run `docker compose up` to emulate. 
+
+Terranova also uses Python3 (3.11 is specified in the Dockerfile) and Node.js.
+
+### Make
+
+Once the above is completed, all further environment installations and development processes can be done from the Makefile. The Makefile is used to encapsulate all commands that may be needed to run any part of the project. You'll need to run the following in seperate shells.
+
+Start the Elasticsearch service (see prerequisites!)
 ```sh
 docker compose up
 ```
 
-Run the Python API
+Run the Python API (creates venv and installs requirements automatically).
 ```sh
 make run_api
 ```
 
-Run the Node frontend development server
+Run the Node frontend development server (installs Node modules automatically).
 ```sh
 make run_frontend
 ```
 
-These will automatically install all necessary Node modules and Python packages. Both Python API and frontend will reload on change.
-
-Additional useful Makefile targets include `make test` to test both frontend and backend (may have to install Playwright headless browsers), and `make build` to produce the frontend build.
+Additional useful Makefile targets include 
+- `make install`: Install both frontend and backend Python packages and Node modules.
+- `make test`: Test both frontend and backend (may have to install Playwright headless browsers).
+- `make build`: Produce frontend build in `/terranova/frontend/dist`
+- `make clean`: Remove the Python virtual environment and all Node modules.

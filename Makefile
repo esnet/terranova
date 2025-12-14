@@ -16,6 +16,11 @@ endif
 # - Docker/Elasticsearch
 # - Start the backend
 # - Start the frontend development server
+.PHONY: run
+run:
+	@echo "To begin development on Terranova, you'll need to run three seperate processes to start Elasticsearch, Python API, and Node frontend."
+	@echo "To see how, visit the Development section of the project's README.md."
+	exit 1
 
 
 # ----- FRONTEND TARGETS -----
@@ -80,7 +85,7 @@ node_modules: $(FRONTEND_DIR)/node_modules
 # these targets ensure that the venv is created and the Python packages are installed
 $(VENV_DIR):
 	python3 -m venv $(VENV_DIR)
-	$(VENV_DIR)/bin/pip install -r requirements.txt
+	$(VENV_DIR)/bin/pip install -r requirements.txt || (echo "Failed to install requirements.txt, stopping here." && exit 1)
 
 # include venv target as a dependency anywhere it needs to exist
 .PHONY: venv
