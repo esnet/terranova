@@ -57,7 +57,7 @@ opentelemetry-proto==1.23.0
 opentelemetry-sdk==1.23.0
 opentelemetry-semantic-conventions==0.44b0
 opentelemetry-util-http==0.44b0
-orjson==3.8.5
+orjson==3.11.5
 packaging==25.0
 platformdirs==4.5.1
 playwright==1.57.0
