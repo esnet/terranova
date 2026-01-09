@@ -8,7 +8,7 @@
 */
 import { NavBar } from "../components/NavBar";
 import { Outlet } from "react-router-dom";
-import { LeftSideBar } from "../components/LeftSideBar.component";
+import { Sidebar } from "../components/SideBar";
 import { UserDataContextProvider } from "../context/UserDataContextProvider";
 import { FavoritesContextProvider, Favorites } from "../context/FavoritesContextProvider";
 import { LastEditedContextProvider, LastEdited } from "../context/LastEditedContextProvider";
@@ -28,7 +28,7 @@ import { quickhash } from "../data/utils";
 export function Home() {
     let auth = useAuth();
     return (
-        <div key={quickhash(JSON.stringify(window?.BasicUser || ""))}>
+        <div className="w-full h-full" key={quickhash(JSON.stringify(window?.BasicUser || ""))}>
             {auth?.isAuthenticated &&
             auth?.user?.scope &&
             auth.user.scope.indexOf(READ_SCOPE) >= 0 ? (
@@ -39,8 +39,8 @@ export function Home() {
                         <LastEditedContextProvider>
                             <FavoritesContextProvider>
                                 <GlobalLastEditedContextProvider>
-                                    <div className="backdrop bg-tn-layer-1/80 h-auto">
-                                        <LeftSideBar />
+                                    <div className="flex relative w-full h-full">
+                                        <Sidebar />
                                         <Outlet />
                                     </div>
                                 </GlobalLastEditedContextProvider>

@@ -86,11 +86,6 @@ h6 {
     @apply w-3/4 h-3/4 bg-terranova-logo-grey bg-contain bg-no-repeat bg-center opacity-80;
 }
 
-/* -- Left-side Panel -- */
-.toolbar {
-    @apply flex-initial w-full h-12 py-[0.4rem] px-2 sm:px-4 sm:pt-8 sm:pb-12 bg-color-layer-2 sm:w-72 sm:h-full fixed [left:0];
-}
-
 /* -- Main Content Panel -- */
 .main-content {
     @apply min-h-full w-full sm:mx-auto sm:max-w-6xl  p-2 pt-12 sm:pt-2;
@@ -342,53 +337,6 @@ button.warning {
 .dialog-form.tight-form-func td, 
 .dialog-form.tight-form-func tr { @apply py-0 }
 
-/* -- Navigation Links -- */
-.nav-list .nav-head {
-    @apply pb-6;
-}
-.nav-list .nav-head > a {
-    @apply text-2xl font-semibold text-color-text p-1
-}
-
-.nav-list .tab-group {
-    @apply pl-6
-}
-.nav-list .tab-group a,  .nav-list .tab-group .collapsible span {
-    @apply text-teal-700 text-lg font-semibold hover:font-bold hover:text-teal-400 cursor-pointer;
-}
-
-.nav-list .tab-group .sub-group {
-    @apply ml-6
-}
-.nav-list .tab-group .sub-group:hover .icon {
-    @apply stroke-teal-400
-}
-.nav-list .tab-group .sub-group .icon {
-    @apply w-6 h-6 stroke-teal-700 -ml-4 -mt-1;
-}
-.nav-list .tab-group .sub-group:hover a {
-    @apply font-semibold text-teal-400
-}
-.nav-list .tab-group .sub-group a {
-    @apply text-base text-teal-700 font-normal hover:font-semibold hover:text-teal-400
-}
-
-.nav-list .icon {
-    @apply w-9 h-9;
-}
-.nav-list .tab-group:hover .collapsible .icon {
-    @apply stroke-teal-400;
-}
-.nav-list .tab-group:hover span {
-    @apply  font-bold text-teal-400
-}
-
-.nav-list .collapsible .icon.sm {
-    @apply w-5 h-5 p-0 -ml-2 mt-1 mr-1 stroke-teal-700;
-}
-:where(.nav-list .icon){
-    @apply stroke-esnetblack-700;
-}
 
 .message-box {
     @apply bg-esnetblue-700 text-white px-4 py-1 rounded-xl mb-2;
