@@ -23,10 +23,6 @@ p {
     @apply tn-text
 }
 
-a {
-    @apply font-sans font-normal text-color-text-link hover:text-color-text-link-hover focus:text-color-text-link-focused active:text-color-text-link-active;
-}
-
 strong {
     @apply tn-bold;
 }

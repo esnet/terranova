@@ -18,7 +18,7 @@ function ProfileMenu() {
     ];
 
     return (
-        <ESDropdown className="ml-auto" carat mode="both">
+        <ESDropdown className="ml-auto" caret mode="both">
             <ESDropdownAnchor>
                 <ESAvatar
                     srcSet={auth?.user?.profile?.picture ?? "/user.svg"}

@@ -2,11 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import oidcConfig from "./OIDCConfig";
 import { AuthenticationProvider } from "./AuthService";
 import { AuthProvider as OIDCAuthProvider } from "react-oidc-context";
-
-import "@esnet/packets-ui/style.css";
-
 import { Protected } from "./components/ProtectedRoute.component";
-
 import { HomePageComponent } from "./pages/Home.page";
 import { MapEditorPageComponent } from "./pages/MapEditor.page";
 import { NodeTemplateEditorPageComponent } from "./pages/NodeTemplateEditor.page";
