@@ -19,3 +19,18 @@ def test_navbar(page, login):
     page.get_by_role("img", name="avatar").click()
     page.get_by_role("link", name="Sign out").click()
     expect(page.get_by_text("You have been logged out")).to_be_visible()
+
+
+def test_sidebar(page, login):
+    # some basic expectations of what should always be on sidebar
+    expect(page.get_by_text("Tools")).to_be_visible()
+    expect(page.get_by_text("Libraries")).to_be_visible()
+    expect(page.get_by_text("Resources")).to_be_visible()
+
+
+def test_sidebar_toggle(page, login):
+    expect(page.get_by_text("Tools")).to_be_visible()
+    page.get_by_role("button", name="Close Sidebar").click()
+    expect(page.get_by_text("Tools")).not_to_be_visible()
+    page.get_by_role("button", name="Open Sidebar").click()
+    expect(page.get_by_text("Tools")).to_be_visible()
