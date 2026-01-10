@@ -10,7 +10,7 @@
         "build": "vite build --mode=production && pnpm run build-static-overwrites",
         "build-test-static-overwrites": "echo 'copy static files to dist-test...' && rm -Rf dist-test/static && mkdir dist-test/static && cp node_modules/esnet-networkmap-panel/src/components/lib/* dist-test/static && cp static/settings.js dist-test/static/settings.js",
         "build-test": "vite build -c vite.config.test.ts --mode=production && pnpm run build-test-static-overwrites",
-        "generate-client": "@hey-api/openapi-ts -i http://localhost:8000/openapi.json -o ../client/typescript"
+        "generate-client": "npx @hey-api/openapi-ts -i http://localhost:8000/openapi.json -o ../client/typescript"
     },
     "dependencies": {
         "@esnet/esnet-tokens": "file:../../../packets-terranova/design-tokens",

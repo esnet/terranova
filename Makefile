@@ -32,6 +32,13 @@ run_frontend: node_modules
 build: node_modules
 	@cd ${FRONTEND_DIR} && pnpm run build
 
+# generate the frontend TypeScript API client and types using openapi-ts
+.PHONY: generate-api-client
+generate-api-client: node_modules venv
+	@curl --silent --fail http://localhost:8000/openapi.json > /dev/null || \
+		(echo "API needs to be running to generate TypeScript API types" && exit 1)
+	@cd ${FRONTEND_DIR} && pnpm run generate-client
+
 
 # ----- BACKEND TARGETS -----
 .PHONY: run_api
