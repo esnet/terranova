@@ -8,7 +8,7 @@ def test_has_title(page):
 
 def test_navbar(page, login):
     page.get_by_role("img", name="avatar").hover()
-    settings_link = page.get_by_role("navigation").get_by_role("link", name="Settings")
+    settings_link = page.get_by_role("navigation").get_by_role("link", name="Settings").first
     expect(settings_link).to_be_visible()
     expect(settings_link).to_have_attribute("href", "/settings")
 
@@ -17,7 +17,7 @@ def test_navbar(page, login):
     expect(home_link).to_have_attribute("href", "/")
 
     page.get_by_role("img", name="avatar").click()
-    page.get_by_role("link", name="Sign out").click()
+    page.get_by_role("link", name="Sign out").press("Enter")
     expect(page.get_by_text("You have been logged out")).to_be_visible()
 
 

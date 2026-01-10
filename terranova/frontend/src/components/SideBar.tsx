@@ -1,27 +1,15 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { MenuList } from "./Menu.component";
+import { useContext, useState, useEffect } from "react";
 import { DataController } from "../DataController";
 import { LastEdited } from "../context/LastEditedContextProvider";
 import { GlobalLastEdited } from "../context/GlobalLastEditedContextProvider";
 import { SIDEBAR_STRUCTURE, SIDEBAR_STRUCTURE_TEMPLATES_ITEM } from "../data/constants";
-import { DataControllerContextType, DataControllerType } from "../types/mapeditor";
+import { DataControllerType } from "../types/mapeditor";
 import { API_URL, PUBLISH_SCOPE, ADMIN_SCOPE } from "../../static/settings";
 import { setAuthHeaders } from "../DataController";
-import { Icon } from "./Icon.component";
 import { useAuth } from "../AuthService";
-import { ESIcon, ESIconButton, ESListTreeView } from "@esnet/packets-ui";
+import { ESIconButton } from "@esnet/packets-ui";
 import { _Map as Map, Dataset, Template } from "../../../client/typescript";
-import { FileText, FolderOpen, SettingsIcon, ToolCase } from "lucide-react";
-
-// TO BE REFACTORED
-// step 1: fgure out what this stuf even does
-// step 2: simplify logic
-// step 3: reduce CSS
-// step 4: trim the fat
-
-// ... figure out how toimport packets CSS file.. specifically the typography...
-// import it into the CSS file (same as tailwind config file), or the main App.tsx
-// will need to update the docs
+import { FileText, FolderOpen, ToolCase } from "lucide-react";
 
 //////// TO BE PORTED TO PACKETS SYSTEM
 type ESNestedListProps = {
@@ -32,7 +20,7 @@ type ESNestedListProps = {
 };
 function ESNestedList({ header, children }: ESNestedListProps) {
     return (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
             {header && <div>{header}</div>}
             <ul className="pl-4">{children}</ul>
         </div>
@@ -45,10 +33,9 @@ type ESNestedListItemProps = {
     noDisc?: boolean;
 };
 function ESNestedListItem({ children, noDisc = false }: ESNestedListItemProps) {
-    return <li className={`!mt-0 ${noDisc && "list-none"}`}>{children}</li>;
+    return <li className={`${noDisc && "list-none"} mt-0 mb-2`}>{children}</li>;
 }
 //////// END PACKETS PORT
-
 
 type SidebarMenuListProps = {
     header: string;
@@ -60,7 +47,7 @@ function SidebarMenuList({ header, icon, children }: SidebarMenuListProps) {
     return (
         <ESNestedList
             header={
-                <h5 className="flex items-center pb-0 gap-1 !my-0 w-full">
+                <h5 className="flex items-center pb-0 gap-2 my-0 w-full">
                     {icon}
                     {header}
                 </h5>

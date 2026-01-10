@@ -62,7 +62,7 @@ function NavigationItems({ navigation }: NavigationProps) {
                 <h6 key={item.name}>
                     <a
                         href={item.href}
-                        className="light:text-light-copy-alt dark:text-dark-copy-alt"
+                        className="text-light-copyAlt dark:text-dark-copyAlt text-2xl no-underline"
                         aria-current={item.current ? "page" : undefined}
                     >
                         {item.name}
@@ -77,7 +77,7 @@ export function NavBar() {
     const navigation = [{ name: "Terranova", href: "/", current: false }];
 
     return (
-        <nav className="flex items-center gap-x-4 p-2 light:bg-light-primary dark:bg-dark-primary">
+        <nav className="flex items-center gap-x-4 p-2 bg-light-primary dark:bg-dark-primary">
             <Logo />
             <NavigationItems navigation={navigation} />
             <ProfileMenu />
