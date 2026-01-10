@@ -13,8 +13,8 @@
         "generate-client": "@hey-api/openapi-ts -i http://localhost:8000/openapi.json -o ../client/typescript"
     },
     "dependencies": {
-        "@esnet/esnet-tokens": "file:../../../packets-terranova/design-tokens",
-        "@esnet/packets-ui": "file:../../../packets-terranova/ui",
+        "@esnet/esnet-tokens": "file:../../../esnet-esnet-tokens-1.1.1.tgz",
+        "@esnet/packets-ui": "file:../../../esnet-packets-ui-0.8.0.tgz",
         "esnet-networkmap-panel": "^3.0.0-beta5",
         "jwt-decode": "^3.1.2",
         "keycloak-js": "^22.0.0",
