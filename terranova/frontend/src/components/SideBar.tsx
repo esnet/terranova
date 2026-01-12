@@ -1,14 +1,9 @@
 import { useContext, useState, useEffect } from "react";
-import { DataController } from "../DataController";
 import { LastEdited } from "../context/LastEditedContextProvider";
 import { GlobalLastEdited } from "../context/GlobalLastEditedContextProvider";
-import { SIDEBAR_STRUCTURE, SIDEBAR_STRUCTURE_TEMPLATES_ITEM } from "../data/constants";
-import { DataControllerType } from "../types/mapeditor";
-import { API_URL, PUBLISH_SCOPE, ADMIN_SCOPE } from "../../static/settings";
-import { setAuthHeaders } from "../DataController";
+import { PUBLISH_SCOPE, ADMIN_SCOPE } from "../../static/settings";
 import { useAuth } from "../AuthService";
 import { ESIconButton } from "@esnet/packets-ui";
-import { _Map as Map, Dataset, Template } from "../../../client/typescript";
 import { FileText, FolderOpen, ToolCase } from "lucide-react";
 
 //////// TO BE PORTED TO PACKETS SYSTEM
@@ -60,197 +55,68 @@ function SidebarMenuList({ header, icon, children }: SidebarMenuListProps) {
 
 export function Sidebar() {
     let auth = useAuth();
-
-    const [showTemplates, setShowTemplates] = useState<boolean>(false);
-    const [showSettings, setShowSettings] = useState<boolean>(false);
-
-    useEffect(() => {
-        if (!auth?.user?.scope) return;
-
-        // I don't understand the structure of the scope string, but I can't help but feel that doing a .in() is better
-        setShowSettings(auth.user.scope.indexOf(PUBLISH_SCOPE) > 0);
-        setShowTemplates(auth.user.scope.indexOf(ADMIN_SCOPE) > 0);
-    }, [auth?.user?.scope]);
-
-    let [navigationItems, setNavigationItems] = useState(
-        JSON.parse(JSON.stringify(SIDEBAR_STRUCTURE))
-    );
+    const showSettings = auth?.user?.scope?.includes(PUBLISH_SCOPE);
+    const showTemplates = auth?.user?.scope?.includes(ADMIN_SCOPE);
 
     let lastEdited = useContext(LastEdited);
     let lastGlobal = useContext(GlobalLastEdited);
 
-    let [maps, setMaps] = useState<Map[]>([]);
-    let [datasets, setDatasets] = useState<Dataset[]>([]);
-    let [templates, setTemplates] = useState<Template[]>([]);
-
-    const [controller] = useState<DataControllerType>(
-        new DataController(null, navigationItems, setNavigationItems)
-    ) as any;
-
-    // move to util file or outside of function
-    const sortDatesDesc = (a: any, b: any) => {
-        if (a.lastUpdatedOn > b.lastUpdatedOn) {
-            return -1;
-        }
-        if (a.lastUpdatedOn == b.lastUpdatedOn) {
-            return 0;
-        }
-        if (a.lastUpdatedOn < b.lastUpdatedOn) {
-            return 1;
-        }
-    };
-
-    // construct a list of components for a specific itemType (dataset, sidebar, templates)
-    const buildSidebar = (items: any[], itemType: string, itemId: string, icon: string) => {
-        let result = [];
-        if (items.length !== 0) {
-            for (let item of items) {
-                let data = {
-                    id: item[itemId],
-                    text: item.name,
-                    href: `/${itemType}/${item[itemId]}`,
-                    className: "sub-group",
-                    collapsible: false,
-                    current: false,
-                    icon: icon,
-                };
-                result.push(data);
-            }
-        }
-        return result;
-    };
-
-    const fetchDetails = async (dataType: string, idType: string) => {
-        // getString will be a string like
-        // mapId=a&mapId=b&mapId=c
-        // @ts-ignore
-        let getString = lastEdited?.[dataType]?.map((id: any) => `${idType}=${id}`).join("&");
-
-        let apiUrl = `${API_URL}/${dataType}/?${getString}`;
-        let headers = {
-            "Content-Type": "application/json",
-        } as any;
-        headers = setAuthHeaders(headers);
-        let response = await fetch(apiUrl, { headers: headers, method: "GET" });
-        console.log("fetched details...", response);
-        if (response.ok) {
-            let output = await response.json();
-            // @ts-ignore
-            let order = lastEdited?.[dataType];
-            output.sort(function (a: any, b: any) {
-                var A = a["mapId"],
-                    B = b["mapId"];
-                if (order.indexOf(A) < order.indexOf(B)) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            });
-            if (dataType === "maps") {
-                maps = output;
-                setMaps([...maps]);
-            } else if (dataType === "datasets") {
-                datasets = output;
-                setDatasets([...datasets]);
-            } else if (dataType === "templates") {
-                templates = output;
-                setTemplates([...templates]);
-            }
-        }
-    };
-
-    useEffect(() => {
-        if (lastEdited?.maps?.length > 0) {
-            fetchDetails("maps", "mapId");
-        }
-
-        if (maps.length < 3 && lastGlobal?.maps) {
-            let remainingItems = 3 - maps.length;
-            // Only include those from lastGlobal which are not present in templates
-            let remainingMaps = lastGlobal.maps
-                ?.sort(sortDatesDesc)
-                .slice(0, remainingItems)
-                .filter((obj2: any) => !maps.some((obj1) => obj1["mapId"] === obj2["mapId"]));
-            maps = maps.concat(remainingMaps);
-            setMaps(maps);
-        }
-
-        if (lastEdited?.datasets?.length > 0) {
-            fetchDetails("datasets", "datasetId");
-        }
-
-        if (datasets.length < 3 && lastGlobal?.datasets) {
-            let remainingItems = 3 - datasets.length;
-            // Only include those from lastGlobal which are not present in templates
-            let remainingDatasets = lastGlobal.datasets
-                ?.sort(sortDatesDesc)
-                .slice(0, remainingItems)
-                .filter(
-                    (obj2: any) => !datasets.some((obj1) => obj1["datasetId"] === obj2["datasetId"])
-                );
-            datasets = datasets.concat(remainingDatasets);
-            setDatasets(datasets);
-        }
-
-        if (lastEdited?.templates?.length > 0) {
-            fetchDetails("templates", "templateId");
-        }
-
-        if (templates.length < 3 && lastGlobal?.templates) {
-            let remainingItems = 3 - templates.length;
-            // Only include those from lastGlobal which are not present in templates
-            let remainingTemplates = lastGlobal.templates
-                ?.sort(sortDatesDesc)
-                .slice(0, remainingItems)
-                .filter(
-                    (obj2: any) =>
-                        !templates.some((obj1) => obj1["templateId"] === obj2["templateId"])
-                );
-            templates = templates.concat(remainingTemplates);
-            setTemplates(templates);
-        }
-        console.log("hello", lastGlobal);
-
-        // Build navigation items
-        let datasetSubItems = buildSidebar(datasets, "dataset", "datasetId", "lucide-database");
-        let mapSubItems = buildSidebar(maps, "map", "mapId", "lucide-map");
-
-        navigationItems.subItems[1].subItems[0].subItems = datasetSubItems;
-        navigationItems.subItems[1].subItems[1].subItems = mapSubItems;
-
-        if (showTemplates) {
-            let templateSubItems = buildSidebar(
-                templates,
-                "template",
-                "templateId",
-                "lucide-map-pin"
-            );
-            if (navigationItems.subItems[1].subItems.length <= 2) {
-                navigationItems.subItems[1].subItems.push(SIDEBAR_STRUCTURE_TEMPLATES_ITEM);
-            }
-            navigationItems.subItems[1].subItems[2].subItems = templateSubItems;
-        }
-
-        // Update navigation items
-        controller.setInstance({ ...navigationItems });
-    }, [
-        lastEdited?.maps,
-        lastEdited?.datasets,
-        lastEdited?.templates,
-        lastGlobal?.maps,
-        lastGlobal?.datasets,
-        lastGlobal?.templates,
-    ]);
+    let [maps, setMaps] = useState<any[]>([]);
+    let [datasets, setDatasets] = useState<any[]>([]);
+    let [templates, setTemplates] = useState<any[]>([]);
 
     // TODO: move this to some persistent state store
     const [open, setOpen] = useState(true);
     const toggleMenu = () => setOpen((prev) => !prev);
 
+    useEffect(() => {
+        // context is null, skip for now (perhaps render a skeleton)
+        if (!lastEdited || !lastGlobal) return;
+
+        type LastUpdatedOn = { lastUpdatedOn: string };
+        const sortOnUpdateDate = (a: LastUpdatedOn, b: LastUpdatedOn) =>
+            b.lastUpdatedOn.localeCompare(a.lastUpdatedOn);
+
+        // show the 3 last edited items, from either local or global
+        // take the total number of locals, and if that's < 3, add in globals until we get 3 (or there are no globals)
+        // the end result should have recently edited locals in order, then recently edited globals in order
+        const getSortedData = (dataType: "datasets" | "maps" | "templates") => {
+            // use a map to guarantee unique data objects (id: Data)
+            const data = new Map();
+            // a way to map data to their ID's (more clear than splicing and appending)
+            let idFields = {
+                maps: "mapId",
+                datasets: "datasetId",
+                templates: "templateId",
+            };
+            // @ts-ignore
+            lastEdited[dataType].forEach((item: any) => data.set(item[idFields[dataType]], item));
+            const lastEditedSorted = Array.from(data.values()).sort(sortOnUpdateDate);
+            // found enough last edited, return as is
+            if (lastEditedSorted.length >= 3) {
+                return lastEditedSorted.slice(0, 3);
+            }
+
+            // not enough local last edited maps, must add in globals
+            const extendedData = new Map();
+            lastGlobal[dataType]?.forEach((item: any) => {
+                // filter out any data that has already been seen in local last edited
+                if (data.has(item.id)) return;
+                extendedData.set(item[idFields[dataType]], item);
+            });
+            const globalEditedSorted = Array.from(extendedData.values()).sort(sortOnUpdateDate);
+            return lastEditedSorted.concat(globalEditedSorted).slice(0, 3);
+        };
+
+        setMaps(getSortedData("maps"));
+        setDatasets(getSortedData("datasets"));
+        setTemplates(getSortedData("templates"));
+    }, [lastEdited, lastGlobal]);
+
     return (
         <div
-            className={`fixed sm:relative ${
-                open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto" : "w-16"
-            } h-full p-4 flex flex-col gap-2 sm:bg-light-surface_1`}
+            className={`fixed sm:relativeh-full p-4 flex flex-col gap-2 sm:bg-light-surface_1
+                 ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto" : "w-16"}`}
         >
             <div className={"absolute right-3 top-3"}>
                 <ESIconButton
@@ -264,7 +130,7 @@ export function Sidebar() {
                 />
             </div>
             {open && (
-                <nav id="sidebar" className={`overflow-hidden text-nowrap`}>
+                <nav id="sidebar" className="flex flex-col gap-2 text-nowrap">
                     <SidebarMenuList header="Tools" icon={<ToolCase />}>
                         <ESNestedListItem noDisc>
                             <a href="/dataset/new">Create New Layer</a>
@@ -279,17 +145,19 @@ export function Sidebar() {
                     <SidebarMenuList header="Libraries" icon={<FolderOpen />}>
                         <ESNestedList header={<a href="/library/datasets">Datasets</a>}>
                             {datasets.map((dataset) => (
-                                <ESNestedListItem>{dataset.name}</ESNestedListItem>
+                                <ESNestedListItem key={dataset.datasetId}>
+                                    {dataset.name}
+                                </ESNestedListItem>
                             ))}
                         </ESNestedList>
                         <ESNestedList header={<a href="/library/maps">Maps</a>}>
                             {maps.map((map) => (
-                                <ESNestedListItem>{map.name}</ESNestedListItem>
+                                <ESNestedListItem key={map.mapId}>{map.name}</ESNestedListItem>
                             ))}
                         </ESNestedList>
                         <ESNestedList header={<a href="/library/templates">Node Templates</a>}>
                             {templates.map((template) => (
-                                <ESNestedListItem>
+                                <ESNestedListItem key={template.templateId}>
                                     <a href={`/template/${template.templateId}`}>{template.name}</a>
                                 </ESNestedListItem>
                             ))}
