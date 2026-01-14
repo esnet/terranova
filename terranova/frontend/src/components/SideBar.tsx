@@ -6,53 +6,6 @@ import { useAuth } from "../AuthService";
 import { ESIconButton } from "@esnet/packets-ui";
 import { FileText, FolderOpen, ToolCase } from "lucide-react";
 
-//////// TO BE PORTED TO PACKETS SYSTEM
-type ESNestedListProps = {
-    /** List header, recommended but not necessary to have. */
-    header?: React.ReactNode;
-    /** ESNestedListItem or ESNestedList (for further nesting) children. */
-    children: React.ReactNode;
-};
-function ESNestedList({ header, children }: ESNestedListProps) {
-    return (
-        <div className="flex flex-col gap-2">
-            {header && <div>{header}</div>}
-            <ul className="pl-4">{children}</ul>
-        </div>
-    );
-}
-type ESNestedListItemProps = {
-    /** Nested list item content, typically text, wrapped in a `<li>` tag. */
-    children: React.ReactNode;
-    /** Whether to show a bullet point. */
-    noDisc?: boolean;
-};
-function ESNestedListItem({ children, noDisc = false }: ESNestedListItemProps) {
-    return <li className={`${noDisc && "list-none"} mt-0 mb-2`}>{children}</li>;
-}
-//////// END PACKETS PORT
-
-type SidebarMenuListProps = {
-    header: string;
-    icon?: React.ReactElement;
-    children: React.ReactNode;
-};
-// Custom wrapper around ESNestedList to apply specific header styling and icon content
-function SidebarMenuList({ header, icon, children }: SidebarMenuListProps) {
-    return (
-        <ESNestedList
-            header={
-                <h5 className="flex items-center pb-0 gap-2 my-0 w-full">
-                    {icon}
-                    {header}
-                </h5>
-            }
-        >
-            {children}
-        </ESNestedList>
-    );
-}
-
 export function Sidebar() {
     let auth = useAuth();
     const showSettings = auth?.user?.scope?.includes(PUBLISH_SCOPE);
@@ -115,10 +68,10 @@ export function Sidebar() {
 
     return (
         <div
-            className={`fixed sm:relativeh-full p-4 flex flex-col gap-2 sm:bg-light-surface_1
+            className={`fixed sm:relative h-full p-4 flex flex-col gap-2 sm:bg-light-surface_1
                  ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto" : "w-16"}`}
         >
-            <div className={"absolute right-3 top-3"}>
+            <div className={"absolute right-3.5 top-3"}>
                 <ESIconButton
                     onClick={toggleMenu}
                     variant="tertiary"
@@ -130,51 +83,71 @@ export function Sidebar() {
                 />
             </div>
             {open && (
-                <nav id="sidebar" className="flex flex-col gap-2 text-nowrap">
-                    <SidebarMenuList header="Tools" icon={<ToolCase />}>
-                        <ESNestedListItem noDisc>
+                <nav
+                    id="sidebar"
+                    className="flex flex-col text-nowrap [&_h5,h6,ul,li]:mb-2 [&>ul]:mb-8 [&_h6>a,&>ul>li>a]:no-underline *:list-none"
+                >
+                    <h5 className="flex gap-1 items-center">
+                        <ToolCase /> Tools
+                    </h5>
+                    <ul>
+                        <li>
                             <a href="/dataset/new">Create New Layer</a>
-                        </ESNestedListItem>
-                        <ESNestedListItem noDisc>
+                        </li>
+                        <li>
                             <a href="/map/new">Create New Map</a>
-                        </ESNestedListItem>
-                        <ESNestedListItem noDisc>
+                        </li>
+                        <li>
                             <a href="/template/new">Node SVG Builder</a>
-                        </ESNestedListItem>
-                    </SidebarMenuList>
-                    <SidebarMenuList header="Libraries" icon={<FolderOpen />}>
-                        <ESNestedList header={<a href="/library/datasets">Datasets</a>}>
+                        </li>
+                    </ul>
+                    <h5 className="flex gap-1 items-center">
+                        <FolderOpen /> Libraries
+                    </h5>
+                    <ul>
+                        <h6>
+                            <a href="/library/datasets">Datasets</a>
+                        </h6>
+                        <ul>
                             {datasets.map((dataset) => (
-                                <ESNestedListItem key={dataset.datasetId}>
-                                    {dataset.name}
-                                </ESNestedListItem>
+                                <li key={dataset.datasetId}>{dataset.name}</li>
                             ))}
-                        </ESNestedList>
-                        <ESNestedList header={<a href="/library/maps">Maps</a>}>
+                        </ul>
+                        <h6>
+                            <a href="/library/maps">Maps</a>
+                        </h6>
+                        <ul>
                             {maps.map((map) => (
-                                <ESNestedListItem key={map.mapId}>{map.name}</ESNestedListItem>
+                                <li key={map.mapId}>{map.name}</li>
                             ))}
-                        </ESNestedList>
-                        <ESNestedList header={<a href="/library/templates">Node Templates</a>}>
+                        </ul>
+                        <h6>
+                            <a href="/library/templates">Node Templates</a>
+                        </h6>
+                        <ul>
                             {templates.map((template) => (
-                                <ESNestedListItem key={template.templateId}>
+                                <li key={template.templateId}>
                                     <a href={`/template/${template.templateId}`}>{template.name}</a>
-                                </ESNestedListItem>
+                                </li>
                             ))}
-                        </ESNestedList>
-                    </SidebarMenuList>
-                    <SidebarMenuList header="Resources" icon={<FileText />}>
-                        <ESNestedListItem noDisc>
+                        </ul>
+                    </ul>
+                    <h5 className="flex gap-1 items-center">
+                        <FileText />
+                        Resources
+                    </h5>
+                    <ul>
+                        <li>
                             <a href="https://esnet.atlassian.net/wiki/spaces/MAAG/pages/3186196481/Terranova+Documentation">
                                 Documentation
                             </a>
-                        </ESNestedListItem>
+                        </li>
                         {showSettings && (
-                            <ESNestedListItem noDisc>
+                            <li>
                                 <a href="/settings">Settings</a>
-                            </ESNestedListItem>
+                            </li>
                         )}
-                    </SidebarMenuList>
+                    </ul>
                 </nav>
             )}
         </div>
