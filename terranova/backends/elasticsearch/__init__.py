@@ -114,7 +114,7 @@ class ElasticSearchBackend:
         response = self.create(
             ELASTIC_INDICES["userdata"]["write"],
             id=user.username,
-            doc=UserData(**to_create).dict(),
+            doc=UserData(**to_create).model_dump(),
         )
         output = {"result": response.get("result"), "object": to_create}
         return output
@@ -134,7 +134,7 @@ class ElasticSearchBackend:
         response = self.update(
             ELASTIC_INDICES["userdata"]["write"],
             id=user.username,
-            doc=UserData(**to_update).dict(),
+            doc=UserData(**to_update).model_dump(),
         )
         output = {"result": response.get("result"), "object": to_update}
         return output
@@ -196,7 +196,7 @@ class ElasticSearchBackend:
             "lastUpdatedOn": datetime.now().isoformat(),
         }
         response = self.create(
-            ELASTIC_INDICES["map"]["write"], id=map_id, doc=Map(**to_create).dict()
+            ELASTIC_INDICES["map"]["write"], id=map_id, doc=Map(**to_create).model_dump()
         )
         return {"result": response.get("result"), "object": to_create}
 
@@ -219,7 +219,7 @@ class ElasticSearchBackend:
             "overrides": map_revision.overrides,
         }
         response = self.create(
-            ELASTIC_INDICES["map"]["write"], id=self.generate_id(), doc=Map(**new_map).dict()
+            ELASTIC_INDICES["map"]["write"], id=self.generate_id(), doc=Map(**new_map).model_dump()
         )
         output = {"result": response.get("result"), "object": new_map}
         return output
@@ -238,7 +238,7 @@ class ElasticSearchBackend:
         new_map["version"] = new_map["version"] + 1
 
         response = self.create(
-            ELASTIC_INDICES["map"]["write"], id=self.generate_id(), doc=Map(**new_map).dict()
+            ELASTIC_INDICES["map"]["write"], id=self.generate_id(), doc=Map(**new_map).model_dump()
         )
         return {"result": response.get("result"), "object": new_map}
 
@@ -302,7 +302,7 @@ class ElasticSearchBackend:
         response = self.create(
             ELASTIC_INDICES["dataset"]["write"],
             id=self.generate_id(),
-            doc=Dataset(**new_dataset).dict(),
+            doc=Dataset(**new_dataset).model_dump(),
         )
         output = {"result": response.get("result"), "object": new_dataset}
         return output
@@ -318,7 +318,7 @@ class ElasticSearchBackend:
             "lastUpdatedOn": datetime.now().isoformat(),
         }
         response = self.create(
-            ELASTIC_INDICES["dataset"]["write"], id=dataset_id, doc=Dataset(**dataset).dict()
+            ELASTIC_INDICES["dataset"]["write"], id=dataset_id, doc=Dataset(**dataset).model_dump()
         )
         output = {"result": response.get("result"), "object": dataset}
         return output
@@ -366,7 +366,7 @@ class ElasticSearchBackend:
             "lastUpdatedOn": datetime.now().isoformat(),
         }
         response = self.create(
-            ELASTIC_INDICES["template"]["write"], id=template_id, doc=Template(**template).dict()
+            ELASTIC_INDICES["template"]["write"], id=template_id, doc=Template(**template).model_dump()
         )
         output = {"result": response.get("result"), "object": template}
         return output
@@ -384,7 +384,7 @@ class ElasticSearchBackend:
         response = self.create(
             ELASTIC_INDICES["template"]["write"],
             id=self.generate_id(),
-            doc=Template(**new_template).dict(),
+            doc=Template(**new_template).model_dump(),
         )
         output = {"result": response.get("result"), "object": new_template}
         return output

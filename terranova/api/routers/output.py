@@ -300,7 +300,7 @@ def _normalize_map(map_object: Map | MapRevision, user: User = None) -> None:
                 match_data[k] = v
             match_data["user"] = user
             topology_json = dataset_output(**match_data)
-            layer.mapjson = topology_json.dict()
+            layer.mapjson = topology_json.model_dump()
 
             override = map_overrides.get(dataset_id)
             if override:

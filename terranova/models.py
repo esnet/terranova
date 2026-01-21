@@ -1,6 +1,7 @@
 from typing import Dict, List, Any, Optional
 from fastapi import Query
-from pydantic import BaseModel, conlist, validator
+from pydantic import BaseModel, Field, field_validator
+from typing import Annotated
 
 from enum import Enum
 from dataclasses import make_dataclass, dataclass
@@ -128,9 +129,10 @@ class OverrideRule(BaseModel):
     state: Dict | None
     render: bool | None
 
-    @validator("state", always=True)
-    def validate_state(cls, v, values):
-        oper = values.get("operation")
+    @field_validator("state", mode="after")
+    @classmethod
+    def validate_state(cls, v, info):
+        oper = info.data.get("operation")
         if oper != OverrideType.delete and not v:
             raise ValueError("state cannot be empty unless operation is delete")
         return v
@@ -162,7 +164,7 @@ class MapRevision(BaseModel):
 
 class DatasetQuery(BaseModel):
     endpoint: str
-    filters: conlist(QueryFilter, min_items=0)
+    filters: Annotated[List[QueryFilter], Field(min_length=0)]
     node_deduplication_field: str | None  # default is "location_name"
     node_group_criteria: List[str] | None  # default is None (do not group)
     node_group_layout: str | None  # default is None (do not group)
@@ -237,8 +239,8 @@ class PasswordReset(BaseModel):
     password: str
 
 
-MapFieldEnum = Enum("MapFieldEnum", {k: k for k in Map.__fields__.keys()})
-DatasetFieldEnum = Enum("DatasetFieldEnum", {k: k for k in Dataset.__fields__.keys()})
+MapFieldEnum = Enum("MapFieldEnum", {k: k for k in Map.model_fields.keys()})
+DatasetFieldEnum = Enum("DatasetFieldEnum", {k: k for k in Dataset.model_fields.keys()})
 
 # For specifying versions, we want to limit to specifiying an integer representing an
 # individual version. Alternatively they can specify the special string "all" for getting
@@ -269,7 +271,7 @@ TerranovaVersion = make_dataclass(
 )
 
 
-TemplateFieldEnum = Enum("TemplateFieldEnum", {k: k for k in Template.__fields__.keys()})
+TemplateFieldEnum = Enum("TemplateFieldEnum", {k: k for k in Template.model_fields.keys()})
 
 
 @dataclass
