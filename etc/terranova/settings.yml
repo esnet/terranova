@@ -1,5 +1,13 @@
 environment: dev
 
+# Storage backend configuration
+# Default: sqlite (lightweight, no external dependencies)
+# Alternative: elasticsearch (production-grade, scalable)
+storage:
+  backend: sqlite
+  sqlite_path: ./terranova.db
+
+# Elasticsearch configuration (only required if storage.backend is set to "elasticsearch")
 elastic:
   username: elastic
   password: DkIedPPSCb

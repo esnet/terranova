@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException, Response, Securi
 from terranova.settings import TOKEN_SCOPES
 from fastapi_versioning import version
 from terranova.backends.auth import User, auth_check
-from terranova.backends.elasticsearch import backend as elastic_backend
+from terranova.backends.storage import backend as storage_backend
 from terranova.backends.datasources import datasources, NamedDatasource, FilterTypes
 from terranova.logging import logger
 from typing import List, Dict, Any
@@ -60,7 +60,7 @@ def dataset_output(
 
     use_snapshot = datatype == TerranovaDatatype.snapshot
 
-    dataset_json = elastic_backend.get_datasets(dataset_id=dataset_id, version=version)
+    dataset_json = storage_backend.get_datasets(dataset_id=dataset_id, version=version)
     if len(dataset_json) < 1:
         version_suffix = f" and version = {version}" if version is not None else ""
         raise HTTPException(
@@ -195,7 +195,7 @@ def get_map_output(
     filters: TypeFilters = Depends(),
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
 ) -> Map:
-    map_json = elastic_backend.get_maps(map_id=mapId, version=version)
+    map_json = storage_backend.get_maps(map_id=mapId, version=version)
     if len(map_json) < 1:
         raise HTTPException(
             status_code=404,
@@ -222,7 +222,7 @@ def output_public_map(
     version: TerranovaVersion = Depends(),
     filters: TypeFilters = Depends(),
 ):
-    map_json = elastic_backend.get_public_maps(map_id=mapId, version=version)
+    map_json = storage_backend.get_public_maps(map_id=mapId, version=version)
     if len(map_json) < 1:
         raise HTTPException(
             status_code=404,
@@ -244,7 +244,7 @@ def output_typed_public_map(
     output_type: TerranovaOutputType | None = None,
     filters: TypeFilters = Depends(),
 ):
-    map_json = elastic_backend.get_public_maps(map_id=mapId, version=version)
+    map_json = storage_backend.get_public_maps(map_id=mapId, version=version)
     if len(map_json) < 1:
         raise HTTPException(
             status_code=404,
@@ -317,7 +317,7 @@ def _get_template(template_id: str, geographic=True) -> str:
             return DEFAULT_NODE_TEMPLATES["GEOGRAPHIC"]
         else:
             return DEFAULT_NODE_TEMPLATES["LOGICAL"]
-    response = elastic_backend.get_templates(template_id=template_id)
+    response = storage_backend.get_templates(template_id=template_id)
     if len(response) < 1:
         raise HTTPException(
             status_code=404, detail="Requested template with %s not found" % template_id
