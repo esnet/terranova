@@ -59,7 +59,7 @@ function NavigationItems({ navigation }: NavigationProps) {
     return (
         <div className="flex gap-8 items-center">
             {navigation?.map((item) => (
-                <h6 key={item.name}>
+                <h6 key={item.name} className="mb-0">
                     <a
                         href={item.href}
                         className="text-light-copyAlt dark:text-dark-copyAlt text-2xl no-underline"
