@@ -29,7 +29,7 @@ def setup_server_processes(request):
     # overwrite the ephemeral JS settings file
     shutil.copyfile(js_settings_source_path, js_settings_target_path)
 
-    frontend_server = "%s/frontend_server.py" % parent_dir
+    frontend_server = "%s/utils/frontend_server.py" % parent_dir
     # spawn a simple http server from the frontend docroot, serving the pre-compiled frontend files
     js_proc = subprocess.Popen(
         [venv_python_path, frontend_server], cwd=frontend_docroot, universal_newlines=True
