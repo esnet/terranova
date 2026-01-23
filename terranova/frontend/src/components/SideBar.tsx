@@ -5,6 +5,7 @@ import { PUBLISH_SCOPE, ADMIN_SCOPE } from "../../static/settings";
 import { useAuth } from "../AuthService";
 import { ESIconButton } from "@esnet/packets-ui";
 import { FileText, FolderOpen, ToolCase } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function Sidebar() {
     let auth = useAuth();
@@ -92,13 +93,13 @@ export function Sidebar() {
                     </h5>
                     <ul>
                         <li>
-                            <a href="/dataset/new">Create New Layer</a>
+                            <Link to="/dataset/new">Create New Layer</Link>
                         </li>
                         <li>
-                            <a href="/map/new">Create New Map</a>
+                            <Link to="/map/new">Create New Map</Link>
                         </li>
                         <li>
-                            <a href="/template/new">Node SVG Builder</a>
+                            <Link to="/template/new">Node SVG Builder</Link>
                         </li>
                     </ul>
                     <h5 className="flex gap-1 items-center">
@@ -106,31 +107,41 @@ export function Sidebar() {
                     </h5>
                     <ul>
                         <h6>
-                            <a href="/library/datasets">Datasets</a>
+                            <Link to="/library/datasets">Datasets</Link>
                         </h6>
                         <ul>
                             {datasets.map((dataset) => (
-                                <li key={dataset.datasetId}>{dataset.name}</li>
-                            ))}
-                        </ul>
-                        <h6>
-                            <a href="/library/maps">Maps</a>
-                        </h6>
-                        <ul>
-                            {maps.map((map) => (
-                                <li key={map.mapId}>{map.name}</li>
-                            ))}
-                        </ul>
-                        <h6>
-                            <a href="/library/templates">Node Templates</a>
-                        </h6>
-                        <ul>
-                            {templates.map((template) => (
-                                <li key={template.templateId}>
-                                    <a href={`/template/${template.templateId}`}>{template.name}</a>
+                                <li key={dataset.datasetId}>
+                                    <Link to={`/dataset/${dataset.datasetId}`}>{dataset.name}</Link>
                                 </li>
                             ))}
                         </ul>
+                        <h6>
+                            <Link to="/library/maps">Maps</Link>
+                        </h6>
+                        <ul>
+                            {maps.map((map) => (
+                                <li key={map.mapId}>
+                                    <Link to={`/map/${map.mapId}`}>{map.name}</Link>
+                                </li>
+                            ))}
+                        </ul>
+                        {showTemplates && (
+                            <>
+                                <h6>
+                                    <Link to="/library/templates">Node Templates</Link>
+                                </h6>
+                                <ul>
+                                    {templates.map((template) => (
+                                        <li key={template.templateId}>
+                                            <Link to={`/template/${template.templateId}`}>
+                                                {template.name}
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
                     </ul>
                     <h5 className="flex gap-1 items-center">
                         <FileText />
@@ -144,7 +155,7 @@ export function Sidebar() {
                         </li>
                         {showSettings && (
                             <li>
-                                <a href="/settings">Settings</a>
+                                <Link to="/settings">Settings</Link>
                             </li>
                         )}
                     </ul>
