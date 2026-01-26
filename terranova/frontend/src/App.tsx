@@ -13,13 +13,13 @@ import { DatasetEditorPageComponent } from "./pages/DatasetEditor.page";
 import { LoginPageComponent } from "./pages/Login.page";
 import { ErrorPage } from "./pages/Error.page";
 import { SettingsPageComponent } from "./pages/Settings.page";
-import { Home } from "./pages/Home.page";
+import Layout from "./Layout";
 
 function App() {
     const router = createBrowserRouter([
         {
             path: "/",
-            element: <Home />,
+            element: <Layout />,
             errorElement: <ErrorPage />,
             children: [
                 {

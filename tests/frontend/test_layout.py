@@ -1,3 +1,7 @@
+"""
+Tests for the layout of Terranova, specifically concerning the NavBar and Sidebar.
+"""
+
 from playwright.sync_api import expect
 
 

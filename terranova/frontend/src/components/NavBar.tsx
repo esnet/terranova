@@ -1,4 +1,4 @@
-import { ESDropdown, ESDropdownAnchor, ESAvatar, ESDropdownContent } from "@esnet/packets-ui";
+import { ESDropdown, ESAvatar } from "@esnet/packets-ui";
 import { useState } from "react";
 import { useAuth } from "react-oidc-context";
 
@@ -18,28 +18,26 @@ function ProfileMenu() {
     ];
 
     return (
-        <ESDropdown className="ml-auto" caret mode="both">
-            <ESDropdownAnchor>
+        <ESDropdown
+            anchor={
                 <ESAvatar
                     srcSet={auth?.user?.profile?.picture ?? "/user.svg"}
                     size="medium"
                     className="cursor-pointer"
                     alt={auth?.user?.profile?.name}
                 />
-            </ESDropdownAnchor>
-
-            <ESDropdownContent className="min-w-32">
-                {links.map((item) => (
-                    <a
-                        href={item.href}
-                        key={item.name}
-                        className="block px-4 py-2 text-sm text-color-primary text-nowrap"
-                        onClick={() => setOpen(!open)}
-                    >
-                        {item.name}
-                    </a>
-                ))}
-            </ESDropdownContent>
+            }
+        >
+            {links.map((item) => (
+                <a
+                    href={item.href}
+                    key={item.name}
+                    className="block px-4 py-2 text-sm text-color-primary text-nowrap"
+                    onClick={() => setOpen(!open)}
+                >
+                    {item.name}
+                </a>
+            ))}
         </ESDropdown>
     );
 }
@@ -59,7 +57,7 @@ function NavigationItems({ navigation }: NavigationProps) {
     return (
         <div className="flex gap-8 items-center">
             {navigation?.map((item) => (
-                <h6 key={item.name}>
+                <h6 key={item.name} className="mb-0">
                     <a
                         href={item.href}
                         className="text-light-copyAlt dark:text-dark-copyAlt text-2xl no-underline"
@@ -77,9 +75,11 @@ export function NavBar() {
     const navigation = [{ name: "Terranova", href: "/", current: false }];
 
     return (
-        <nav className="flex items-center gap-x-4 p-2 bg-light-primary dark:bg-dark-primary">
-            <Logo />
-            <NavigationItems navigation={navigation} />
+        <nav className="flex justify-between items-center p-2 bg-light-primary dark:bg-dark-primary">
+            <div className="flex gap-x-4">
+                <Logo />
+                <NavigationItems navigation={navigation} />
+            </div>
             <ProfileMenu />
         </nav>
     );
