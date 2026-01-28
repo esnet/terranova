@@ -1,40 +1,58 @@
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth, doBasicAuth } from "../AuthService";
 import { SignoutRedirectArgs } from "oidc-client-ts";
-import { AUTH_BACKEND, AUTH_SESSION_STORAGE, READ_SCOPE } from "../../static/settings";
-import { setAuthHeaders } from "../DataController";
-import { useState } from "react";
+import { AUTH_BACKEND, READ_SCOPE } from "../../static/settings";
+import { useEffect, useState } from "react";
 
+/**
+ * This component is multi-faceted, serving as the page for both `/login` and `/logout`
+ *
+ * For `/login`, it serves as an sign in page if not logged in, otherwise simply redirects
+ *
+ * For `/logout`, it serves as a logout function (so users can be easily logged out by simply navigating to `/logout`), and then redirects to `/login`
+ *
+ * It may be wise to split them up in the future if the auth logic changes
+ */
 export function LoginPageComponent(props: any) {
     const auth = useAuth();
-    const [params, setParams] = useSearchParams();
-    const [message, setMessage] = useState(props.message);
-    let localUrl = window.location.href;
+    const [params] = useSearchParams();
+    const navigate = useNavigate();
+    // allow the message to come as either a prop or a param query
+    const [message, setMessage] = useState(props.message || params.get("message"));
 
-    function doAuth(event: any) {
-        function failureCallback() {
-            setMessage("Incorrect Username/Password: Unauthorized");
-        }
-        function successCallback() {
-            setMessage("Authenticated.");
-        }
-        doBasicAuth(event, successCallback, failureCallback);
-    }
+    const onOIDCAuth = () => {
+        auth?.signinRedirect({ redirect_uri: window.location.href });
+    };
 
-    if (props.doLogout) {
-        auth?.removeUser();
-        auth?.signoutRedirect(
-            "/login?message=You+have+been+logged+out&next=/" as SignoutRedirectArgs
+    const onBasicAuth = (event: any) => {
+        doBasicAuth(
+            event,
+            () => setMessage("Authenticated."),
+            () => setMessage("Incorrect Username/Password: Unauthorized"),
         );
-    }
-    if (params.get("next") || props.next) {
-        localUrl = `${window.location.protocol}//${window.location.host}${
-            params.get("next") || props.next
-        }`;
-    }
-    if (AUTH_BACKEND == "basic" && auth?.user?.scope && auth.user.scope.indexOf(READ_SCOPE) >= 0) {
-        auth?.signinRedirect({ redirect_uri: localUrl });
-    }
+    };
+
+    // if prop.doLogout, then redirect back to the login page (this occurs on the /logout page)
+    useEffect(() => {
+        if (!auth || !props.doLogout) return;
+        auth.removeUser();
+        // EC: I have concerns over this line (the previous value), while this works as intended for basic auth
+        // it doesn't work for OIDC, which requires a different parameter type entirely...
+        // https://authts.github.io/oidc-client-ts/classes/UserManager.html#signoutredirect
+        auth.signoutRedirect("/login?message=You+have+been+logged+out" as SignoutRedirectArgs);
+    }, [auth, props.doLogout]);
+
+    // if the user is logged in and somehow it to this page (/login), redirect them
+    // if a specific redirect 'next' link was provided, redirect them there
+    useEffect(() => {
+        // only perform these actions on basic auth
+        if (AUTH_BACKEND != "basic" || !auth?.user?.scope) return;
+        const nextUrl = new URL(props.next ?? params.get("next") ?? "/", window.location.href);
+        if (auth.user.scope.indexOf(READ_SCOPE) >= 0) {
+            navigate(nextUrl.href);
+        }
+    }, [auth, params, props.next]);
+
     return (
         <div className="flex w-full h-full">
             <div
@@ -57,10 +75,7 @@ export function LoginPageComponent(props: any) {
                             <h2 className="mr-5 text-white">Login</h2>
                         </div>
                         <div className="grid w-full h-auto">
-                            {message ? <div className="message-box">{message}</div> : null}
-                            {params.get("message") ? (
-                                <div className="message-box">{params.get("message")}</div>
-                            ) : null}
+                            {message && <div className="message-box">{message}</div>}
                         </div>
                         <div className="grid w-full h-auto"></div>
                         {AUTH_BACKEND == "oidc" ? (
@@ -69,15 +84,13 @@ export function LoginPageComponent(props: any) {
                                     type="button"
                                     className="btn primary w-full"
                                     value="Login with Keycloak"
-                                    onClick={() => {
-                                        auth?.signinRedirect({ redirect_uri: localUrl });
-                                    }}
+                                    onClick={onOIDCAuth}
                                 />
                             </div>
                         ) : null}
                         {AUTH_BACKEND == "basic" ? (
                             <div className="grid h-auto w-full">
-                                <form onSubmit={doAuth}>
+                                <form onSubmit={onBasicAuth}>
                                     <label htmlFor="username" className="text-white mt-2">
                                         Username
                                     </label>
