@@ -25,9 +25,9 @@ class InputModifier(str, Enum):
 
 class QueryFilter(BaseModel):
     field: str
-    operator: InputModifier | None
+    operator: InputModifier | None = None
     value: List[str]
-    templated: bool | None
+    templated: bool | None = False
 
 
 # For specifying output layout types, we can specify logical or geographic
@@ -54,11 +54,11 @@ class TopologyNodes(BaseModel):
     name: str
     coordinate: LatLon
     meta: Dict[str, Any]
-    children: List[str] | None
+    children: List[str] | None = None
 
 
 class EdgeMeta(BaseModel):
-    capacity: int | None
+    capacity: int | None = None
     endpoint_identifiers: Dict[str, List[Any]]
 
 

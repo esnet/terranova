@@ -50,7 +50,7 @@ datasources.discover()
 
 
 class NamedDatasource(BaseModel):
-    name = Enum("Datasources", {k: k for k, v in datasources.items()})
+    name: Enum("Datasources", {k: k for k, v in datasources.items()})
 
 
 filter_subtypes = []

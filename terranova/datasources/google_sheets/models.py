@@ -10,14 +10,14 @@ from .backend import GoogleSheetsBackend
 
 class Metadata(BaseModel):
     name: str
-    value: List[str] | None
+    value: List[str] | None = None
 
 
 class Node(BaseModel):
     name: str
     latitude: float
     longitude: float
-    description: str | None
+    description: str | None = None
 
     model_config = ConfigDict(extra="allow")
 
@@ -25,7 +25,7 @@ class Node(BaseModel):
 class Edge(BaseModel):
     id: str
     name: str
-    description: str | None
+    description: str | None = None
     endpoints: List[Node]
     source: str
     destination: str

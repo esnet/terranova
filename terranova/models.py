@@ -45,19 +45,19 @@ class LayerConfiguration(BaseModel):
 
     # "where's my topology" settings
     jsonFromUrl: bool
-    mapjson: str | None
-    mapjsonUrl: str | None
+    mapjson: str | None = None
+    mapjsonUrl: str | None = None
 
     # "data match" settings
     endpointId: str
-    inboundValueField: str | None
-    outboundValueField: str | None
-    srcField: str | None
-    dstField: str | None
+    inboundValueField: str | None = None
+    outboundValueField: str | None = None
+    srcField: str | None = None
+    dstField: str | None = None
 
     # what do these even do?
-    legend: bool | None
-    nodeHighlight: str | None
+    legend: bool | None = None
+    nodeHighlight: str | None = None
 
 
 class ViewportCenter(BaseModel):
@@ -66,25 +66,25 @@ class ViewportCenter(BaseModel):
 
 
 class Viewport(BaseModel):
-    center: Optional[ViewportCenter]
-    top: Optional[float]
-    left: Optional[float]
-    bottom: Optional[float]
-    right: Optional[float]
-    zoom: Optional[float]
+    center: Optional[ViewportCenter] = None
+    top: Optional[float] = None
+    left: Optional[float] = None
+    bottom: Optional[float] = None
+    right: Optional[float] = None
+    zoom: Optional[float] = None
 
 
 class TilesetConfiguration(BaseModel):
-    geographic: str | None
-    boundaries: Optional[str]
-    labels: Optional[str]
+    geographic: str | None = None
+    boundaries: Optional[str] = None
+    labels: Optional[str] = None
 
 
 class MapConfiguration(BaseModel):
     # viewport strategy options
     initialViewStrategy: str
-    latitudeVar: str | None
-    longitudeVar: str | None
+    latitudeVar: str | None = None
+    longitudeVar: str | None = None
 
     viewport: Viewport
     background: str
@@ -99,9 +99,9 @@ class MapConfiguration(BaseModel):
     showLegend: bool
 
     # legend options
-    legendColumnLength: int | None
-    legendPosition: str | None
-    legendDefaultBehavior: str | None
+    legendColumnLength: int | None = None
+    legendPosition: str | None = None
+    legendDefaultBehavior: str | None = None
 
     # optional UI effects
     enableScrolling: bool
@@ -112,7 +112,7 @@ class MapConfiguration(BaseModel):
     enableEdgeAnimation: bool
 
     # edge coloration thresholds
-    thresholds: List[Any] | None  # TODO: Confirm this
+    thresholds: List[Any] | None = None  # TODO: Confirm this
     zIndexBase: int
 
     layers: List[LayerConfiguration]
@@ -126,8 +126,8 @@ class OverrideType(str, Enum):
 
 class OverrideRule(BaseModel):
     operation: OverrideType
-    state: Dict | None
-    render: bool | None
+    state: Dict | None = None
+    render: bool | None = None
 
     @field_validator("state", mode="after")
     @classmethod
@@ -153,7 +153,7 @@ class Map(BaseModel):
     # this represents both the "owner" and "last editor" of this particular version/topology
     lastUpdatedBy: str
     lastUpdatedOn: datetime
-    public: bool | None
+    public: bool | None = None
 
 
 class MapRevision(BaseModel):
@@ -165,9 +165,9 @@ class MapRevision(BaseModel):
 class DatasetQuery(BaseModel):
     endpoint: str
     filters: Annotated[List[QueryFilter], Field(min_length=0)]
-    node_deduplication_field: str | None  # default is "location_name"
-    node_group_criteria: List[str] | None  # default is None (do not group)
-    node_group_layout: str | None  # default is None (do not group)
+    node_deduplication_field: str | None = "location_name"
+    node_group_criteria: List[str] | None = None
+    node_group_layout: str | None = None
 
 
 class Dataset(BaseModel):
@@ -177,7 +177,7 @@ class Dataset(BaseModel):
     lastUpdatedBy: str  # both the "owner" and "last editor"
     lastUpdatedOn: datetime
     query: DatasetQuery
-    results: List[Any] | None  # only set for Datasets with valid query filters
+    results: List[Any] | None = None  # only set for Datasets with valid query filters
     # this will grant e.g. read and write privs to a particular group (Keycloak Workgroup)
     # group: str
 
