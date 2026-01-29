@@ -21,7 +21,7 @@ from terranova.settings import (
 from terranova.abstract_models import SQLiteCacheDatasource, Topology, QueryFilter, InputModifier
 from terranova.logging import logger
 from terranova import models
-from terranova.backends.elasticsearch import backend as elastic_backend
+from terranova.backends.storage import backend as storage_backend
 
 from .settings import METADATA
 
@@ -171,7 +171,7 @@ class GoogleSheetsBackend(SQLiteCacheDatasource):
             encrypted_bytes = f.read()
 
         doc = {"name": name, "jwt": base64.encode(encrypted_bytes)}
-        elastic_backend.create(index=GOOGLE_SHEETS_WRITE_INDEX, id=name, doc=doc)
+        storage_backend.create(index=GOOGLE_SHEETS_WRITE_INDEX, id=name, doc=doc)
 
     def list_credentials(self, sanitize=True):
         """
@@ -179,7 +179,7 @@ class GoogleSheetsBackend(SQLiteCacheDatasource):
         GOOGLE_SHEETS_CREDENTIAL_SOURCE is 'dynamic'
         """
         query = {"bool": {"filter": "*"}}
-        rows = elastic_backend.query(index=GOOGLE_SHEETS_READ_INDEX, query=query)
+        rows = storage_backend.query(index=GOOGLE_SHEETS_READ_INDEX, query=query)
         count = len(rows)
         data = []
         for cred in rows:
@@ -204,8 +204,8 @@ class GoogleSheetsBackend(SQLiteCacheDatasource):
                 ]
             }
         }
-        rows = elastic_backend.query(GOOGLE_SHEETS_READ_INDEX, query=query, limit=1)
-        elastic_backend.delete_by_query(GOOGLE_SHEETS_READ_INDEX, query=query, max_docs=1)
+        rows = storage_backend.query(GOOGLE_SHEETS_READ_INDEX, query=query, limit=1)
+        storage_backend.delete_by_query(GOOGLE_SHEETS_READ_INDEX, query=query, max_docs=1)
         data = []
         for cred in rows:
             cred = self.decrypt_credential(cred)

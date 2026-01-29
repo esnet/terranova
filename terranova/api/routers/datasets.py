@@ -5,7 +5,7 @@ from typing import List, Any
 from urllib.parse import parse_qs
 
 from terranova.backends.auth import User, auth_check
-from terranova.backends.elasticsearch import backend as elastic_backend
+from terranova.backends.storage import backend as storage_backend
 from terranova.backends.datasources import datasources
 from terranova.models import (
     Dataset,
@@ -57,7 +57,7 @@ def datasets(
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
 ) -> List[dict[str, Any]]:
 
-    result = elastic_backend.get_datasets(
+    result = storage_backend.get_datasets(
         fields=[f.name for f in fields], filters=filters, version=version
     )
 
@@ -69,7 +69,7 @@ def datasets(
 def dataset_by_id(
     datasetId: str, user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]])
 ) -> Dataset:
-    result = elastic_backend.get_datasets(dataset_id=datasetId)
+    result = storage_backend.get_datasets(dataset_id=datasetId)
     if len(result) < 1:
         raise HTTPException(status_code=404, detail="Dataset with id %s not found" % datasetId)
     return result[0]
@@ -90,7 +90,7 @@ def update_dataset(
         query_results = datasources[endpoint].backend.query(
             datasetRevision.query.filters, limit=None, apply_templated_filters=False, **context
         )
-        return elastic_backend.update_dataset(datasetId, datasetRevision, query_results.data, user)
+        return storage_backend.update_dataset(datasetId, datasetRevision, query_results.data, user)
     except TerranovaNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -101,4 +101,4 @@ def create_dataset(
     datasetRevision: DatasetRevision,
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
 ):
-    return elastic_backend.create_dataset(datasetRevision, user)
+    return storage_backend.create_dataset(datasetRevision, user)

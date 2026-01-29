@@ -119,7 +119,7 @@ export const OVERRIDE_TYPES = [
 
 export const DEFAULT_MAP = {
     name: "",
-    overrides: [],
+    overrides: {},
     configuration: {
         initialViewStrategy: "static",
         latitudeVar: null,
@@ -146,7 +146,7 @@ export const DEFAULT_MAP = {
 
 export const DEFAULT_LOGICAL_MAP = {
     name: "",
-    overrides: [],
+    overrides: {},
     configuration: {
         initialViewStrategy: "static",
         latitudeVar: null,

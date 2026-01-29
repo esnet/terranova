@@ -1,14 +1,17 @@
 import os
 import sys
-from terranova.backends.elasticsearch import backend as elastic_backend
+from terranova.backends.storage import backend
+from terranova.settings import STORAGE_BACKEND
 
-try:
-    if not elastic_backend.is_connected():
+# Only check Elasticsearch connection if using Elasticsearch backend
+if STORAGE_BACKEND == "elasticsearch":
+    try:
+        if not backend.is_connected():
+            print("Elasticsearch connection not detected. Exiting.")
+            sys.exit(1)
+    except Exception:
         print("Elasticsearch connection not detected. Exiting.")
         sys.exit(1)
-except Exception:
-    print("Elasticsearch connection not detected. Exiting.")
-    sys.exit(1)
 
 # fastapi
 from fastapi import FastAPI, Request
@@ -36,8 +39,10 @@ from terranova.settings import ENVIRONMENT, AUTH_BACKEND
 import terranova.opentelemetry
 from terranova.request import RequestContextMiddleware
 
-elastic_backend.create_indices()
-elastic_backend.initialize_templates()
+# Only initialize Elasticsearch-specific features if using Elasticsearch backend
+if STORAGE_BACKEND == "elasticsearch":
+    backend.create_indices()
+    backend.initialize_templates()
 
 app = FastAPI(title="Terranova API")
 app.add_middleware(RequestContextMiddleware)

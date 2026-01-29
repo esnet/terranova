@@ -1,17 +1,13 @@
+version: "0.0.1"
 environment: dev
 
-# Storage backend configuration
-# Default: sqlite (lightweight, no external dependencies)
-# Alternative: elasticsearch (production-grade, scalable)
 storage:
   backend: sqlite
-  sqlite_path: ./terranova.db
+  sqlite_path: ./terranova-test.db
 
-# Elasticsearch configuration (only required if storage.backend is set to "elasticsearch")
 elastic:
   username: elastic
   password: DkIedPPSCb
-  # url: http://elastic:9200
   url: http://localhost:9200
   indices:
     template:
@@ -32,7 +28,7 @@ elastic:
 
 datasources:
   google_sheets:
-    credential_type: static 
+    credential_type: static
     cache_file: google_sheets.sqlite
     static:
         token_files:

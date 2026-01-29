@@ -15,10 +15,12 @@ def setup_server_processes(request):
     parent_dir = os.path.dirname(__file__)
     # path to top level dir. ugh.
     app_root = os.path.join(parent_dir, os.pardir, os.pardir)
+    # path to python .venv
+    venv_python_path = os.path.join(app_root, ".venv", "bin", "python")
     # path to doc root for pre-compiled frontend files
     frontend_docroot = os.path.join(app_root, "terranova", "frontend", "dist-test")
     # path to the config file for the API for these tests
-    test_config_path = os.path.join(parent_dir, "config.yml")
+    test_config_path = os.path.join(parent_dir, "mock", "settings.yml")
     # path to the JS settings file for these tests
     js_settings_source_path = os.path.join(parent_dir, "mock", "settings.js")
     # path to the copy target for the JS settings file
@@ -28,17 +30,18 @@ def setup_server_processes(request):
     shutil.copyfile(js_settings_source_path, js_settings_target_path)
 
     frontend_server = "%s/frontend_server.py" % parent_dir
-
     # spawn a simple http server from the frontend docroot, serving the pre-compiled frontend files
     js_proc = subprocess.Popen(
-        ["python", frontend_server], cwd=frontend_docroot, universal_newlines=True
+        [venv_python_path, frontend_server], cwd=frontend_docroot, universal_newlines=True
     )
 
     # create an environment for the API server
     api_env = os.environ.copy()
     api_env["TERRANOVA_CONF"] = test_config_path
     api_env["MOCKS"] = "tests.frontend.mock.mocks"
-    api_proc = subprocess.Popen(["uvicorn", "terranova.api:app"], env=api_env, cwd=app_root)
+    api_proc = subprocess.Popen(
+        [venv_python_path, "-m", "uvicorn", "terranova.api:app"], env=api_env, cwd=app_root
+    )
 
     time.sleep(2)
 
@@ -54,7 +57,6 @@ def setup_server_processes(request):
 @pytest.fixture
 def login(setup_server_processes, page):
     """Fixture that automatically logs in when included in a test. Does not return anything."""
-
     page.goto("http://localhost:5173/")
     page.locator('input[name="username"]').click()
     page.locator('input[name="username"]').fill("admin")

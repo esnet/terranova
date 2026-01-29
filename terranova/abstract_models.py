@@ -1,4 +1,5 @@
-from pydantic import BaseModel, conlist
+from pydantic import BaseModel, Field
+from typing import Annotated
 from enum import Enum
 from typing import List, Union, Dict, Any
 from dataclasses import make_dataclass, asdict
@@ -24,9 +25,9 @@ class InputModifier(str, Enum):
 
 class QueryFilter(BaseModel):
     field: str
-    operator: InputModifier | None
+    operator: InputModifier | None = None
     value: List[str]
-    templated: bool | None
+    templated: bool | None = False
 
 
 # For specifying output layout types, we can specify logical or geographic
@@ -46,24 +47,24 @@ class TerranovaOutputType(Enum):
     svg = "svg"
 
 
-LatLon = conlist(float, min_items=2, max_items=2)
+LatLon = Annotated[List[float], Field(min_length=2, max_length=2)]
 
 
 class TopologyNodes(BaseModel):
     name: str
     coordinate: LatLon
     meta: Dict[str, Any]
-    children: List[str] | None
+    children: List[str] | None = None
 
 
 class EdgeMeta(BaseModel):
-    capacity: int | None
+    capacity: int | None = None
     endpoint_identifiers: Dict[str, List[Any]]
 
 
 class TopologyEdges(BaseModel):
     name: str
-    coordinates: conlist(LatLon, min_items=2)
+    coordinates: Annotated[List[LatLon], Field(min_length=2)]
     meta: EdgeMeta
 
 
@@ -251,7 +252,7 @@ class SQLiteCacheDatasource(BaseDatasource):
     def _apply_logical(self, topology, node_template):
         # The logical Topology is exactly the same as the geographic one, just with shifted
         # lat/lon values for all nodes and edges. Avoid a lot of code duplication.
-        topology = topology.dict()
+        topology = topology.model_dump()
         # Step 1 - we need to build up a graphviz graph object so that we can compute
         # a layout
         G = pygraphviz.AGraph()
@@ -400,9 +401,9 @@ class BaseTypeFilters:
 
 
 def group_fields_by_type(model_class):
-    schema = model_class.schema()
+    schema = model_class.model_json_schema()
     properties = schema["properties"]
-    definitions = schema["definitions"]
+    definitions = schema.get("$defs", {})
     fields = defaultdict(dict)
     for field_name, field in properties.items():
         if field.get("type") == "array" and field.get("items", {}).get("type") == "string":
@@ -451,9 +452,9 @@ def enumerate_fields(schema, definitions, prefix=""):
 
 
 def enumerate_filterable_columns(model_class):
-    schema = model_class.schema()
+    schema = model_class.model_json_schema()
     properties = schema["properties"]
-    definitions = schema["definitions"]
+    definitions = schema.get("$defs", {})
     filterable_fields = enumerate_fields(properties, definitions)
     return {f: f for f in filterable_fields}
 
@@ -463,12 +464,21 @@ def flatten_field(name, field, prefix=""):
     if prefix:
         name = "%s_%s" % (prefix, name)
 
-    if field["type"] == "string":
+    # In Pydantic v2, nullable fields might use anyOf instead of direct type
+    field_type = field.get("type")
+    if not field_type and "anyOf" in field:
+        # Extract type from anyOf (skip null type)
+        for schema_option in field["anyOf"]:
+            if schema_option.get("type") and schema_option["type"] != "null":
+                field_type = schema_option["type"]
+                break
+
+    if field_type == "string":
         signature = List[str]
         output.append((name, signature, Query([])))
         for modifier in InputModifier:
             output.append(("%s_%s" % (name, modifier.name), signature, Query([])))
-    if field["type"] == "integer":
+    if field_type == "integer":
         signature = List[int]
         output.append((name, signature, Query([])))
     return output
@@ -520,9 +530,9 @@ def get_all_type_filters():
 
 def create_type_filters(model_class, backend):
 
-    schema = model_class.schema()
+    schema = model_class.model_json_schema()
     properties = schema["properties"]
-    definitions = schema["definitions"]
+    definitions = schema.get("$defs", {})
     filterable_fields = flatten_fields(properties, definitions)
     curval = _all_filterable_fields.get()
     _all_filterable_fields.set(curval + filterable_fields)

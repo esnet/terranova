@@ -2,7 +2,7 @@ FROM python:3.11-alpine
 
 WORKDIR /terranova
 
-RUN apk add --no-cache gcc g++ musl-dev rust cargo patchelf graphviz graphviz-dev supervisor apache2 apache2-proxy
+RUN apk add --no-cache gcc g++ musl-dev patchelf graphviz graphviz-dev supervisor apache2 apache2-proxy
 RUN pip install --no-cache-dir "cython<3.0.0" wheel
 RUN echo "cython<3" > /tmp/constraint.txt
 

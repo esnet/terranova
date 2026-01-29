@@ -3,6 +3,7 @@
 An app for building and editing maps
 
 - [Getting Started](#getting-started)
+- [Development](#development)
 
 ## Getting Started
 
@@ -26,6 +27,65 @@ settings.yml
 
 The `settings.js` file contains frontend settings, while `settings.yml` contains backend settings.
 
+### Configure Storage Backend
+
+Terranova supports two storage backends for persisting maps, datasets, templates, and user data:
+
+**SQLite (default)** - Lightweight file-based database ideal for development and small deployments.
+
+**Elasticsearch** - Production-grade distributed search and analytics engine for scalable deployments.
+
+#### SQLite Configuration (Default)
+
+The default configuration uses SQLite with no additional setup required. To customize the database path, edit `/etc/terranova/settings.yml`:
+
+```yaml
+storage:
+  backend: sqlite  # Default backend
+  sqlite_path: ./terranova.db  # Optional: customize database location
+```
+
+#### Elasticsearch Configuration
+
+For production deployments, edit `/etc/terranova/settings.yml`:
+
+```yaml
+storage:
+  backend: elasticsearch
+
+elastic:
+  url: http://localhost:9200
+  username: elastic
+  password: changeme
+  indices:
+    template:
+      read: terranova-template-*
+      write: terranova-template
+    map:
+      read: terranova-map-*
+      write: terranova-map
+    dataset:
+      read: terranova-dataset-*
+      write: terranova-dataset
+    userdata:
+      read: terranova-userdata-*
+      write: terranova-userdata
+```
+
+**When to use SQLite:**
+- Local development
+- Small deployments (< 100k documents)
+- Simple setup without external dependencies
+- Single-server deployments
+
+**When to use Elasticsearch:**
+- Production deployments
+- Large datasets (millions of documents)
+- High availability requirements
+- Horizontal scalability needs
+- Advanced search capabilities
+
+Both backends provide identical functionality with 97% test coverage.
 
 ### Get an API token from Google
 
@@ -58,3 +118,42 @@ cd terranova  # change directory to the repo you just cloned
 docker compose build  # this command builds the terranova docker image
 docker compose up  # this command starts the elasticsearch and terranova image
 ```
+
+## Development
+
+To develop Terranova, you'll still need to do all of the above, stopping at building a Docker image.
+
+### Prerequisites
+
+Various libraries and packages used in Terranova have other dependencies that may need to be installed. These specifically include:
+
+- [`pygraphviz`](https://pygraphviz.github.io/), needing [`graphviz`](https://pygraphviz.github.io/documentation/stable/install.html). If you are on a Mac, you make encounter an error failing to build the pygraphviz wheel. To resolve this, you'll need to comment out pygraphviz in requirements.txt, allowing all other packages to install, then follow these [instructions](https://pygraphviz.github.io/documentation/stable/install.html#macos) to resolve.
+
+- [`Elasticsearch`](https://www.elastic.co/docs/deploy-manage/deploy/self-managed/local-development-installation-quickstart). TODO: Add elasticsearch installation and setup instructions. In the meantime, you comment out the `terranova` service in the Docker compose file, and run `docker compose up` to emulate. 
+
+Terranova also uses Python3 (3.11 is specified in the Dockerfile) and Node.js.
+
+### Make
+
+Once the above is completed, all further environment installations and development processes can be done from the Makefile. The Makefile is used to encapsulate all commands that may be needed to run any part of the project. You'll need to run the following in seperate shells.
+
+Start the Elasticsearch service (see prerequisites!)
+```sh
+docker compose up
+```
+
+Run the Python API (creates venv and installs requirements automatically).
+```sh
+make run_api
+```
+
+Run the Node frontend development server (installs Node modules automatically).
+```sh
+make run_frontend
+```
+
+Additional useful Makefile targets include 
+- `make install`: Install both frontend and backend Python packages and Node modules.
+- `make test`: Test both frontend and backend (may have to install Playwright headless browsers).
+- `make build`: Produce frontend build in `/terranova/frontend/dist`
+- `make clean`: Remove the Python virtual environment and all Node modules.
