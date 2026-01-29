@@ -295,9 +295,10 @@ def _normalize_map(map_object: Map | MapRevision, user: User = None) -> None:
             dataset_id = match_data.get("dataset_id")
             querystring = match_data.get("querystring")
             del match_data["querystring"]
-            for pair in querystring.split("&"):
-                k, v = pair.split("=")
-                match_data[k] = v
+            if querystring:
+                for pair in querystring.split("&"):
+                    k, v = pair.split("=")
+                    match_data[k] = v
             match_data["user"] = user
             topology_json = dataset_output(**match_data)
             layer.mapjson = topology_json.model_dump()
