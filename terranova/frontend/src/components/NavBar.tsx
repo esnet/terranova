@@ -75,7 +75,7 @@ export function NavBar() {
     const navigation = [{ name: "Terranova", href: "/", current: false }];
 
     return (
-        <nav className="flex justify-between items-center p-2 bg-light-primary dark:bg-dark-primary">
+        <nav className="flex justify-between items-center p-2 bg-light-primary">
             <div className="flex gap-x-4">
                 <Logo />
                 <NavigationItems navigation={navigation} />

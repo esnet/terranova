@@ -78,7 +78,7 @@ export function LoginPageComponent(props: any) {
                             {message && <div className="message-box">{message}</div>}
                         </div>
                         <div className="grid w-full h-auto"></div>
-                        {AUTH_BACKEND == "oidc" ? (
+                        {AUTH_BACKEND == "oidc" && (
                             <div className="grid h-auto w-full">
                                 <input
                                     type="button"
@@ -87,8 +87,8 @@ export function LoginPageComponent(props: any) {
                                     onClick={onOIDCAuth}
                                 />
                             </div>
-                        ) : null}
-                        {AUTH_BACKEND == "basic" ? (
+                        )}
+                        {AUTH_BACKEND == "basic" && (
                             <div className="grid h-auto w-full">
                                 <form onSubmit={onBasicAuth}>
                                     <label htmlFor="username" className="text-white mt-2">
@@ -116,7 +116,7 @@ export function LoginPageComponent(props: any) {
                                     />
                                 </form>
                             </div>
-                        ) : null}
+                        )}
                     </div>
                 </div>
             </div>
