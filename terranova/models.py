@@ -148,7 +148,7 @@ class Map(BaseModel):
     mapId: str
     name: str
     version: int
-    overrides: Dict[str, MapOverrides]  # DatasetID => Overrides
+    overrides: Dict[str, MapOverrides] = {}  # DatasetID => Overrides
     configuration: MapConfiguration
     # this represents both the "owner" and "last editor" of this particular version/topology
     lastUpdatedBy: str
@@ -158,7 +158,7 @@ class Map(BaseModel):
 
 class MapRevision(BaseModel):
     name: str
-    overrides: Dict[str, MapOverrides]
+    overrides: Dict[str, MapOverrides] = {}
     configuration: MapConfiguration
 
 
