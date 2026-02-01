@@ -3,6 +3,7 @@ import { useAuth, doBasicAuth } from "../AuthService";
 import { SignoutRedirectArgs } from "oidc-client-ts";
 import { AUTH_BACKEND, READ_SCOPE } from "../../static/settings";
 import { useEffect, useState } from "react";
+import { ESButton, ESInputPassword, ESInputRow, ESInputText } from "@esnet/packets-ui";
 
 /**
  * This component is multi-faceted, serving as the page for both `/login` and `/logout`
@@ -55,86 +56,36 @@ export function LoginPageComponent(props: any) {
 
     return (
         <div className="flex w-full h-full">
-            <div
-                className="
-                    flex
-                    w-full
-                    md:w-3/5
-                    xl:w-2/5
-                    px-28
-                    md:px-28
-                    lg:px-40
-                    xl:px-56
-                    bg-esnetblue-800
-                    mx-auto
-                "
-            >
-                <div className="flex items-center justify-center h-full w-full pb-9">
-                    <div className="w-full items-center justify-center my-auto">
-                        <div className="grid h-auto w-full">
-                            <h2 className="mr-5 text-white">Login</h2>
-                        </div>
-                        <div className="grid w-full h-auto">
-                            {message && <div className="message-box">{message}</div>}
-                        </div>
-                        <div className="grid w-full h-auto"></div>
-                        {AUTH_BACKEND == "oidc" && (
-                            <div className="grid h-auto w-full">
-                                <input
-                                    type="button"
-                                    className="btn primary w-full"
-                                    value="Login with Keycloak"
-                                    onClick={onOIDCAuth}
-                                />
-                            </div>
-                        )}
-                        {AUTH_BACKEND == "basic" && (
-                            <div className="grid h-auto w-full">
-                                <form onSubmit={onBasicAuth}>
-                                    <label htmlFor="username" className="text-white mt-2">
-                                        Username
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="username"
-                                        className="w-full"
-                                        autoComplete="current-username"
-                                    />
-                                    <label htmlFor="password" className="text-white mt-2">
-                                        Password
-                                    </label>
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        className="w-full mb-8"
-                                        autoComplete="current-password"
-                                    />
-                                    <input
-                                        type="submit"
-                                        value="Login"
-                                        className="btn w-full secondary"
-                                    />
-                                </form>
-                            </div>
-                        )}
+            <div className="flex flex-col grow justify-center min-w-md px-24 bg-light-primary">
+                <h2 className="text-dark-copy">Login</h2>
+                {message && (
+                    <div className="bg-light-secondary text-white rounded-xl p-1 px-4 mb-4">
+                        {message}
                     </div>
-                </div>
+                )}
+                {AUTH_BACKEND === "oidc" && (
+                    <div className="grid h-auto w-full">
+                        <ESButton onClick={onOIDCAuth}>Login with Keycloak</ESButton>
+                    </div>
+                )}
+                {AUTH_BACKEND === "basic" && (
+                    <form
+                        className="[&_span]:text-white flex flex-col gap-y-4"
+                        onSubmit={onBasicAuth}
+                    >
+                        <ESInputRow label="Username">
+                            <ESInputText name="username" autoComplete="username" />
+                        </ESInputRow>
+                        <ESInputRow label="Password">
+                            <ESInputPassword name="password" autoComplete="current-password" />
+                        </ESInputRow>
+                        <ESButton type="submit" as="button" className="mt-4">
+                            Login
+                        </ESButton>
+                    </form>
+                )}
             </div>
-            <div
-                className="
-                    hidden
-                    md:w-3/5
-                    xl:2/5
-                    py-20
-                    px-8
-                    bg-tn-layer-3
-                    md:grid
-                    place-items-center
-                    h-screen
-                "
-            >
-                <div className="w-full h-3/4 bg-terranova-logo-name bg-contain bg-no-repeat bg-center"></div>
-            </div>
+            <div className="hidden md:block w-full m-8 lg:m-16 bg-terranova-logo-name bg-contain bg-no-repeat bg-center" />
         </div>
     );
 }

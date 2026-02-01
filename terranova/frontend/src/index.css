@@ -77,7 +77,6 @@ input[type=range] {
 }
 
 input[type="text"],
-input[type="password"],
 input[type="search"],
 input[type="email"],
 input[type="number"],
@@ -266,10 +265,6 @@ button.warning {
 .dialog-form.tight-form-func td, 
 .dialog-form.tight-form-func tr { @apply py-0 }
 
-
-.message-box {
-    @apply bg-esnetblue-700 text-white px-4 py-1 rounded-xl mb-2;
-}
 
 table.data-table td, table.data-table th {
     @apply bg-white border whitespace-nowrap max-w-2xl py-1 overflow-hidden;
