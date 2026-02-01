@@ -121,7 +121,7 @@ docker compose up  # this command starts the elasticsearch and terranova image
 
 ## Development
 
-To develop Terranova, you'll still need to do all of the above, stopping at building a Docker image.
+To develop Terranova, you'll still need to do all of the above, then follow the below instructions.
 
 ### Prerequisites
 
@@ -131,7 +131,7 @@ Various libraries and packages used in Terranova have other dependencies that ma
 
 - [`Elasticsearch`](https://www.elastic.co/docs/deploy-manage/deploy/self-managed/local-development-installation-quickstart). TODO: Add elasticsearch installation and setup instructions. In the meantime, you comment out the `terranova` service in the Docker compose file, and run `docker compose up` to emulate. 
 
-Terranova also uses Python3 (3.11 is specified in the Dockerfile) and Node.js.
+Terranova also uses Python 3 (3.11 is specified in the Dockerfile) and Node.js.
 
 ### Make
 
