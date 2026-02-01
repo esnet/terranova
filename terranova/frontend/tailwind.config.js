@@ -20,6 +20,12 @@ module.exports = {
       ...packetsTailwindConfig.theme.extend,
       screens: { "3xl": {"min": "1791px"} },
       colors: {
+        ...packetsTailwindConfig.theme.extend.colors,
+        // light and dark mode aren't actually implemented, but for light
+        // the primary and secondary are visually switched, but haven't yet been updated
+        // until it is, this patch will do
+        'light-primary': tokens.ESNET_COLOR_LIGHT_SECONDARY,
+        'light-secondary': tokens.ESNET_COLOR_LIGHT_PRIMARY,
         "tn-layer": {
           1: tokens.ESNET_COLOR_CORE_WHITE_600, "//": "esnetwhite-400",
           2: tokens.ESNET_COLOR_CORE_WHITE_400, "//": "esnetwhite-200",
