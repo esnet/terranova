@@ -19,80 +19,9 @@
 :where(html, body, div#root, .App) { @apply h-screen; }
 
 /* ##### Typography ##### */
-p {
-    @apply tn-text
-}
-
-strong {
-    @apply tn-bold;
-}
-
-label {
-    @apply font-sans tn-bold text-color-text text-sm inline-block pr-2 my-2;
-}
-
-h1,h2,h3,h4,h5 {
-    @apply font-sans tn-bold py-4
-}
-h1 {
-    @apply text-5xl ;
-}
-h1.title {
-    @apply font-extrabold text-color-text-alt-2;
-}
-h2 {
-    @apply text-4xl;
-}
-h3 {
-    @apply text-3xl;
-}
-
-h4 {
-    @apply text-2xl;
-}
-h5 {
-    @apply text-xl;
-}
-h6 {
-    @apply tn-text text-lg;
-}
-:where(h1,h2,h3,h4,h5,h6){
-    @apply text-color-text; /* default heading color applied with 'zero-specificity' (override-able) :where selector */
-}
-
-.highlight {
-    @apply text-color-text-alt-2;
-}
-.aside {
-    @apply text-color-text-alt;
-}
 }
 
 /* ##### Components ##### */
-
-/* ----- MAIN LAYOUT COMPONENTS ----- */
-
-/* -- The Backdrop "Curtain" -- */
-.backdrop {
-    @apply w-full sm:flex pt-12;
-}
-:where(.backdrop) {
-    @apply bg-color-layer-1 min-h-screen pl-0 sm:pl-72;
-}
-.homepage-back {
-    @apply fixed z-[-1] w-full pt-24 pb-12 pr-0 sm:pr-72 mx-auto bg-tn-layer-1 grid place-items-center h-screen;
-}
-.homepage-logo {
-    @apply w-3/4 h-3/4 bg-terranova-logo-grey bg-contain bg-no-repeat bg-center opacity-80;
-}
-
-/* -- Main Content Panel -- */
-.main-content {
-    @apply min-h-full w-full sm:mx-auto sm:max-w-6xl  p-2 pt-12 sm:pt-2;
-}
-:where(.main-content) {
-    @apply bg-color-layer-3 border border-color-layer-division;
-}
 
 /* ---- Compound Component Help Classes ---- */
 @utility compound {
