@@ -17,7 +17,7 @@ def test_basic_auth_login(page):
     page.locator('input[name="username"]').press("Tab")
     page.locator('input[name="password"]').fill("admin")
     page.locator('input[name="password"]').press("Enter")
-    page.get_by_role("button", name="Login").click()
+    page.locator('button[type="submit"]').click()
     expect(page.get_by_role("link", name="Terranova")).to_be_visible()
 
 
