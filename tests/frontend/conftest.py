@@ -5,6 +5,13 @@ import subprocess
 import time
 
 
+# AUTH_BACKEND can be basic or keycloak, in which different tests would apply
+# this should be read dynamically from ./mock/settings.yml, but this will suffice
+# as there are no tests intended for the keycloak version yet.
+# TODO: update login fixture and write auth tests for keycloak
+AUTH_BACKEND = "basic"
+
+
 @pytest.fixture(autouse=True)
 def setup_server_processes(request):
     """
@@ -57,10 +64,13 @@ def setup_server_processes(request):
 @pytest.fixture
 def login(setup_server_processes, page):
     """Fixture that automatically logs in when included in a test. Does not return anything."""
-    page.goto("http://localhost:5173/")
-    page.locator('input[name="username"]').click()
-    page.locator('input[name="username"]').fill("admin")
-    page.locator('input[name="username"]').press("Tab")
-    page.locator('input[name="password"]').fill("admin")
-    page.locator('input[name="password"]').press("Enter")
-    page.get_by_role("button", name="Login").click()
+    if AUTH_BACKEND == "basic":
+        page.goto("http://localhost:5173/")
+        page.locator('input[name="username"]').click()
+        page.locator('input[name="username"]').fill("admin")
+        page.locator('input[name="username"]').press("Tab")
+        page.locator('input[name="password"]').fill("admin")
+        page.locator('input[name="password"]').press("Enter")
+        page.get_by_role("button", name="Login").click()
+    else:
+        raise Exception("Unsupported Auth Backend: " + AUTH_BACKEND)
