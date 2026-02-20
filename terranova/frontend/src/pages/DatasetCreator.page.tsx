@@ -6,18 +6,22 @@ import { DataControllerType, DataControllerContextType } from "../types/mapedito
 import { DatasetCreatorForm } from "../components/DatasetCreatorForm";
 import { API_URL } from "../../static/settings";
 import { DEFAULT_DATASET } from "../data/constants";
+import Card from "../components/Card";
 
 export const DatasetListDataController = createContext<DataControllerContextType | null>(null);
 
+/**
+ * TODO: hmmmmm....
+ * LAYOUT:
+ *  - on small screen sizes, stack the card on top of the accordion
+ * COMPONENTS:
+ *  - utilize ESAccordion for create new
+ *  - utilize ESInputSelect or ESInputTypeahead (experiment) for fork options
+ *  - utilize Card component for description
+ * LOGIC:
+ *  - show "no datasets to fork" message when no other datasets exist
+ */
 export function DatasetCreatorPageComponent() {
-    const navigate = useNavigate();
-    // create some state here for the form
-    const [formOptions, setFormOptions] = useState({
-        name: "",
-        fork: false,
-        forkDataset: "",
-        forkDatasetVersion: "",
-    });
     // set up some state variables for the controller to work with
     const [datasetList, setDatasetList] = useState([]);
 
@@ -28,7 +32,7 @@ export function DatasetCreatorPageComponent() {
 
     // set up the DataController
     const [controller, _setController] = useState<DataControllerType>(
-        new DataController(API_URL + "/datasets/" + fieldsetString, datasetList, setDatasetList)
+        new DataController(API_URL + "/datasets/" + fieldsetString, datasetList, setDatasetList),
     ) as any;
 
     // trigger a fetch of the dataset list on initial load (empty list signifies this)
@@ -37,66 +41,27 @@ export function DatasetCreatorPageComponent() {
         controller.fetch();
     }, []); // on initial render
 
-    // get some information from the DataController (set of options for 'select' elements, e.g.)
-    async function createDataset(event: any) {
-        event.preventDefault();
-        let newDataset = JSON.parse(JSON.stringify(DEFAULT_DATASET));
-        newDataset.name = formOptions.name;
-        if (formOptions.fork) {
-            datasetList.forEach((datasetToFork: any) => {
-                if (
-                    formOptions.forkDataset &&
-                    datasetToFork.datasetId == formOptions.forkDataset &&
-                    formOptions.forkDatasetVersion &&
-                    datasetToFork.version == formOptions.forkDatasetVersion
-                ) {
-                    newDataset.query = JSON.parse(JSON.stringify(datasetToFork.query));
-                }
-            });
-        }
-        // persistence controller
-        let DatasetPersistenceController = new DataController(
-            API_URL + "/dataset/",
-            newDataset,
-            null
-        );
-        await DatasetPersistenceController.create();
-        navigate(`/dataset/${DatasetPersistenceController.instance.datasetId}`);
-    }
-
     return (
-        <DatasetListDataController.Provider value={{ controller, instance: datasetList }}>
-            <main className="main-content md:flex">
-                <div className="w-full md:w-6/12 mx-auto pt-6 pb-12">
-                    <DatasetCreatorForm
-                        instance={formOptions}
-                        instanceSetter={setFormOptions}
-                        datasetList={datasetList}
-                        createDataset={createDataset}
-                    ></DatasetCreatorForm>
-                </div>
+        <main className="w-full h-full flex flex-col lg:flex-row gap-8 p-8">
+            <DatasetCreatorForm datasetList={datasetList}></DatasetCreatorForm>
 
-                <div className="md:w-5/12 mx-auto mb-6">
-                    <fieldset className="content-sidebar">
-                        <h4>Create New Dataset</h4>
-                        <p>
-                            A Dataset is a set of data to be plotted on your map. To render a
-                            dataset, we create a query that yields a set of nodes. Datasets are
-                            later used to bundled together into a finished map, which also includes
-                            styling information.
-                        </p>
+            <Card className="w-full lg:1/3">
+                <h4>Create New Dataset</h4>
+                <p>
+                    A Dataset is a set of data to be plotted on your map. To render a dataset, we
+                    create a query that yields a set of nodes. Datasets are later used to bundled
+                    together into a finished map, which also includes styling information.
+                </p>
 
-                        <p className="my-2 mt-6 block">
-                            <strong>Fork Existing Dataset</strong>
-                        </p>
+                <p className="my-2 mt-6 block">
+                    <strong>Fork Existing Dataset</strong>
+                </p>
 
-                        <p>
-                            One way to create a new dataset is to make a fork of an existing one
-                            &mdash; which will copy the query and make a new dataset.
-                        </p>
-                    </fieldset>
-                </div>
-            </main>
-        </DatasetListDataController.Provider>
+                <p>
+                    One way to create a new dataset is to make a fork of an existing one &mdash;
+                    which will copy the query and make a new dataset.
+                </p>
+            </Card>
+        </main>
     );
 }
