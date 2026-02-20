@@ -49,22 +49,20 @@ export function HomePageComponent() {
     const showTemplates = auth?.user?.scope?.includes(ADMIN_SCOPE);
 
     return (
-        <main className="w-full h-full flex flex-col md:flex-row-reverse gap-8 p-8 relative">
-            <div className="md:flex-1">
-                <Card header="My Favorites" icon={<Star />}>
-                    <h4>My Datasets</h4>
-                    <FavLinkList links={favDatasets} dataType="datasets" />
-                    <h4>My Maps</h4>
-                    <FavLinkList links={favMaps} dataType="maps" />
-                    {showTemplates && (
-                        <>
-                            <h4>My Templates</h4>
-                            <FavLinkList links={favTemplates} dataType="templates" />
-                        </>
-                    )}
-                </Card>
-            </div>
-            <div className="w-full h-fit md:w-2/3 flex flex-col gap-8 pb-8">
+        <main className="w-full h-full flex flex-col lg:flex-row-reverse gap-8 p-8">
+            <Card header="My Favorites" icon={<Star />} className="md:flex-1">
+                <h4>My Datasets</h4>
+                <FavLinkList links={favDatasets} dataType="datasets" />
+                <h4>My Maps</h4>
+                <FavLinkList links={favMaps} dataType="maps" />
+                {showTemplates && (
+                    <>
+                        <h4>My Templates</h4>
+                        <FavLinkList links={favTemplates} dataType="templates" />
+                    </>
+                )}
+            </Card>
+            <div className="w-full h-fit lg:w-2/3 flex flex-col gap-8 pb-8">
                 <Card header="Recent Activity" icon={<History />}>
                     <h4>Recent Maps</h4>
                     <LinkTable links={topMaps} dataType="maps" />
