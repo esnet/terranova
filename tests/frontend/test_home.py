@@ -23,12 +23,12 @@ def test_view_libraries(page, login):
 def test_new_buttons(page, login):
     # ensure new button leads to some create new item menu
     page.get_by_role("button").nth(1).click()
-    expect(page.locator("form")).to_contain_text("Create New Dataset")
+    expect(page.locator("main").first).to_contain_text("Create New Dataset")
     page.get_by_role("link", name="Terranova").click()
 
     page.get_by_role("button").nth(2).click()
-    expect(page.locator("form")).to_contain_text("Create New Map")
+    expect(page.locator("main").first).to_contain_text("Create New Map")
     page.get_by_role("link", name="Terranova").click()
 
     page.get_by_role("button").nth(3).click()
-    expect(page.locator("form")).to_contain_text("Node Template Builder")
+    expect(page.locator("main").first).to_contain_text("Node Template Builder")
