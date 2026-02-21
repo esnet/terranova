@@ -7,7 +7,9 @@ import re
 
 
 def test_create_map(page, login):
+    # unreliable way of clicking on the create map icon button
     page.get_by_role("button").nth(2).click()
+
     # perhaps it may be better to have a proper named button instead of an icon button
     expect(page.get_by_role("button", name="Create New Map")).to_be_visible()
 
