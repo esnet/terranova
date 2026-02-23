@@ -1,4 +1,5 @@
 import React from "react";
+import Card from "./Card";
 
 export function TemplatePreview(props: any) {
     let [width, setWidth] = React.useState(0);
@@ -25,17 +26,16 @@ export function TemplatePreview(props: any) {
         stroke-opacity="0.5" />`;
 
     return (
-        <fieldset className="content-sidebar">
+        <Card className="w-full lg:1/3">
             <h4>Node Template Builder</h4>
             <p>
                 You can use SVG to style the nodes on your map. Each node is wrapped in a &nbsp;
-                <span className="highlight monospace">&lt;g&gt;</span>&nbsp; ("group") element and
-                scaled appropriately in the map application.
+                <code>g</code> (group) element and scaled appropriately in the map application.
             </p>
 
-            <h5>Node Preview</h5>
+            <h5 className="text-center">Node Preview</h5>
 
-            <div className="template-preview" ref={container}>
+            <div className="template-preview mb-4" ref={container}>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="-25 -25 50 50"
@@ -43,9 +43,9 @@ export function TemplatePreview(props: any) {
                 ></svg>
             </div>
 
-            <h5>Scaled Node Preview</h5>
+            <h5 className="text-center">Scaled Node Preview</h5>
 
-            <div className="w-6 h-6 border bg-white mx-auto">
+            <div className="w-6 h-6 border bg-white mx-auto mb-4">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="-6 -6 12 12"
@@ -53,32 +53,21 @@ export function TemplatePreview(props: any) {
                 ></svg>
             </div>
 
-            <p className="aside text-sm mt-6">
-                <em>
-                    The scaled preview shows the SVG element scaled to the approximate real size of
-                    map nodes.
-                </em>
-            </p>
+            <em className="mb-4 block text-center">
+                The scaled preview shows the SVG element scaled to the approximate real size of map
+                nodes.
+            </em>
 
             <p className="aside pt-6">Notes on formatting:</p>
-            <ul className="aside">
-                <li className="block">&bull; A stroke will be applied in the resulting map</li>
-                <li className="block">&bull; A fill applied in the resulting map</li>
-                <li className="block">
-                    &bull; Nodes are generally ~10px in width in geographic maps
-                </li>
-                <li className="block">
-                    &bull; Nodes are scaled using: &nbsp;
-                    <br />
-                    <span className="highlight monospace">height</span>,&nbsp;
-                    <span className="highlight monospace">width</span>,&nbsp;
-                    <span className="highlight monospace">x</span>, and{" "}
-                    <span className="highlight monospace">y</span>. <br />
-                    To scale properly, wrap your element in:
-                    <br />
-                    <span className="highlight monospace">&lt;svg viewBox&gt;</span>.
+            <ul>
+                <li>A stroke and a fill will be applied in the resulting map</li>
+                <li>Nodes are generally ~10px in width in geographic maps</li>
+                <li>
+                    Nodes are scaled using <code>width</code>, <code>height</code>, <code>x</code>,
+                    and <code>y</code>. To scale properly, wrap your element in:
+                    <code>&lt;svg viewBox&gt;</code>
                 </li>
             </ul>
-        </fieldset>
+        </Card>
     );
 }
