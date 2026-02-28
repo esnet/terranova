@@ -6,7 +6,7 @@ import {
     TemplateListController,
 } from "../../pages/MapEditor.page";
 import { DataControllerContextType } from "../../types/mapeditor";
-import { CompoundSlider } from "../CompoundSlider.component";
+import { InputRange } from "../InputRange";
 import { signals } from "esnet-networkmap-panel";
 import { ContentAccordion } from "../ContentAccordion.component";
 import { API_URL } from "../../../static/settings";
@@ -16,10 +16,22 @@ import {
     NumericMapType,
 } from "../../data/constants";
 import { resolvePath } from "../../data/utils";
+import {
+    ESAccordion,
+    ESButton,
+    ESDivider,
+    ESInputOption,
+    ESInputRow,
+    ESInputSelect,
+    ESInputText,
+} from "@esnet/packets-ui";
+import { Eye, EyeClosed, EyeOff } from "lucide-react";
+import { Accordion } from "../Accordion";
+import InputColor from "../InputColor";
 
 export function MapLayerOptionsPanel(props: any) {
     const { controller: mapController, instance: theMap } = useContext(
-        MapController
+        MapController,
     ) as DataControllerContextType;
     let thisLayer = mapController?.instance?.configuration?.layers[props.layerId];
 
@@ -34,14 +46,11 @@ export function MapLayerOptionsPanel(props: any) {
     let [liveOrStatic, setLiveOrStatic] = useState<string | undefined>("live");
     let [version, setVersion] = useState<string | null>("latest");
     let [template, setTemplate] = useState(undefined);
-    let layerName = mapController.instance.configuration.layers[props.layerId].name;
-    let [overrideLayerName, setLayerName] = useState(
-        (layerName.indexOf(`Layer ${props.layerId + 1}`) < 0 && "") || layerName
-    );
+    let [layerName, _setLayerName] = useState(thisLayer.name);
 
-    const setOverrideLayerName = (newName: string) => {
+    const setLayerName = (newName: string) => {
         mapController.setProperty(`configuration.layers[${props.layerId}].name`, newName);
-        setLayerName(newName);
+        _setLayerName(newName);
     };
 
     const setParentSelectedDataset = (datasetId: string) => {
@@ -91,7 +100,7 @@ export function MapLayerOptionsPanel(props: any) {
         if (liveOrStatic && selectedDataset && renderMode) {
             mapController.setProperty(
                 `configuration.layers[${props.layerId}].mapjsonUrl`,
-                layerUrl
+                layerUrl,
             );
         }
     };
@@ -106,17 +115,18 @@ export function MapLayerOptionsPanel(props: any) {
         var output = [];
         DATASET_STATIC_OR_LIVE_OPTIONS.forEach((item) => {
             output.push(
-                <option key={`${item.value}`} value={`${item.value}`}>
+                <ESInputOption key={`${item.value}`} value={`${item.value}`}>
                     {item.label}
-                </option>
+                </ESInputOption>,
             );
         });
         output.push();
         for (let i = maxVersionForSelectedDataset; i >= 1; i--) {
             output.push(
-                <option key={`static-${i}`} value={`static-${i}`}>
-                    Static &#128247; Version {i}
-                </option>
+                // @ts-ignore - genuine hurdles to satisfy TS
+                <ESInputOption key={`static-${i}`} value={`static-${i}`}>
+                    Static &#128247; Version {i as unknown as string}
+                </ESInputOption>,
             );
         }
         return output;
@@ -147,7 +157,7 @@ export function MapLayerOptionsPanel(props: any) {
     const handleConfigChange = (
         property: string,
         value: string | number,
-        availableValues: Array<{ value: string | null; label: string }> | null = null
+        availableValues: Array<{ value: string | null; label: string }> | null = null,
     ) => {
         let newValue = value;
         let editMode = props.mapCanvasRef.current.lastValue(signals.EDITING_SET);
@@ -159,232 +169,199 @@ export function MapLayerOptionsPanel(props: any) {
         props.mapCanvasRef.current.setEditMode(editMode);
     };
 
-    let header = (
-        <span>
-            <strong>Layer {props.layerId + 1}</strong>{" "}
-            {mapController.instance.configuration.layers[props.layerId].name ||
-                DSL?.controller?.instance?.filter((ds: any) => {
-                    return ds.datasetId == selectedDataset;
-                })[0]?.name}
-        </span>
-    );
-
-    let footer = (
-        <>
-            <span />
-            <div
-                className="compound hover:bg-mauve-200 cursor-pointer rounded-lg"
-                onClick={props.deleteLayer}
-            >
-                <p className="py-1 pl-3 text-esnetblack-700">Delete Layer</p>
-                <Icon className="icon btn small p-1 stroke-esnetblack-700" name="trash" />
-            </div>
-        </>
-    );
+    // the rendered layer name is a bit convoluted
+    // by default, it's undefined, but if so, we want to show it as the dataset name
+    const displayedLayerName =
+        mapController.instance.configuration.layers[props.layerId].name ??
+        DSL?.controller?.instance?.filter((ds: any) => {
+            return ds.datasetId == selectedDataset;
+        })[0]?.name;
 
     return (
-        <>
-            <ContentAccordion
-                header={header}
-                footer={footer}
-                visibility={
-                    mapController?.instance?.configuration?.layers?.[props.layerId]?.visible
-                }
-                showEye={true}
-                setVisibilityToggle={props.toggleLayer}
-            >
-                <div className="lg:flex lg:flex-row w-full">
-                    <div className="w-full lg:w-4/12">
-                        <fieldset className="lg:h-full lg:mr-3">
-                            <legend>Dataset Options</legend>
-                            <label className="strong">Import Dataset</label>
-                            <select
-                                name="dataset"
-                                className="w-full"
-                                key={`dataset-selector-${DSL?.controller?.instance?.length}-${selectedDataset}`}
-                                value={selectedDataset}
-                                onChange={(e: any) => {
-                                    setSelectedDataset(e.target.value);
-                                    setParentSelectedDataset(e.target.value);
-                                }}
-                            >
-                                {DSL?.controller?.instance?.map((dataset: any) => {
-                                    return (
-                                        <option value={dataset.datasetId} key={dataset.datasetId}>
-                                            {dataset.name}
-                                        </option>
-                                    );
-                                })}
-                            </select>
-                            <label className="strong">Dataset View</label>
-                            <select
-                                name="version"
-                                className="w-full"
-                                value={renderMode}
-                                onChange={(e: any) => {
-                                    setRenderMode(e.target.value);
-                                }}
-                            >
-                                {DATASET_RENDER_MODES.map((renderMode) => {
-                                    return (
-                                        <option key={renderMode.value} value={renderMode.value}>
-                                            {renderMode.label}
-                                        </option>
-                                    );
-                                })}
-                            </select>
-                            <div className="compound justify-start">
-                                <label className="strong">Dataset Version</label>
-                                <div
-                                    className="icon sm mt-1 -ml-1"
-                                    title='Using the "Dynamic" version will always keep your map up to date with the database, whereas "Static" versions represent a specific point in time. For some maps, stability is more important.'
+        <Accordion
+            header={
+                displayedLayerName
+                    ? `Layer ${props.layerId + 1}: ${displayedLayerName}`
+                    : `Layer ${props.layerId + 1}`
+            }
+            showEye
+            defaultVisibility={thisLayer.visible}
+            onVisibilityChange={props.toggleLayer}
+        >
+            <div className="flex flex-col gap-4 lg:flex-row w-full">
+                <fieldset className="w-full flex flex-col gap-2">
+                    <legend>
+                        <b>Dataset Options</b>
+                    </legend>
+                    <ESInputRow label="Import Dataset">
+                        <ESInputSelect
+                            name="dataset"
+                            value={selectedDataset}
+                            onChange={(e: any) => {
+                                setSelectedDataset(e.target.value);
+                                setParentSelectedDataset(e.target.value);
+                            }}
+                        >
+                            {DSL?.controller?.instance?.map((dataset: any) => (
+                                <ESInputOption
+                                    value={dataset.datasetId}
+                                    key={`dataset-selector-option-${dataset.datasetId}`}
                                 >
-                                    <Icon
-                                        name="help-circle"
-                                        className="icon tiny stroke-esnetwhite-600"
-                                    />
-                                </div>
-                            </div>
-                            <select
-                                name="version"
-                                className="w-full"
-                                key={`version-selector-${DSL?.controller?.instance?.length}`}
-                                defaultValue={`${liveOrStatic}-${version}`}
-                                onChange={(e) => {
-                                    let [s, v] = e.target.value.split("-");
-                                    setLiveOrStatic(s);
-                                    setVersion(v);
-                                }}
-                            >
-                                {renderVersionSelections()}
-                            </select>
-                            <label className="strong">Layer Name</label>
-                            <input
-                                type="text"
-                                className="w-full"
-                                defaultValue={overrideLayerName}
-                                onChange={(e) => {
-                                    setOverrideLayerName(e.target.value);
-                                }}
-                                placeholder="Override Layer Name"
-                            />
-                        </fieldset>
+                                    {dataset.name}
+                                </ESInputOption>
+                            ))}
+                        </ESInputSelect>
+                    </ESInputRow>
+                    <ESInputRow label="Dataset View">
+                        <ESInputSelect
+                            name="version"
+                            value={renderMode}
+                            onChange={(e: any) => {
+                                setRenderMode(e.target.value);
+                            }}
+                        >
+                            {DATASET_RENDER_MODES.map((renderMode) => {
+                                return (
+                                    <ESInputOption key={renderMode.value} value={renderMode.value}>
+                                        {renderMode.label}
+                                    </ESInputOption>
+                                );
+                            })}
+                        </ESInputSelect>
+                    </ESInputRow>
+                    <ESInputRow
+                        label="Dataset Version"
+                        tooltip='Using the "Dynamic" version will always keep your map up to date with the database, whereas "Static" versions represent a specific point in time. For some maps, stability is more important.'
+                    >
+                        <ESInputSelect
+                            name="version"
+                            value={`${liveOrStatic}-${version}`}
+                            onChange={(e) => {
+                                let [s, v] = e.target.value.split("-");
+                                setLiveOrStatic(s);
+                                setVersion(v);
+                            }}
+                        >
+                            {renderVersionSelections()}
+                        </ESInputSelect>
+                    </ESInputRow>
+                    <ESInputRow label="Layer Name">
+                        <ESInputText
+                            placeholder="Layer Name"
+                            value={layerName}
+                            onChange={(e) => setLayerName(e.target.value)}
+                        />
+                    </ESInputRow>
+                </fieldset>
+                <ESDivider className="block lg:hidden" />
+                <fieldset className="w-full flex flex-col gap-2">
+                    <legend>
+                        <b>Node Style</b>
+                    </legend>
+                    <ESInputRow label="Shape">
+                        <ESInputSelect
+                            name="shape"
+                            value={template}
+                            onChange={(e: any) => {
+                                setTemplate(e.target.value);
+                            }}
+                        >
+                            {TL?.controller?.instance
+                                ?.sort((a: any, b: any) => (a.name > b.name ? 1 : -1))
+                                .map((template: { templateId: string; name: string }) => {
+                                    return (
+                                        <ESInputOption
+                                            key={template.templateId}
+                                            value={template.templateId}
+                                        >
+                                            {template.name}
+                                        </ESInputOption>
+                                    );
+                                })}
+                        </ESInputSelect>
+                    </ESInputRow>
+                    <ESInputRow label="Color">
+                        <InputColor
+                            defaultValue={thisLayer?.color}
+                            onChange={(e) =>
+                                handleConfigChange(`layers[${props.layerId}].color`, e.target.value)
+                            }
+                        />
+                    </ESInputRow>
+                    <ESInputRow label="Highlight Color">
+                        <InputColor
+                            defaultValue={thisLayer?.nodeHighlight}
+                            onChange={(e) =>
+                                handleConfigChange(
+                                    `layers[${props.layerId}].nodeHighlight`,
+                                    e.target.value,
+                                )
+                            }
+                        />
+                    </ESInputRow>
+                    <ESInputRow label="Size">
+                        <InputRange
+                            name={`layer[${props.layerId}].nodewidth`}
+                            min="1"
+                            max="15"
+                            step="0.25"
+                            onChange={(e: { target: { valueAsNumber: string | number } }) =>
+                                handleConfigChange(
+                                    `layers[${props.layerId}].nodeWidth`,
+                                    e.target.valueAsNumber,
+                                    null,
+                                )
+                            }
+                            defaultValue={thisLayer?.nodeWidth}
+                        />
+                    </ESInputRow>
+                </fieldset>
+                <ESDivider className="block lg:hidden" />
+                <fieldset className="w-full flex flex-col gap-2">
+                    <legend>
+                        <b>Edge Style</b>
+                    </legend>
+                    <ESInputRow label="Width">
+                        <InputRange
+                            name={`layer[${props.layerId}].edgeWidth`}
+                            min="0.5"
+                            max="15"
+                            step="0.25"
+                            onChange={(e: { target: { valueAsNumber: string | number } }) =>
+                                handleConfigChange(
+                                    `layers[${props.layerId}].edgeWidth`,
+                                    e.target.valueAsNumber,
+                                    null,
+                                )
+                            }
+                            defaultValue={thisLayer?.edgeWidth}
+                        />
+                    </ESInputRow>
+
+                    <ESInputRow label="Offset">
+                        <InputRange
+                            name={`layer[${props.layerId}].edgeWidth`}
+                            min="0.5"
+                            max="15"
+                            step="0.25"
+                            onChange={(e: { target: { valueAsNumber: string | number } }) =>
+                                handleConfigChange(
+                                    `layers[${props.layerId}].pathOffset`,
+                                    e.target.valueAsNumber,
+                                    null,
+                                )
+                            }
+                            defaultValue={thisLayer?.pathOffset}
+                        />
+                    </ESInputRow>
+
+                    <div className="ml-auto mt-auto w-40">
+                        <ESButton variant="destructive" onClick={props.deleteLayer}>
+                            Delete Layer
+                        </ESButton>
                     </div>
-                    <div className="w-full lg:w-4/12">
-                        <fieldset className="lg:h-full lg:mr-3">
-                            <legend>Node Style</legend>
-                            <label className="shape">Shape</label>
-                            <select
-                                name="shape"
-                                className="w-full"
-                                value={template}
-                                onChange={(e: any) => {
-                                    setTemplate(e.target.value);
-                                }}
-                            >
-                                {TL?.controller?.instance
-                                    ?.sort((a: any, b: any) => {
-                                        if (a.name < b.name) {
-                                            return -1;
-                                        }
-                                        if (a.name > b.name) {
-                                            return 1;
-                                        }
-                                        return 0;
-                                    })
-                                    .map((template: { templateId: string; name: string }) => {
-                                        return (
-                                            <option
-                                                key={template.templateId}
-                                                value={template.templateId}
-                                            >
-                                                {template.name}
-                                            </option>
-                                        );
-                                    })}
-                            </select>
-                            <div>
-                                <label className="color">Color</label>
-                            </div>
-                            <div className="compound justify-start">
-                                <input
-                                    type="color"
-                                    id="color"
-                                    defaultValue={thisLayer?.color}
-                                    onChange={(e) =>
-                                        handleConfigChange(
-                                            `layers[${props.layerId}].color`,
-                                            e.target.value
-                                        )
-                                    }
-                                />
-                                <label htmlFor="color">Choose Color...</label>
-                            </div>
-                            <label htmlFor="highlight">Highlight Color</label>
-                            <div className="compound justify-start">
-                                <input type="color" id="highlight" defaultValue="#B6B6B6" />
-                                <label htmlFor="highlight">Choose Color...</label>
-                            </div>
-                            <label className="size-slider">Size</label>
-                            <div className="compound">
-                                <CompoundSlider
-                                    name={`layer[props.layerId].nodewidth`}
-                                    min="1"
-                                    max="15"
-                                    step="0.25"
-                                    onChange={(e: { target: { valueAsNumber: string | number } }) =>
-                                        handleConfigChange(
-                                            `layers[${props.layerId}].nodeWidth`,
-                                            e.target.valueAsNumber,
-                                            null
-                                        )
-                                    }
-                                    defaultValue={thisLayer?.nodeWidth}
-                                />
-                            </div>
-                        </fieldset>
-                    </div>
-                    <div className="w-full lg:w-4/12">
-                        <fieldset className="lg:h-full">
-                            <legend>Edge Style</legend>
-                            <label className="size-slider">Width</label>
-                            <div className="compound">
-                                <CompoundSlider
-                                    name={`layer[props.layerId].edgeWidth`}
-                                    min="0.5"
-                                    max="15"
-                                    step="0.25"
-                                    onChange={(e: { target: { valueAsNumber: string | number } }) =>
-                                        handleConfigChange(
-                                            `layers[${props.layerId}].edgeWidth`,
-                                            e.target.valueAsNumber,
-                                            null
-                                        )
-                                    }
-                                    defaultValue={thisLayer?.edgeWidth}
-                                />
-                            </div>
-                            <label className="size-slider">Offset</label>
-                            <div className="compound">
-                                <CompoundSlider
-                                    name={`layer[props.layerId].pathOffset`}
-                                    min="0"
-                                    max="15"
-                                    step="0.25"
-                                    onChange={(e: { target: { valueAsNumber: string | number } }) =>
-                                        handleConfigChange(
-                                            `layers[${props.layerId}].pathOffset`,
-                                            e.target.valueAsNumber,
-                                            null
-                                        )
-                                    }
-                                    defaultValue={thisLayer?.pathOffset}
-                                />
-                            </div>
-                        </fieldset>
-                    </div>
-                </div>
-            </ContentAccordion>
-        </>
+                </fieldset>
+            </div>
+        </Accordion>
     );
 }

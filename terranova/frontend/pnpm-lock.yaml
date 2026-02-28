@@ -15,16 +15,16 @@ importers:
         specifier: file:../../../esnet-packets-ui-0.8.0.tgz
         version: file:../../../esnet-packets-ui-0.8.0.tgz(antd@5.29.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.525.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       esnet-networkmap-panel:
-        specifier: ^3.1.0
+        specifier: ^3.0.0-beta5
         version: 3.1.0
       jwt-decode:
         specifier: ^3.1.2
         version: 3.1.2
       keycloak-js:
-        specifier: ^22.0.5
+        specifier: ^22.0.0
         version: 22.0.5
       lodash:
-        specifier: ^4.17.23
+        specifier: ^4.17.21
         version: 4.17.23
       lucide-react:
         specifier: ^0.525.0
@@ -33,47 +33,47 @@ importers:
         specifier: ^0.263.0
         version: 0.263.0
       oidc-client-ts:
-        specifier: ^2.5.0
+        specifier: ^2.2.4
         version: 2.5.0
       react:
-        specifier: ^18.3.1
+        specifier: ^18.2.0
         version: 18.3.1
       react-dom:
-        specifier: ^18.3.1
+        specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
       react-oidc-context:
-        specifier: ^2.4.0
+        specifier: ^2.2.2
         version: 2.4.0(oidc-client-ts@2.5.0)(react@18.3.1)
       react-router-dom:
-        specifier: ^6.30.3
+        specifier: ^6.11.1
         version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@tailwindcss/cli':
-        specifier: ^4.2.1
+        specifier: ^4.1.14
         version: 4.2.1
       '@tailwindcss/vite':
-        specifier: ^4.2.1
+        specifier: ^4.1.16
         version: 4.2.1(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1)(lightningcss@1.31.1))
       '@types/node':
-        specifier: ^24.10.13
+        specifier: ^24.10.0
         version: 24.10.13
       '@types/react':
-        specifier: ^18.3.28
+        specifier: ^18.0.28
         version: 18.3.28
       '@types/react-dom':
-        specifier: ^18.3.7
+        specifier: ^18.0.11
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
-        specifier: ^5.1.4
+        specifier: ^5.1.2
         version: 5.1.4(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1)(lightningcss@1.31.1))
       tailwindcss:
-        specifier: ^4.2.1
+        specifier: ^4.1.16
         version: 4.2.1
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
       vite:
-        specifier: ^7.3.1
+        specifier: ^7.2.0
         version: 7.3.1(@types/node@24.10.13)(jiti@2.6.1)(lightningcss@1.31.1)
 
 packages:
@@ -405,7 +405,7 @@ packages:
     version: 1.1.1
 
   '@esnet/packets-ui@file:../../../esnet-packets-ui-0.8.0.tgz':
-    resolution: {integrity: sha512-Zn2BnkQ9xj4MjujIENgIMfTQ3kPZr1v8u3V6O8AVUoXKUY4Qw4QPbyZ8UwsYMwbwLQe7SF95ugqbgsN6YHOOcg==, tarball: file:../../../esnet-packets-ui-0.8.0.tgz}
+    resolution: {integrity: sha512-XAcnhFluWpxskreub2FHArouEjSvVhLvVwPPinHE5mtt8oVig5gYQA3YTtvDdChst+O6RGdcAQB5WAe7KHHiLw==, tarball: file:../../../esnet-packets-ui-0.8.0.tgz}
     version: 0.8.0
     peerDependencies:
       antd: ^5.4.0
