@@ -4,7 +4,7 @@ import { MapController } from "../../pages/MapEditor.page";
 import { DataControllerContextType } from "../../types/mapeditor";
 import { resolvePath, setPath } from "../../data/utils";
 import { DEFAULT_MAP } from "../../data/constants";
-import { CompoundSlider } from "../CompoundSlider.component";
+import { InputRange } from "../InputRange";
 import { signals } from "esnet-networkmap-panel";
 import { ClipboardCopyInput } from "../ClipboardCopyInput.component";
 import { MapOutputModalDialog } from "./MapOutputModalDialog.component";
@@ -20,6 +20,17 @@ import {
     PoliticalBoundaryTilesets,
     PoliticalLabelTilesets,
 } from "./MapEditor.constants";
+import {
+    ESButton,
+    ESDivider,
+    ESInputNumber,
+    ESInputOption,
+    ESInputRow,
+    ESInputSelect,
+    ESInputText,
+} from "@esnet/packets-ui";
+import { ArrowUpToLine } from "lucide-react";
+import InputColor from "../InputColor";
 
 export const MapEditorSidebar = (props: any) => {
     let showPublishButton = false;
@@ -49,22 +60,22 @@ export const MapEditorSidebar = (props: any) => {
             if (lastTileset) {
                 handleConfigChange(
                     "tileset.geographic",
-                    lastTileset.geographic || (DEFAULT_MAP as any).configuration.tileset.geographic
+                    lastTileset.geographic || (DEFAULT_MAP as any).configuration.tileset.geographic,
                 );
                 handleConfigChange("tileset.political", lastTileset.political);
                 handleConfigChange("tileset.boundaries", lastTileset.boundaries);
             } else {
                 handleConfigChange(
                     "tileset.geographic",
-                    (DEFAULT_MAP as any).configuration.tileset.geographic
+                    (DEFAULT_MAP as any).configuration.tileset.geographic,
                 );
                 handleConfigChange(
                     "tileset.political",
-                    (DEFAULT_MAP as any).configuration.tileset.political
+                    (DEFAULT_MAP as any).configuration.tileset.political,
                 );
                 handleConfigChange(
                     "tileset.boundaries",
-                    (DEFAULT_MAP as any).configuration.tileset.boundaries
+                    (DEFAULT_MAP as any).configuration.tileset.boundaries,
                 );
             }
         }
@@ -77,7 +88,7 @@ export const MapEditorSidebar = (props: any) => {
 
     const findMatch = (
         value: string | number,
-        availableValues: Array<{ value: string | null; label: string }>
+        availableValues: Array<{ value: string | null; label: string }>,
     ) => {
         let match = availableValues.find((o) => o.value === value);
         if (match === undefined) {
@@ -102,7 +113,7 @@ export const MapEditorSidebar = (props: any) => {
                     handleConfigChange("viewport.center.lng", centerAndZoom.center.lng.toFixed(3));
                     handleConfigChange("viewport.zoom", centerAndZoom.zoom);
                     setRerenderViewportZoom(Math.random());
-                }
+                },
             );
             setSubscribed(true);
         }
@@ -111,7 +122,7 @@ export const MapEditorSidebar = (props: any) => {
     const handleConfigChange = (
         property: string,
         value: any,
-        availableValues: Array<{ value: string | null; label: string }> | null = null
+        availableValues: Array<{ value: string | null; label: string }> | null = null,
     ) => {
         let newValue: string | null | number = value;
         if (availableValues !== null) {
@@ -136,7 +147,7 @@ export const MapEditorSidebar = (props: any) => {
     };
 
     return (
-        <div id="dataset-editor-sidebar" className="w-4/12 2xl:w-2/12 p-2 pb-4">
+        <div className="min-w-64 w-2/5 2xl:w-1/4 flex flex-col gap-2">
             <MapOutputModalDialog
                 map={controller.instance}
                 visible={showModal}
@@ -151,132 +162,85 @@ export const MapEditorSidebar = (props: any) => {
                     setShowPublishConfirmation(false);
                 }}
             />
-            {showPublishButton ? (
-                <button
-                    className="w-full mt-2 tn-bold text-black"
-                    onClick={(e) => {
-                        setShowPublishConfirmation(true);
-                    }}
-                >
-                    <Icon
-                        name="arrow-up-to-line"
-                        className="inline-block icon sm stroke-esnetblack-700"
-                    />{" "}
-                    Publish Map&nbsp;&nbsp;&nbsp;&nbsp;
-                </button>
-            ) : null}
-            <button
-                className="w-full primary mt-2"
-                onClick={(e) => {
-                    setShowModal(true);
-                }}
-            >
+            {showPublishButton && (
+                <ESButton variant="secondary" onClick={() => setShowPublishConfirmation(true)}>
+                    <span className="flex items-center">
+                        <ArrowUpToLine />
+                        &nbsp;Publish Map
+                    </span>
+                </ESButton>
+            )}
+            <ESButton variant="secondary" onClick={() => setShowModal(true)}>
                 Get Map Output
-            </button>
-            <div className="relative opacity-50 h-4">
-                <label key={controller?.instance?.version} className="absolute right-0">
-                    Current Version: {controller?.instance?.version}
-                </label>
-            </div>
-            <label htmlFor="map-background">Background</label>
-            <div>
-                <select
-                    id="map-background"
+            </ESButton>
+            <div className="text-center">Current Version: {controller?.instance?.version}</div>
+            <ESDivider />
+            <ESInputRow label="Background">
+                <ESInputSelect
+                    name="map-background"
                     onChange={handleMapBackgroundChange}
-                    className="w-full"
-                    role="listbox"
                     value={mapBackground}
                 >
                     {MapBackgrounds.map((d) => {
                         return (
-                            <option
+                            <ESInputOption value={d.value} key={`map-background-option-${d.value}`}>
+                                {d.label}
+                            </ESInputOption>
+                        );
+                    })}
+                </ESInputSelect>
+            </ESInputRow>
+
+            {mapBackground === "tiles" ? (
+                <ESInputRow label="Geographic Tileset">
+                    <ESInputSelect
+                        name="map-background-tiles"
+                        onChange={(e) =>
+                            handleConfigChange("tileset.geographic", e.target.value, BaseTilesets)
+                        }
+                        value={controller?.instance?.configuration?.tileset?.geographic ?? "arcgis"}
+                    >
+                        {BaseTilesets.map((d) => {
+                            const value = d.value ?? d.label;
+                            return (
+                                <ESInputOption value={value} key={`map-background-option-${value}`}>
+                                    {d.label}
+                                </ESInputOption>
+                            );
+                        })}
+                    </ESInputSelect>
+                </ESInputRow>
+            ) : (
+                <ESInputRow label="Background Color">
+                    <InputColor
+                        name="map-background-color"
+                        onChange={(e) => handleConfigChange("background", e.target.value, null)}
+                        value={instance.configuration.background}
+                    />
+                </ESInputRow>
+            )}
+
+            <ESInputRow label="Map Initial Position">
+                <ESInputSelect
+                    name="map-background-tiles"
+                    onChange={(e) =>
+                        handleConfigChange("initialViewStrategy", e.target.value, ViewStrategies)
+                    }
+                    value={controller?.instance?.configuration?.initialViewStrategy}
+                >
+                    {ViewStrategies.map((d) => {
+                        return (
+                            <ESInputOption
                                 role="option"
                                 value={d.value}
                                 key={`map-background-option-${d.value}`}
                             >
                                 {d.label}
-                            </option>
+                            </ESInputOption>
                         );
                     })}
-                </select>
-            </div>
-
-            {mapBackground === "tiles" ? (
-                <div>
-                    <label htmlFor="map-background-tiles">Geographic Tileset</label>
-                    <div>
-                        <select
-                            id="map-background-tiles"
-                            onChange={(e) =>
-                                handleConfigChange(
-                                    "tileset.geographic",
-                                    e.target.value,
-                                    BaseTilesets
-                                )
-                            }
-                            className="w-full"
-                            role="listbox"
-                            defaultValue={resolvePath(
-                                controller.instance.configuration,
-                                "tileset.geographic"
-                            )}
-                        >
-                            {BaseTilesets.map((d) => {
-                                return (
-                                    <option
-                                        role="option"
-                                        value={String(d.value)}
-                                        key={`map-background-option-${String(d.value)}`}
-                                    >
-                                        {d.label}
-                                    </option>
-                                );
-                            })}
-                        </select>
-                    </div>
-                </div>
-            ) : (
-                <div>
-                    <label htmlFor="map-background-tiles">Background Color</label>
-                    <div className="color-chooser">
-                        <input
-                            id="color-select"
-                            type="color"
-                            name="color"
-                            className="w-full"
-                            onChange={(e) => handleConfigChange("background", e.target.value, null)}
-                            defaultValue={instance.configuration.background}
-                        />
-                    </div>
-                </div>
-            )}
-
-            <label htmlFor="map-viewstrat">Map Initial Position</label>
-            <div>
-                <select
-                    id="map-viewstrat"
-                    onChange={(e) =>
-                        handleConfigChange("initialViewStrategy", e.target.value, ViewStrategies)
-                    }
-                    className="w-full min-w-full"
-                    defaultValue={resolvePath(
-                        controller.instance.configuration,
-                        "initialViewStrategy"
-                    )}
-                >
-                    {ViewStrategies.map((d) => {
-                        return (
-                            <option
-                                role="option"
-                                value={String(d.value)}
-                                key={`map-background-option-${String(d.value)}`}
-                            >
-                                {d.label}
-                            </option>
-                        );
-                    })}
-                </select>
-            </div>
+                </ESInputSelect>
+            </ESInputRow>
 
             {instance.configuration.initialViewStrategy === "viewport" ? (
                 <div key={instance.configuration?.viewport}>
@@ -304,7 +268,7 @@ export const MapEditorSidebar = (props: any) => {
                                                 handleConfigChange(
                                                     "viewport.top",
                                                     e.target.valueAsNumber,
-                                                    null
+                                                    null,
                                                 )
                                             }
                                             defaultValue={instance.configuration?.viewport?.top}
@@ -323,7 +287,7 @@ export const MapEditorSidebar = (props: any) => {
                                                 handleConfigChange(
                                                     "viewport.left",
                                                     e.target.valueAsNumber,
-                                                    null
+                                                    null,
                                                 )
                                             }
                                             defaultValue={instance.configuration?.viewport?.left}
@@ -347,7 +311,7 @@ export const MapEditorSidebar = (props: any) => {
                                                 handleConfigChange(
                                                     "viewport.bottom",
                                                     e.target.valueAsNumber,
-                                                    null
+                                                    null,
                                                 )
                                             }
                                             defaultValue={instance.configuration?.viewport?.bottom}
@@ -366,7 +330,7 @@ export const MapEditorSidebar = (props: any) => {
                                                 handleConfigChange(
                                                     "viewport.right",
                                                     e.target.valueAsNumber,
-                                                    null
+                                                    null,
                                                 )
                                             }
                                             defaultValue={instance.configuration?.viewport?.right}
@@ -381,70 +345,61 @@ export const MapEditorSidebar = (props: any) => {
                 <></>
             )}
 
-            {instance.configuration.initialViewStrategy === "static" ? (
-                <div key={instance.configuration?.viewport}>
-                    <button
-                        className="w-full secondary mt-2"
-                        onClick={(e) => {
-                            props.mapCanvasRef.current.emit(signals.REQUEST_MAP_CENTER_AND_ZOOM);
-                        }}
+            {instance.configuration.initialViewStrategy === "static" && (
+                <>
+                    <ESButton
+                        onClick={() =>
+                            props.mapCanvasRef.current.emit(signals.REQUEST_MAP_CENTER_AND_ZOOM)
+                        }
+                        variant="secondary"
                     >
                         Set Center & Zoom From Map State
-                    </button>
-                    <div className="flex flex-wrap items-stretch">
-                        {/* key="...": force children to re-render on change*/}
-                        <div
-                            className="w-6/12 pr-1"
+                    </ESButton>
+                    <div className="flex gap-2">
+                        <ESInputRow
+                            label="Starting Latitude"
+                            // force a rerender on lat center change (can't occur since it's not a state)
                             key={`slat-${instance.configuration?.viewport?.center?.lat}`}
                         >
-                            <label htmlFor="start-lat">Start Latitude</label>
-                            <div>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    name="viewport.center.lat"
-                                    className="w-full"
-                                    onChange={(e) =>
-                                        handleConfigChange(
-                                            "viewport.center.lat",
-                                            e.target.valueAsNumber,
-                                            null
-                                        )
-                                    }
-                                    defaultValue={instance.configuration?.viewport?.center?.lat}
-                                />
-                            </div>
-                        </div>
-
-                        {/* key="...": force children to re-render on change*/}
-                        <div
-                            className="w-6/12 pl-1"
+                            <ESInputNumber
+                                step="0.01"
+                                name="start-lat"
+                                onChange={(e) =>
+                                    handleConfigChange(
+                                        "viewport.center.lat",
+                                        e.target.valueAsNumber,
+                                        null,
+                                    )
+                                }
+                                defaultValue={instance.configuration?.viewport?.center?.lat}
+                            />
+                        </ESInputRow>
+                        <ESInputRow
+                            label="Starting Longitude"
+                            // force a rerender on lng center change (can't occur since it's not a state)
                             key={`slng-${instance.configuration?.viewport?.center?.lng}`}
                         >
-                            <label htmlFor="start-lng">Start Longitude</label>
-                            <div>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    name="startlng"
-                                    className="w-full"
-                                    onChange={(e) =>
-                                        handleConfigChange(
-                                            "viewport.center.lng",
-                                            e.target.valueAsNumber,
-                                            null
-                                        )
-                                    }
-                                    defaultValue={instance.configuration?.viewport?.center?.lng}
-                                />
-                            </div>
-                        </div>
+                            <ESInputNumber
+                                type="number"
+                                step="0.01"
+                                name="start-lng"
+                                onChange={(e) =>
+                                    handleConfigChange(
+                                        "viewport.center.lng",
+                                        e.target.valueAsNumber,
+                                        null,
+                                    )
+                                }
+                                defaultValue={instance.configuration?.viewport?.center?.lng}
+                            />
+                        </ESInputRow>
                     </div>
-
-                    <label htmlFor="start-zoom">Start Zoom</label>
-                    {/* key="...": force children to re-render on change*/}
-                    <div key={rerenderViewportZoom}>
-                        <CompoundSlider
+                    <ESInputRow
+                        label="Start Zoom"
+                        // force a rerender on lng center change (can't occur since it's not a state)
+                        key={`szoom-${rerenderViewportZoom}`}
+                    >
+                        <InputRange
                             name="viewport.zoom"
                             min="1"
                             max="15"
@@ -454,10 +409,8 @@ export const MapEditorSidebar = (props: any) => {
                             }
                             defaultValue={instance.configuration?.viewport?.zoom}
                         />
-                    </div>
-                </div>
-            ) : (
-                <></>
+                    </ESInputRow>
+                </>
             )}
 
             {instance.configuration.initialViewStrategy === "variables" ? (
@@ -488,7 +441,7 @@ export const MapEditorSidebar = (props: any) => {
 
                     <label htmlFor="start-zoom">Initial Zoom</label>
                     <div>
-                        <CompoundSlider
+                        <InputRange
                             name="viewport.zoom"
                             min="1"
                             max="15"

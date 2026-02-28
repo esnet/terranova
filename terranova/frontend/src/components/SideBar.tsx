@@ -69,8 +69,7 @@ export function Sidebar() {
 
     return (
         <div
-            className={`fixed sm:relative h-full p-4 flex flex-col gap-2 sm:bg-light-surface_1
-                 ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto" : "w-16"}`}
+            className={`fixed sm:relative h-full p-4 flex flex-col gap-2 sm:bg-light-surface_1 shadow-2xl ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto" : "w-16"}`}
         >
             <div className={"absolute right-3.5 top-3"}>
                 <ESIconButton
