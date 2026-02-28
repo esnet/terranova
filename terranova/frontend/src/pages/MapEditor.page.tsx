@@ -21,42 +21,45 @@ import { API_URL, LAYER_LIMIT, TOOLTIP_TTL } from "../../static/settings";
 import "esnet-networkmap-panel";
 import { signals } from "esnet-networkmap-panel";
 import { debounce } from "lodash";
+import MapEditorTopbar from "../components/mapEditor/MapEditorTopbar";
+import { ESAlert, ESButton } from "@esnet/packets-ui";
+import Card from "../components/Card";
+import { Plus } from "lucide-react";
 
 export const MapController = createContext<DataControllerContextType | null>(null);
 export const DatasetListController = createContext<DataControllerContextType | null>(null);
 export const TemplateListController = createContext<DataControllerContextType | null>(null);
 
 export function MapEditorPageComponent() {
-    const mapNameRefInput = useRef<HTMLInputElement>(null);
-
     const { mapId } = useParams();
     const q = new URLSearchParams(window.location.search);
     const queryParams = q.toString() ? `?${q.toString()}` : "";
 
     let lastEdited = useContext(LastEdited);
-    let favorites = useContext(Favorites);
     let { controller: userDataController, instance: userdata } = useContext(
-        UserDataController
+        UserDataController,
     ) as DataControllerContextType;
 
     // map data controller
     const mapUrl = `${API_URL}/map/id/${mapId}/${queryParams}`;
     const [map, setMap] = useState<Map | null>(null) as any;
     const [mapController] = useState<DataControllerType>(
-        new DataController(mapUrl, map, setMap)
+        new DataController(mapUrl, map, setMap),
     ) as any;
+
+    const [loading, setLoading] = useState(false);
+    const [showSaveAlert, setShowSaveAlert] = useState(false);
 
     // persistence for map
     const saveMapConfig = () => {
-        if (mapController.update) {
-            mapController.update().then(() => {
-                setShowTooltip(true);
-                console.log(mapController.instance);
-                setTimeout(() => {
-                    setShowTooltip(false);
-                }, TOOLTIP_TTL * 1000);
-            });
-        }
+        setLoading(true);
+        mapController.update().then(() => {
+            setShowSaveAlert(true);
+            setTimeout(() => {
+                setLoading(false);
+                setShowSaveAlert(false);
+            }, TOOLTIP_TTL * 1000);
+        });
         // Remove instances of mapId from the array
         let newMaps = lastEdited?.maps?.filter((e) => e !== mapId);
         newMaps?.push(mapId); // Push at the end
@@ -74,18 +77,15 @@ export function MapEditorPageComponent() {
     const datasetListUrl = `${API_URL}/datasets/`;
     const [datasetList, setDatasetList] = useState<any[] | null>(null) as any;
     const [datasetListController] = useState<DataControllerType>(
-        new DataController(datasetListUrl, datasetList, setDatasetList)
+        new DataController(datasetListUrl, datasetList, setDatasetList),
     ) as any;
 
     // template list data controller (used in map layer options panel)
     const templateListUrl = `${API_URL}/templates/`;
     const [templateList, setTemplateList] = useState<any[] | null>(null) as any;
     const [templateListController] = useState<DataControllerType>(
-        new DataController(templateListUrl, templateList, setTemplateList)
+        new DataController(templateListUrl, templateList, setTemplateList),
     ) as any;
-    const [showTooltip, setShowTooltip] = useState(false);
-
-    const [editingName, setEditingName] = useState(false);
 
     // data fetching for all controllers
     useEffect(() => {
@@ -184,37 +184,6 @@ export function MapEditorPageComponent() {
         mapController.setProperty(`configuration.layers[${newIdx}]`, newLayer);
     };
 
-    const setMapName = (newMapName: string) => {
-        mapController.setProperty("name", newMapName);
-        setEditingName(false);
-    };
-
-    const nameFormSubmit = (e: any) => {
-        e.preventDefault();
-        setMapName((mapNameRefInput.current as HTMLInputElement).value.trim());
-    };
-
-    const markFavorite = () => {
-        if (favorites?.maps?.includes(mapId)) {
-            const index = favorites?.maps?.indexOf(mapId);
-            favorites?.maps?.splice(index, 1);
-            userDataController.setProperty(`favorites`, favorites);
-            userDataController.update();
-        } else {
-            favorites?.maps?.push(mapId);
-            userDataController.setProperty(`favorites`, favorites);
-            userDataController.update();
-        }
-    };
-
-    const showNameForm = () => {
-        setEditingName(true);
-    };
-
-    const hideNameForm = () => {
-        setEditingName(false);
-    };
-
     const toggleLayer = (idx) => {
         return (visibility) => {
             mapCanvas.current.toggleLayer(idx, visibility);
@@ -225,7 +194,7 @@ export function MapEditorPageComponent() {
     const deleteLayer = (idx) => {
         return () => {
             let splicedLayers = JSON.parse(
-                JSON.stringify(mapController.instance.configuration.layers)
+                JSON.stringify(mapController.instance.configuration.layers),
             );
             let splicedTopology = JSON.parse(JSON.stringify(mapCanvas.current.topology));
             splicedLayers.splice(idx, 1);
@@ -279,48 +248,44 @@ export function MapEditorPageComponent() {
                 console.debug("Drag/edit in progress. Discarding.");
                 return;
             }
-            try {
-                let urlToFetch = `${API_URL}/output/map/`;
-                let headers: any = { "Content-Type": "application/json" };
-                headers = setAuthHeaders(headers);
-                let mapRevision = map;
-                let response = await fetch(urlToFetch, {
-                    method: "PATCH",
-                    headers: headers,
-                    body: JSON.stringify(mapRevision),
-                });
-                if (mapCanvas.current.lastValue(signals.DRAG_STARTED)) {
-                    console.debug("Drag/edit in progress. Discarding.");
+            let urlToFetch = `${API_URL}/output/map/`;
+            let headers: any = { "Content-Type": "application/json" };
+            headers = setAuthHeaders(headers);
+            let mapRevision = map;
+            let response = await fetch(urlToFetch, {
+                method: "PATCH",
+                headers: headers,
+                body: JSON.stringify(mapRevision),
+            });
+            if (mapCanvas.current.lastValue(signals.DRAG_STARTED)) {
+                console.debug("Drag/edit in progress. Discarding.");
+                return;
+            }
+            if (response.ok) {
+                if (renderCount.current != localRenderCount) {
+                    console.debug(
+                        "Data state is out-of-date. Refusing to render out-of-date API data",
+                    );
                     return;
                 }
-                if (response.ok) {
-                    if (renderCount.current != localRenderCount) {
-                        console.debug(
-                            "Data state is out-of-date. Refusing to render out-of-date API data"
-                        );
-                        return;
+                let output = await response.json();
+                output = JSON.parse(JSON.stringify(output));
+                let topology = output.configuration.layers.map((layer, idx) => {
+                    let parsed = JSON.parse(layer.mapjson);
+                    if (!parsed) {
+                        parsed = { nodes: [], edges: [] };
                     }
-                    let output = await response.json();
-                    output = JSON.parse(JSON.stringify(output));
-                    let topology = output.configuration.layers.map((layer, idx) => {
-                        let parsed = JSON.parse(layer.mapjson);
-                        if (!parsed) {
-                            parsed = { nodes: [], edges: [] };
-                        }
-                        output.configuration.layers[idx].mapjson = null;
-                        return parsed;
-                    });
-                    output.configuration.enableEditing = true;
-                    output.configuration.topologySource = "json";
-                    let editMode = mapCanvas.current.lastValue(signals.EDITING_SET);
-                    mapCanvas.current.setOptions(output.configuration);
-                    mapCanvas.current.setTopology(topology);
-                    mapCanvas.current.setEditMode(editMode);
-                }
-            } catch (error) {
-                console.log(error);
+                    output.configuration.layers[idx].mapjson = null;
+                    return parsed;
+                });
+                output.configuration.enableEditing = true;
+                output.configuration.topologySource = "json";
+                let editMode = mapCanvas.current.lastValue(signals.EDITING_SET);
+                mapCanvas.current.setOptions(output.configuration);
+                mapCanvas.current.setTopology(topology);
+                mapCanvas.current.setEditMode(editMode);
             }
-        }, 100)
+        }, 100),
     );
 
     useEffect(() => {
@@ -338,7 +303,7 @@ export function MapEditorPageComponent() {
     }
 
     return (
-        <main className="min-h-full w-full sm:mx-auto lg:max-w-[130rem] max-w-6xl  p-2 pt-12 sm:pt-2 bg-color-layer-3 border border-color-layer-division">
+        <main className="flex flex-col gap-4 px-4 min-h-full bg-light-background">
             <MapController.Provider value={{ controller: mapController, instance: map }}>
                 <DatasetListController.Provider
                     value={{ controller: datasetListController, instance: datasetList }}
@@ -346,154 +311,70 @@ export function MapEditorPageComponent() {
                     <TemplateListController.Provider
                         value={{ controller: templateListController, instance: templateList }}
                     >
-                        {/* Header */}
-                        <div className="main-content-header m-2 compound">
-                            <div className="flex flex-row">
-                                {favorites?.maps?.includes(mapId) ? (
-                                    <div className="icon sm mr-2">
-                                        <Icon
-                                            name="lucide-star"
-                                            fill="#00a0d6"
-                                            className="stroke-esnetblue-400 -mt-[0.125rem] -ml-[0.125rem]"
-                                            onClick={markFavorite}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="icon sm mr-2">
-                                        <Icon
-                                            name="lucide-star"
-                                            className="stroke-esnetblue-400 -mt-[0.125rem] -ml-[0.125rem]"
-                                            onClick={markFavorite}
-                                        />
-                                    </div>
-                                )}
-                                <div className="icon sm mr-2">
-                                    <Icon
-                                        name="lucide-map"
-                                        className="stroke-esnetblue-400 -mt-[0.125rem] -ml-[0.125rem]"
-                                    />
-                                </div>
-                                {!editingName ? (
-                                    map.name
-                                ) : (
-                                    <form onSubmit={nameFormSubmit}>
-                                        <input
-                                            ref={mapNameRefInput}
-                                            className="text-esnetblack-900 pl-2"
-                                            name="dataset-name"
-                                            defaultValue={map.name}
-                                        />
-                                    </form>
-                                )}
-                                {!editingName ? (
-                                    <Icon
-                                        name="pencil"
-                                        height={20}
-                                        width={20}
-                                        onClick={showNameForm}
-                                        className="pencil lucide-pencil stroke-esnetblue-400 icon btn sm p-1 ml-2 -ml-[0.125rem]"
-                                    />
-                                ) : (
-                                    <>
-                                        <Icon
-                                            name="check-square"
-                                            className="check-square lucide-check-square stroke-esnetblue-400 icon btn sm p-1 ml-2 -ml-[0.125rem]"
-                                            onClick={nameFormSubmit}
-                                        />
-                                        <Icon
-                                            name="x-square"
-                                            onClick={hideNameForm}
-                                            className="x-square lucide-x-square stroke-esnetblue-400 icon btn sm p-1 ml-2 -ml-[0.125rem]"
-                                        />
-                                    </>
-                                )}
-                            </div>
-                            <div className="flex flex-row">
-                                <form action="">
-                                    <input
-                                        type="submit"
-                                        className="btn text-base -my-1 mr-2"
-                                        value="Discard Changes"
-                                    />
-                                </form>
-                                {showTooltip ? (
-                                    <span
-                                        className={`tooltip-box animate-fade absolute opacity-0 z-20 pt-[0.125rem] text-sm -top-3 right-16`}
-                                    >
-                                        Saved New Version: {mapController?.instance?.version}
-                                    </span>
-                                ) : null}
-                                <input
-                                    type="button"
-                                    className="btn text-base primary -my-1 -mr-2"
-                                    value="Save Changes"
-                                    onClick={saveMapConfig}
-                                />
-                            </div>
-                        </div>
+                        {/* Topbar */}
+                        <MapEditorTopbar saveMapConfig={saveMapConfig} loading={loading} />
+
                         {/* Map Container + Sidebar */}
-                        <div className="flex flex-row w-full mx-auto">
-                            <div className="w-8/12 2xl:w-10/12 p-2">
-                                <div
-                                    id="mapContainer"
-                                    key={refreshToggle}
-                                    className="h-full w-full border"
-                                >
-                                    <esnet-map-canvas height="560" ref={mapCanvas} />
-                                </div>
+                        <div className="flex flex-row gap-4 w-full p-2">
+                            <div
+                                id="mapContainer"
+                                key={refreshToggle}
+                                className="grow h-full border"
+                            >
+                                <esnet-map-canvas height="560" ref={mapCanvas} />
                             </div>
                             <MapEditorSidebar mapCanvasRef={mapCanvas} />
                         </div>
-                        <div className="p-2 3xl:flex 3xl:flex-row">
-                            <div className="3xl:w-6/12 3xl:pr-4">
+
+                        {/* Layer Options Panel */}
+                        <div className="gap-4 pb-4 flex flex-col 3xl:flex-row">
+                            {/* Layer Options Sections */}
+                            <div className="w-full flex flex-col gap-6">
                                 {mapController.instance.configuration.layers.map((obj, id) => (
-                                    <div className="mb-6" key={`${obj.mapjsonUrl}-${id}`}>
-                                        <MapLayerOptionsPanel
-                                            layerId={id}
-                                            mapCanvasRef={mapCanvas}
-                                            selectedDatasets={selectedDatasets}
-                                            setSelectedDatasets={setSelectedDatasets}
-                                            toggleLayer={toggleLayer(id)}
-                                            deleteLayer={deleteLayer(id)}
-                                        />
-                                    </div>
+                                    <MapLayerOptionsPanel
+                                        key={`${obj.mapjsonUrl}-${id}`}
+                                        layerId={id}
+                                        mapCanvasRef={mapCanvas}
+                                        selectedDatasets={selectedDatasets}
+                                        setSelectedDatasets={setSelectedDatasets}
+                                        toggleLayer={toggleLayer(id)}
+                                        deleteLayer={deleteLayer(id)}
+                                    />
                                 ))}
 
                                 {mapController.instance.configuration.layers.length <
-                                LAYER_LIMIT ? (
-                                    <div
-                                        className="
-                                mt-4
-                                mb-6
-                                border border-dashed
-                                rounded-xl
-                                p-6
-                                flex
-                                justify-center
-                            "
+                                    LAYER_LIMIT && (
+                                    <button
+                                        onClick={addLayerConfig}
+                                        className="cursor-pointer w-full"
                                     >
-                                        <button className="primary" onClick={addLayerConfig}>
-                                            + Add Topology Layer
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div></div>
+                                        <Card className="flex justify-center items-center gap-2">
+                                            <Plus className="mb-0.5" />
+                                            Add Topology Layer
+                                        </Card>
+                                    </button>
                                 )}
                             </div>
-                            <div className="3xl:w-6/12">
-                                <MapOverridesPanel
-                                    key={`${Object.keys(mapController.instance.overrides)
-                                        .map((k) => {
-                                            return (
-                                                k + "-" + mapController.instance.overrides[k].length
-                                            );
-                                        })
-                                        .join("-")}`}
-                                    overrides={mapController.instance.overrides}
-                                    setOverrides={setOverrides}
-                                />
-                            </div>
+
+                            {/* Overrides Panel Section */}
+                            <MapOverridesPanel
+                                key={`${Object.keys(mapController.instance.overrides)
+                                    .map((k) => {
+                                        return k + "-" + mapController.instance.overrides[k].length;
+                                    })
+                                    .join("-")}`}
+                                overrides={mapController.instance.overrides}
+                                setOverrides={setOverrides}
+                            />
                         </div>
+
+                        {showSaveAlert && (
+                            <div className="fixed right-4 bottom-4">
+                                <ESAlert variant="success" title="Map Saved">
+                                    New Version: v{mapController.instance.version}.
+                                </ESAlert>
+                            </div>
+                        )}
                     </TemplateListController.Provider>
                 </DatasetListController.Provider>
             </MapController.Provider>
