@@ -4,7 +4,11 @@ import { ContentAccordion } from "../ContentAccordion.component";
 import { MapOverride } from "./MapOverride.component";
 import { DatasetListController } from "../../pages/MapEditor.page";
 import { MapType } from "../../data/constants";
+import { Accordion } from "../Accordion";
 
+/**
+ * TODO this mess
+ */
 export function MapOverridesPanel(props: any) {
     let [overrideFormData, setOverrideFormData] = React.useState<any[]>([]);
     let [datasetNameLookup, setDatasetNameLookup] = React.useState<MapType>({});
@@ -85,14 +89,14 @@ export function MapOverridesPanel(props: any) {
     };
     React.useEffect(recalcOverrideFormData, [props.overrides]);
     return (
-        <>
-            <ContentAccordion
-                header="Map Overrides"
-                footer={`${overrideFormData.length} Overrides Applied`}
-                visibility={true}
-                showEye={false}
-            >
-                <label className="flew-row -mt-2">Rules</label>
+        <Accordion
+            header="Map Overrides"
+            footer={`${overrideFormData.length} Overrides Applied`}
+            showEye={false}
+        >
+            {overrideFormData.length === 0 ? (
+                <span>Zero overrides found.</span>
+            ) : (
                 <table className="w-full">
                     <tbody>
                         {overrideFormData.map((override) => {
@@ -103,39 +107,39 @@ export function MapOverridesPanel(props: any) {
                                     setName={setOverrideName(
                                         override.datasetId,
                                         override.type,
-                                        override.name
+                                        override.name,
                                     )}
                                     setType={setOverrideType(
                                         override.datasetId,
                                         override.type,
-                                        override.name
+                                        override.name,
                                     )}
                                     setOperation={setOverrideOperation(
                                         override.datasetId,
                                         override.type,
-                                        override.name
+                                        override.name,
                                     )}
                                     setState={setOverrideState(
                                         override.datasetId,
                                         override.type,
-                                        override.name
+                                        override.name,
                                     )}
                                     delete={deleteOverride(
                                         override.datasetId,
                                         override.type,
-                                        override.name
+                                        override.name,
                                     )}
                                     toggleVisibility={toggleOverrideVisibility(
                                         override.datasetId,
                                         override.type,
-                                        override.name
+                                        override.name,
                                     )}
                                 />
                             );
                         })}
                     </tbody>
                 </table>
-            </ContentAccordion>
-        </>
+            )}
+        </Accordion>
     );
 }
