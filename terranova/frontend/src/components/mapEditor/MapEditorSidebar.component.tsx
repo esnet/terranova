@@ -13,13 +13,7 @@ import { useAuth } from "../../AuthService";
 import { Icon } from "../Icon.component";
 
 // TODO: This will be imported through engagemap
-import {
-    MapBackgrounds,
-    ViewStrategies,
-    BaseTilesets,
-    PoliticalBoundaryTilesets,
-    PoliticalLabelTilesets,
-} from "./MapEditor.constants";
+import { MapBackgrounds, ViewStrategies, BaseTilesets } from "./MapEditor.constants";
 import {
     ESButton,
     ESDivider,
@@ -27,11 +21,15 @@ import {
     ESInputOption,
     ESInputRow,
     ESInputSelect,
-    ESInputText,
 } from "@esnet/packets-ui";
 import { ArrowUpToLine } from "lucide-react";
 import InputColor from "../InputColor";
 
+/**
+ * TODO: map publish functionality
+ * TODO: get map output functionality
+ * overall testing
+ */
 export const MapEditorSidebar = (props: any) => {
     let showPublishButton = false;
     let auth = useAuth();

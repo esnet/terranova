@@ -8,16 +8,13 @@ import {
 import { DataControllerContextType } from "../../types/mapeditor";
 import { InputRange } from "../InputRange";
 import { signals } from "esnet-networkmap-panel";
-import { ContentAccordion } from "../ContentAccordion.component";
 import { API_URL } from "../../../static/settings";
 import {
     DATASET_RENDER_MODES,
     DATASET_STATIC_OR_LIVE_OPTIONS,
     NumericMapType,
 } from "../../data/constants";
-import { resolvePath } from "../../data/utils";
 import {
-    ESAccordion,
     ESButton,
     ESDivider,
     ESInputOption,
@@ -25,7 +22,6 @@ import {
     ESInputSelect,
     ESInputText,
 } from "@esnet/packets-ui";
-import { Eye, EyeClosed, EyeOff } from "lucide-react";
 import { Accordion } from "../Accordion";
 import InputColor from "../InputColor";
 

@@ -24,70 +24,64 @@ const MapEditorTopbar = ({ loading, saveMapConfig }: MapEditorTopbarProps) => {
     };
 
     return (
-        <>
-            <div className="sticky top-0 shadow-xl z-999 w-full">
-                {/* hide anything above the sticky topbar */}
-                <div className="h-4 bg-light-background" />
-                <div className="w-full flex justify-between py-2 px-4 bg-light-secondary text-white overflow-hidden">
-                    <div className="flex gap-2 items-center justify-center">
-                        <Map />
-                        <b>Editing: </b>
-                        {!editingName ? (
-                            <>
-                                <span className="text-nowrap font-bold">{mapInstance.name}</span>
-                                <Pencil
-                                    className="cursor-pointer"
-                                    onClick={() => setEditingName(true)}
-                                />
-                            </>
-                        ) : (
-                            <form onSubmit={nameFormSubmit} className="flex gap-x-2 items-center">
-                                <div className="w-full">
-                                    <ESInputText name="map-name" defaultValue={mapName} />
-                                </div>
-                                <button className="contents">
-                                    <Save className="cursor-pointer" />
-                                </button>
-                            </form>
-                        )}
-                    </div>
+        <div className="sticky top-0 shadow-md z-999 w-full">
+            {/* hide anything above the sticky topbar */}
+            <div className="h-4 bg-light-background" />
+            <div className="w-full flex justify-between py-2 px-4 bg-light-secondary text-white overflow-hidden">
+                <div className="flex gap-2 items-center justify-center">
+                    <Map />
+                    <b>Editing: </b>
+                    {!editingName ? (
+                        <>
+                            <span className="text-nowrap font-bold">{mapInstance.name}</span>
+                            <Pencil
+                                className="cursor-pointer"
+                                onClick={() => setEditingName(true)}
+                            />
+                        </>
+                    ) : (
+                        <form onSubmit={nameFormSubmit} className="flex gap-x-2 items-center">
+                            <div className="w-full">
+                                <ESInputText name="map-name" defaultValue={mapName} />
+                            </div>
+                            <button className="contents">
+                                <Save className="cursor-pointer" />
+                            </button>
+                        </form>
+                    )}
+                </div>
 
-                    <div className="hidden lg:flex gap-2">
-                        <ESButton
-                            variant="destructive"
-                            disabled={loading}
-                            className="hidden md:auto"
-                            onClick={() => window.location.reload()}
-                        >
-                            Discard Changes
-                        </ESButton>
-                        <ESButton
-                            disabled={loading}
-                            className="hidden md:auto"
-                            onClick={saveMapConfig}
-                        >
-                            Save Changes
-                        </ESButton>
-                    </div>
-                    <div className="flex lg:hidden gap-2">
-                        <ESIconButton
-                            variant="destructive"
-                            name="trash"
-                            disabled={loading}
-                            className="block md:hidden"
-                            onClick={() => window.location.reload()}
-                        />
-                        <ESIconButton
-                            variant="primary"
-                            name="save"
-                            disabled={loading}
-                            className="block md:hidden"
-                            onClick={saveMapConfig}
-                        />
-                    </div>
+                <div className="hidden lg:flex gap-2">
+                    <ESButton
+                        variant="destructive"
+                        disabled={loading}
+                        className="hidden md:auto"
+                        onClick={() => window.location.reload()}
+                    >
+                        Discard Changes
+                    </ESButton>
+                    <ESButton disabled={loading} className="hidden md:auto" onClick={saveMapConfig}>
+                        Save Changes
+                    </ESButton>
+                </div>
+                <div className="flex lg:hidden gap-2">
+                    <ESIconButton
+                        variant="destructive"
+                        name="trash"
+                        disabled={loading}
+                        className="block md:hidden"
+                        onClick={() => window.location.reload()}
+                    />
+                    <ESIconButton
+                        variant="primary"
+                        name="save"
+                        disabled={loading}
+                        className="block md:hidden"
+                        onClick={saveMapConfig}
+                    />
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
