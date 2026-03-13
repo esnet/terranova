@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "../../../static/settings";
-import { ModalDialog } from "../ModalDialog.component";
+import { ModalDialog } from "../ModalDialog";
 import { useAuth } from "react-oidc-context";
 import { Icon } from "../Icon.component";
+import { ESButton, ESCommaSeperatedList } from "@esnet/packets-ui";
+import { CheckSquare, X } from "lucide-react";
 
 interface MapPublishModalDialogProps {
     map: any;
@@ -12,19 +14,24 @@ interface MapPublishModalDialogProps {
 
 export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
     let auth = useAuth();
-    let [loading, setLoading] = useState<boolean | null>(false);
-    let [error, setError] = useState<string | null>("");
-    let [state, setState] = useState<string | null>("confirmation");
+    let [error, setError] = useState<string>("");
+    // poor replica of a proper way to manage form status
+    const [status, setStatus] = useState<"loading" | "success" | "error" | null>(null);
 
+    // reset status and error on open/close
     useEffect(() => {
-        setLoading(false);
-        setState("confirmation");
+        setStatus(null);
+        setError("");
     }, [props.visible]);
 
     const publishMap = async () => {
-        if (loading) {
+        if (!props.map.mapId) {
+            console.error("Missing mapId when opening publish modal.");
             return;
         }
+        if (status === "loading") return;
+        setStatus("loading");
+
         let headers = {
             "Content-type": "application/json",
         } as any;
@@ -32,131 +39,91 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
             const token = auth.user?.access_token;
             headers["Authorization"] = `Bearer ${token}`;
         }
-        let output = null;
-        setLoading(true);
-        let url = `${API_URL}/map/id/${props.map.mapId}/publish/`;
-        try {
-            let response = await fetch(url, {
-                method: "post",
-                headers: headers,
-            });
-            if (response.ok) {
-                output = await response.text();
-                setLoading(false);
-                setState("success");
-            } else {
-                setState("error");
-                setError(`Error during HTTP POST to to \n${url}`);
-            }
-        } catch {
-            setState("error");
-            setError(`Network error during HTTP POST to to \n${url}`);
+        const url = `${API_URL}/map/id/${props.map.mapId}/publish/`;
+        const response = await fetch(url, {
+            method: "POST",
+            headers: headers,
+        });
+        if (response.ok) {
+            setStatus("success");
+            // TODO: determine if dismissing dialog is best UX
+            // props.dismiss();
+        } else {
+            setStatus("error");
+            setError(`Error attempting to publish map. Please try again.`);
+            console.error(`Error attempting to publish map.`);
+            console.error(response);
         }
     };
 
-    let header = (
-        <>
-            <span>
-                <Icon name="alert-triangle" className="inline-block" /> Publish Map
-            </span>
-        </>
-    );
-    let footer = (
-        <>
-            <div className="compound btn cursor-pointer rounded-lg" onClick={props.dismiss}>
-                <Icon name="x-square" className="icon btn small p-1 stroke-esnetblack-500" />
-                <div className="py-1 pr-3">Cancel</div>
-            </div>
-            <div
-                className="compound hover:bg-mauve-200 btn warning cursor-pointer rounded-lg"
-                onClick={publishMap}
-            >
-                <Icon name="check-square" className="icon btn small p-1 stroke-white" />
-                <div className="py-1 pr-3 text-white">Publish</div>
-            </div>
-        </>
-    );
-    if (state == "success" || state == "error") {
-        footer = (
+    const footer =
+        status !== "success" ? (
             <>
-                <div
-                    className="compound hover:bg-mauve-200 cursor-pointer rounded-lg p-1"
-                    onClick={props.dismiss}
-                >
-                    <Icon name="check-square" />
-                    &nbsp;&nbsp;Done
+                <div className="flex gap-2">
+                    <ESButton
+                        variant="destructive"
+                        onClick={props.dismiss}
+                        disabled={status === "loading"}
+                    >
+                        {/* <X /> */}
+                        Cancel
+                    </ESButton>
+                    <ESButton
+                        variant="primary"
+                        onClick={publishMap}
+                        disabled={status === "loading"}
+                    >
+                        {/* <CheckSquare /> */}
+                        Publish
+                    </ESButton>
                 </div>
             </>
+        ) : (
+            <ESButton variant="branded" onClick={props.dismiss}>
+                Close
+            </ESButton>
         );
-    }
 
-    if (!props.map.mapId) {
-        return (
-            <ModalDialog
-                header={header}
-                footer={footer}
-                visible={props.visible}
-                dismiss={props.dismiss}
-                className="w-3/12"
-            >
-                <h5>This map has not yet been saved.</h5>
-                <p>To publish a map, you must first save it.</p>
-            </ModalDialog>
-        );
-    }
-    let successMessage = <div className="mr-2 p-6">Map Published.</div>;
-
-    let confirmationMessage = (
-        <div className="mr-2 p-6">
-            Please confirm that you'd like to publish this map.
-            <br />
-            <br />
-            This action will make:
-            <ul className="list-disc ml-6 block">
-                <li>the current saved version of the map</li>
-                <li>coordinates of all visible objects</li>
-                <li>the results of dataset(s) used in the map</li>
-            </ul>
-            <span className="text-red-500">
-                visible to the public internet with no password protection.
-            </span>
-            <br />
-            <br />
-            Click <strong className="text-black">Publish</strong> below to proceed, or{" "}
-            <strong className="text-black">Cancel</strong> to cancel.
-        </div>
-    );
-
-    let errorMessage = (
-        <div className="mr-2 p-6">
-            An error occurred while publishing the map.
-            <br />
-            <br />
-            <pre>{error}</pre>
-        </div>
-    );
-
-    function renderMessage(state: string | null) {
-        switch (state) {
+    const renderMessage = () => {
+        switch (status) {
             case "error":
-                return errorMessage;
+                return <b className="text-light-error">{error}</b>;
             case "success":
-                return successMessage;
-            case "confirmation":
+                return <b className="text-light-success">Map Published.</b>;
             default:
-                return confirmationMessage;
+                return (
+                    <span>
+                        Click <b className="text-black">Publish</b> below to proceed, or{" "}
+                        <b className="text-black">Cancel</b> to cancel.
+                    </span>
+                );
         }
-    }
+    };
 
     return (
         <ModalDialog
             visible={props.visible}
-            dismiss={props.dismiss}
-            header={header}
+            setVisible={() => props.dismiss()}
+            header={"Publish Map Confirmation"}
             footer={footer}
-            className="w-3/12"
         >
-            <div className="flex flex-row place-content-center">{renderMessage(state)}</div>
+            <div className="flex flex-col mr-2 p-6">
+                <p>Please confirm that you'd like to publish this map.</p>
+                <p>
+                    This action will make{" "}
+                    <ESCommaSeperatedList
+                        items={[
+                            "the current saved version of the map",
+                            "coordinates of all visible objects",
+                            "the results of dataset(s) used in the map",
+                        ]}
+                    />{" "}
+                    <span className="text-red-500">
+                        visible to the public internet with no password protection.
+                    </span>
+                </p>
+                {renderMessage()}
+            </div>
         </ModalDialog>
     );
 };

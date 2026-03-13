@@ -41,7 +41,7 @@ export const MapEditorSidebar = (props: any) => {
     const { controller, instance } = useContext(MapController) as DataControllerContextType;
 
     const [showModal, setShowModal] = useState(false);
-    const [showPublishConfirmation, setShowPublishConfirmation] = useState(false);
+    const [showPublishModal, setShowPublishModal] = useState(false);
     const [subscribed, setSubscribed] = useState(false);
     const [rerenderViewportZoom, setRerenderViewportZoom] = useState(0.0);
 
@@ -155,13 +155,13 @@ export const MapEditorSidebar = (props: any) => {
             />
             <MapPublishModalDialog
                 map={controller.instance}
-                visible={showPublishConfirmation}
+                visible={showPublishModal}
                 dismiss={() => {
-                    setShowPublishConfirmation(false);
+                    setShowPublishModal(false);
                 }}
             />
             {showPublishButton && (
-                <ESButton variant="secondary" onClick={() => setShowPublishConfirmation(true)}>
+                <ESButton variant="secondary" onClick={() => setShowPublishModal(true)}>
                     <span className="flex items-center">
                         <ArrowUpToLine />
                         &nbsp;Publish Map

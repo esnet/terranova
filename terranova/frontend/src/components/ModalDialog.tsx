@@ -1,0 +1,49 @@
+/**
+ * This component should be ported to Packets Design System - but utilizing HTML's dialog component.
+ * I've confined all relevant code and styling into this file.
+ * The styling isn't fully harmonious with Packets-esque styling.
+ */
+import React from "react";
+import { XCircle } from "lucide-react";
+
+// props should be modified to extend <dialog /> props
+interface ModalDialogProps {
+    visible: boolean;
+    setVisible?: React.Dispatch<React.SetStateAction<boolean>>;
+    children: React.ReactNode;
+    header?: React.ReactNode;
+    footer?: React.ReactNode;
+}
+
+export const ModalDialog = ({
+    visible,
+    setVisible,
+    children,
+    header,
+    footer,
+}: ModalDialogProps) => {
+    if (!visible) return <></>;
+
+    return (
+        <div
+            className="fixed w-screen h-screen grid place-items-center inset-0 bg-core-black-900/40 z-1000"
+            // dismiss modal when clicking on background
+            onClick={() => setVisible?.(false)}
+        >
+            <div
+                className="w-1/2 min-w-96 rounded-xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex justify-between w-full px-4 py-2 bg-light-secondary text-white">
+                    <span className="w-full font-semibold text-lg truncate text-inherit">
+                        {header}
+                    </span>
+                    <XCircle className="hover:cursor-pointer" onClick={() => setVisible?.(false)} />
+                </div>
+                <div className="w-full p-4 bg-light-surface_2">{children}</div>
+                {/* same slate color as accordion component */}
+                <div className="w-full p-2 bg-[#6a6e7a]">{footer}</div>
+            </div>
+        </div>
+    );
+};

@@ -315,7 +315,7 @@ export function MapEditorPageComponent() {
                         <MapEditorTopbar saveMapConfig={saveMapConfig} loading={loading} />
 
                         {/* Map Container + Sidebar */}
-                        <div className="flex flex-row gap-4 w-full p-2">
+                        <div className="flex flex-row gap-4 w-full p-4 surface rounded-xl shadow-sm">
                             <div
                                 id="mapContainer"
                                 key={refreshToggle}
@@ -348,7 +348,7 @@ export function MapEditorPageComponent() {
                                         onClick={addLayerConfig}
                                         className="cursor-pointer w-full"
                                     >
-                                        <Card className="flex justify-center items-center gap-2">
+                                        <Card className="flex justify-center items-center gap-2 hover:shadow-md hover:text-dark-primary transition duration-300">
                                             <Plus className="mb-0.5" />
                                             Add Topology Layer
                                         </Card>
