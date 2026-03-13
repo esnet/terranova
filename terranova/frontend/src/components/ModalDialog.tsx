@@ -13,6 +13,7 @@ interface ModalDialogProps {
     children: React.ReactNode;
     header?: React.ReactNode;
     footer?: React.ReactNode;
+    className?: string;
 }
 
 export const ModalDialog = ({
@@ -21,6 +22,7 @@ export const ModalDialog = ({
     children,
     header,
     footer,
+    className,
 }: ModalDialogProps) => {
     if (!visible) return <></>;
 
@@ -31,18 +33,19 @@ export const ModalDialog = ({
             onClick={() => setVisible?.(false)}
         >
             <div
-                className="w-1/2 min-w-96 rounded-xl overflow-hidden"
+                className="w-1/2 min-w-96 overflow-hidden rounded-xl"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex justify-between w-full px-4 py-2 bg-light-secondary text-white">
-                    <span className="w-full font-semibold text-lg truncate text-inherit">
-                        {header}
-                    </span>
-                    <XCircle className="hover:cursor-pointer" onClick={() => setVisible?.(false)} />
+                <div className="flex justify-between items-center grow w-full px-3 py-2 bg-light-secondary text-white">
+                    <span className="w-full text-lg truncate text-inherit">{header}</span>
+                    <XCircle
+                        className="hover:cursor-pointer hover:text-white/75 transition"
+                        onClick={() => setVisible?.(false)}
+                    />
                 </div>
-                <div className="w-full p-4 bg-light-surface_2">{children}</div>
+                <div className={`w-full p-4 bg-light-surface_2 ${className ?? ""}`}>{children}</div>
                 {/* same slate color as accordion component */}
-                <div className="w-full p-2 bg-[#6a6e7a]">{footer}</div>
+                <div className="w-full p-2 bg-[#6a6e7a] min-h-10">{footer}</div>
             </div>
         </div>
     );

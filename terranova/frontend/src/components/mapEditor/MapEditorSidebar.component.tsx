@@ -161,14 +161,22 @@ export const MapEditorSidebar = (props: any) => {
                 }}
             />
             {showPublishButton && (
-                <ESButton variant="secondary" onClick={() => setShowPublishModal(true)}>
+                <ESButton
+                    disabled={!instance?.mapId}
+                    variant="secondary"
+                    onClick={() => setShowPublishModal(true)}
+                >
                     <span className="flex items-center">
                         <ArrowUpToLine />
                         &nbsp;Publish Map
                     </span>
                 </ESButton>
             )}
-            <ESButton variant="secondary" onClick={() => setShowModal(true)}>
+            <ESButton
+                disabled={!instance?.mapId}
+                variant="secondary"
+                onClick={() => setShowModal(true)}
+            >
                 Get Map Output
             </ESButton>
             <div className="text-center">Current Version: {controller?.instance?.version}</div>

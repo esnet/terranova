@@ -240,9 +240,9 @@ button.warning {
     @apply w-6/12;
 }
 
-.output-preview {
+/* .output-preview {
     @apply my-2 bg-esnetblack-400 h-4 rounded-md px-4 py-2 h-72 text-white w-full monospace text-sm;
-} 
+}  */
 
 /** -- widgets -- */
 
