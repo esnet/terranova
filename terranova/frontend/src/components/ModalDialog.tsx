@@ -35,6 +35,8 @@ export const ModalDialog = ({
             <div
                 className="w-1/2 min-w-96 overflow-hidden rounded-xl"
                 onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                tabIndex={-1}
             >
                 <div className="flex justify-between items-center grow w-full px-3 py-2 bg-light-secondary text-white">
                     <span className="w-full text-lg truncate text-inherit">{header}</span>

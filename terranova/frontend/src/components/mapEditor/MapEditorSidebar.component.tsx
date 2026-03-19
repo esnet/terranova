@@ -21,6 +21,7 @@ import {
     ESInputOption,
     ESInputRow,
     ESInputSelect,
+    ESInputText,
 } from "@esnet/packets-ui";
 import { ArrowUpToLine } from "lucide-react";
 import InputColor from "../InputColor";
@@ -248,111 +249,106 @@ export const MapEditorSidebar = (props: any) => {
                 </ESInputSelect>
             </ESInputRow>
 
-            {instance.configuration.initialViewStrategy === "viewport" ? (
-                <div key={instance.configuration?.viewport}>
-                    <button
-                        className="w-full secondary mt-2"
+            {instance.configuration.initialViewStrategy === "viewport" && (
+                <div className="flex flex-col gap-4 mt-2">
+                    <ESButton
+                        className="w-full"
+                        variant="secondary"
                         onClick={(e) => {
                             props.mapCanvasRef.current.emit(signals.REQUEST_VIEWPORT);
                         }}
                     >
                         Set Viewport from Map State
-                    </button>
-                    <div className="flex flex-wrap items-stretch">
-                        <div className="w-6/12 pr-1">
-                            <fieldset className="flex flex-wrap items-stretch">
-                                <legend className="text-sm">Top-left</legend>
-                                <div className="w-6/12 pr-2 -mt-3">
-                                    <label htmlFor="viewport.top">Latitude</label>
-                                    <div key={`vpt-${instance.configuration?.viewport?.top}`}>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            name="viewport.top"
-                                            className="w-full"
-                                            onChange={(e) =>
-                                                handleConfigChange(
-                                                    "viewport.top",
-                                                    e.target.valueAsNumber,
-                                                    null,
-                                                )
-                                            }
-                                            defaultValue={instance.configuration?.viewport?.top}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="w-6/12 pl-2 -mt-3">
-                                    <label htmlFor="viewport.left">Longitude</label>
-                                    <div key={`vpl-${instance.configuration?.viewport?.left}`}>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            name="viewport.left"
-                                            className="w-full"
-                                            onChange={(e) =>
-                                                handleConfigChange(
-                                                    "viewport.left",
-                                                    e.target.valueAsNumber,
-                                                    null,
-                                                )
-                                            }
-                                            defaultValue={instance.configuration?.viewport?.left}
-                                        />
-                                    </div>
-                                </div>
-                            </fieldset>
+                    </ESButton>
+
+                    <div className="flex flex-col gap-2">
+                        <div className="flex flex-row gap-4">
+                            <div className="flex-1">
+                                <ESInputRow
+                                    label="Top-left Lat"
+                                    key={`vpt-${instance.configuration?.viewport?.top}`}
+                                >
+                                    <ESInputNumber
+                                        step="0.01"
+                                        name="viewport.top"
+                                        onChange={(e) =>
+                                            handleConfigChange(
+                                                "viewport.top",
+                                                e.target.valueAsNumber,
+                                                null,
+                                            )
+                                        }
+                                        defaultValue={instance.configuration?.viewport?.top}
+                                    />
+                                </ESInputRow>
+                            </div>
+                            <div className="flex-1">
+                                <ESInputRow
+                                    label="Top-left Lng"
+                                    key={`vpt-${instance.configuration?.viewport?.left}`}
+                                >
+                                    <ESInputNumber
+                                        step="0.01"
+                                        name="viewport.left"
+                                        onChange={(e) =>
+                                            handleConfigChange(
+                                                "viewport.left",
+                                                e.target.valueAsNumber,
+                                                null,
+                                            )
+                                        }
+                                        defaultValue={instance.configuration?.viewport?.left}
+                                    />
+                                </ESInputRow>
+                            </div>
                         </div>
-                        <div className="w-6/12 pl-1">
-                            <fieldset className="flex flex-wrap items-stretch">
-                                <legend className="text-sm">Bottom-Right</legend>
-                                <div className="w-6/12 pr-2 -mt-3">
-                                    <label htmlFor="viewport.bottom">Latitude</label>
-                                    <div key={`vpb-${instance.configuration?.viewport?.bottom}`}>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            name="viewport.bottom"
-                                            className="w-full"
-                                            onChange={(e) =>
-                                                handleConfigChange(
-                                                    "viewport.bottom",
-                                                    e.target.valueAsNumber,
-                                                    null,
-                                                )
-                                            }
-                                            defaultValue={instance.configuration?.viewport?.bottom}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="w-6/12 pl-2 -mt-3">
-                                    <label htmlFor="viewport.right">Longitude</label>
-                                    <div key={`vpr-${instance.configuration?.viewport?.right}`}>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            name="viewport.right"
-                                            className="w-full"
-                                            onChange={(e) =>
-                                                handleConfigChange(
-                                                    "viewport.right",
-                                                    e.target.valueAsNumber,
-                                                    null,
-                                                )
-                                            }
-                                            defaultValue={instance.configuration?.viewport?.right}
-                                        />
-                                    </div>
-                                </div>
-                            </fieldset>
+
+                        <div className="flex flex-row gap-4">
+                            <div className="flex-1">
+                                <ESInputRow
+                                    label="Bottom-right Lat"
+                                    key={`vpt-${instance.configuration?.viewport?.bottom}`}
+                                >
+                                    <ESInputNumber
+                                        step="0.01"
+                                        name="viewport.bottom"
+                                        onChange={(e) =>
+                                            handleConfigChange(
+                                                "viewport.bottom",
+                                                e.target.valueAsNumber,
+                                                null,
+                                            )
+                                        }
+                                        defaultValue={instance.configuration?.viewport?.bottom}
+                                    />
+                                </ESInputRow>
+                            </div>
+                            <div className="flex-1">
+                                <ESInputRow
+                                    label="Bottom-right Lng"
+                                    key={`vpt-${instance.configuration?.viewport?.right}`}
+                                >
+                                    <ESInputNumber
+                                        step="0.01"
+                                        name="viewport.right"
+                                        onChange={(e) =>
+                                            handleConfigChange(
+                                                "viewport.right",
+                                                e.target.valueAsNumber,
+                                                null,
+                                            )
+                                        }
+                                        defaultValue={instance.configuration?.viewport?.right}
+                                    />
+                                </ESInputRow>
+                            </div>
                         </div>
                     </div>
                 </div>
-            ) : (
-                <></>
             )}
 
             {instance.configuration.initialViewStrategy === "static" && (
-                <>
+                <div className="flex flex-col gap-2 mt-2">
                     <ESButton
                         onClick={() =>
                             props.mapCanvasRef.current.emit(signals.REQUEST_MAP_CENTER_AND_ZOOM)
@@ -364,7 +360,6 @@ export const MapEditorSidebar = (props: any) => {
                     <div className="flex gap-2">
                         <ESInputRow
                             label="Starting Latitude"
-                            // force a rerender on lat center change (can't occur since it's not a state)
                             key={`slat-${instance.configuration?.viewport?.center?.lat}`}
                         >
                             <ESInputNumber
@@ -382,11 +377,9 @@ export const MapEditorSidebar = (props: any) => {
                         </ESInputRow>
                         <ESInputRow
                             label="Starting Longitude"
-                            // force a rerender on lng center change (can't occur since it's not a state)
                             key={`slng-${instance.configuration?.viewport?.center?.lng}`}
                         >
                             <ESInputNumber
-                                type="number"
                                 step="0.01"
                                 name="start-lng"
                                 onChange={(e) =>
@@ -400,11 +393,7 @@ export const MapEditorSidebar = (props: any) => {
                             />
                         </ESInputRow>
                     </div>
-                    <ESInputRow
-                        label="Start Zoom"
-                        // force a rerender on lng center change (can't occur since it's not a state)
-                        key={`szoom-${rerenderViewportZoom}`}
-                    >
+                    <ESInputRow label="Start Zoom" key={`szoom-${rerenderViewportZoom}`}>
                         <InputRange
                             name="viewport.zoom"
                             min="1"
@@ -416,37 +405,32 @@ export const MapEditorSidebar = (props: any) => {
                             defaultValue={instance.configuration?.viewport?.zoom}
                         />
                     </ESInputRow>
-                </>
+                </div>
             )}
 
-            {instance.configuration.initialViewStrategy === "variables" ? (
-                <div key={instance.configuration?.viewport}>
-                    <label htmlFor="start-lat">Latitude Variable</label>
-                    <div>
-                        <input
-                            type="text"
+            {instance.configuration.initialViewStrategy === "variables" && (
+                <div className="flex flex-col gap-2 mt-2">
+                    <ESInputRow label="Latitude Variable">
+                        <ESInputText
                             name="latitudeVar"
                             onChange={(e) =>
                                 handleConfigChange("latitudeVar", e.target.value, null)
                             }
                             defaultValue={instance.configuration?.latitudeVar}
                         />
-                    </div>
+                    </ESInputRow>
 
-                    <label htmlFor="start-lng">Longitude Variable</label>
-                    <div>
-                        <input
-                            type="text"
+                    <ESInputRow label="Longitude Variable">
+                        <ESInputText
                             name="longitudeVar"
                             onChange={(e) =>
                                 handleConfigChange("longitudeVar", e.target.value, null)
                             }
                             defaultValue={instance.configuration?.longitudeVar}
                         />
-                    </div>
+                    </ESInputRow>
 
-                    <label htmlFor="start-zoom">Initial Zoom</label>
-                    <div>
+                    <ESInputRow label="Initial Zoom">
                         <InputRange
                             name="viewport.zoom"
                             min="1"
@@ -457,10 +441,8 @@ export const MapEditorSidebar = (props: any) => {
                             }
                             defaultValue={instance.configuration?.viewport?.zoom}
                         />
-                    </div>
+                    </ESInputRow>
                 </div>
-            ) : (
-                <div />
             )}
         </div>
     );

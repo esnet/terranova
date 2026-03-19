@@ -4,11 +4,15 @@ import { DataControllerContextType, HomePageContextType } from "../types/mapedit
 import { API_URL } from "../../static/settings";
 import { setAuthHeaders } from "../DataController";
 
+/**
+ * LastEdited context stores the IDs to maps, datasets, and templates that were edited recently on local device.
+ * It does NOT store the data.
+ */
 export const LastEdited = createContext<HomePageContextType | null>(null);
 
 export function LastEditedContextProvider(props: any) {
     let { controller: userDataController, instance: userdata } = useContext(
-        UserDataController
+        UserDataController,
     ) as DataControllerContextType;
 
     let [lastEdited, setLastEdited] = useState<any>({

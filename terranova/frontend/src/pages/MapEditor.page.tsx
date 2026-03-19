@@ -327,9 +327,9 @@ export function MapEditorPageComponent() {
                         </div>
 
                         {/* Layer Options Panel */}
-                        <div className="gap-4 pb-4 flex flex-col 3xl:flex-row">
+                        <div className="gap-8 pb-4 flex flex-col 3xl:flex-row">
                             {/* Layer Options Sections */}
-                            <div className="w-full flex flex-col gap-6">
+                            <div className="w-full flex flex-col gap-4">
                                 {mapController.instance.configuration.layers.map((obj, id) => (
                                     <MapLayerOptionsPanel
                                         key={`${obj.mapjsonUrl}-${id}`}

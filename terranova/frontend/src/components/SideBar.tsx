@@ -25,7 +25,13 @@ export function Sidebar() {
 
     useEffect(() => {
         // context is null, skip for now (perhaps render a skeleton)
-        if (!lastEdited || !lastGlobal) return;
+        if (
+            !lastEdited ||
+            Object.keys(lastEdited).length === 0 ||
+            !lastGlobal ||
+            Object.keys(lastGlobal).length === 0
+        )
+            return;
 
         type LastUpdatedOn = { lastUpdatedOn: string };
         const sortOnUpdateDate = (a: LastUpdatedOn, b: LastUpdatedOn) =>
@@ -35,31 +41,32 @@ export function Sidebar() {
         // take the total number of locals, and if that's < 3, add in globals until we get 3 (or there are no globals)
         // the end result should have recently edited locals in order, then recently edited globals in order
         const getSortedData = (dataType: "datasets" | "maps" | "templates") => {
-            // use a map to guarantee unique data objects (id: Data)
-            const data = new Map();
-            // a way to map data to their ID's (more clear than splicing and appending)
-            let idFields = {
+            const dataId = {
                 maps: "mapId",
                 datasets: "datasetId",
                 templates: "templateId",
-            };
-            // @ts-ignore
-            lastEdited[dataType].forEach((item: any) => data.set(item[idFields[dataType]], item));
-            const lastEditedSorted = Array.from(data.values()).sort(sortOnUpdateDate);
-            // found enough last edited, return as is
-            if (lastEditedSorted.length >= 3) {
-                return lastEditedSorted.slice(0, 3);
+            }[dataType];
+
+            const editedIds = lastEdited[dataType] || [];
+            const globals = lastGlobal[dataType] || [];
+
+            const editedItems = globals
+                .filter((item: any) => editedIds.includes(item[dataId]))
+                .sort(sortOnUpdateDate);
+
+            // if we already have 3 or more, return early
+            if (editedItems.length >= 3) {
+                return editedItems.slice(0, 3);
             }
 
-            // not enough local last edited maps, must add in globals
-            const extendedData = new Map();
-            lastGlobal[dataType]?.forEach((item: any) => {
-                // filter out any data that has already been seen in local last edited
-                if (data.has(item.id)) return;
-                extendedData.set(item[idFields[dataType]], item);
-            });
-            const globalEditedSorted = Array.from(extendedData.values()).sort(sortOnUpdateDate);
-            return lastEditedSorted.concat(globalEditedSorted).slice(0, 3);
+            // filter out globals we already have in editedItems, then sort them
+            const existingIds = new Set(editedItems.map((item: any) => item[dataId]));
+            const remainingGlobals = globals
+                .filter((item: any) => !existingIds.has(item[dataId]))
+                .sort(sortOnUpdateDate);
+
+            // combine both arrays and slice to max 3 items
+            return [...editedItems, ...remainingGlobals].slice(0, 3);
         };
 
         setMaps(getSortedData("maps"));
