@@ -44,6 +44,10 @@ document.appendChild(elem);`;
     }
 };
 
+const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+};
+
 interface MapOutputModalDialogProps {
     map: any;
     visible: boolean;
@@ -71,12 +75,16 @@ export const MapOutputModalDialog = (props: MapOutputModalDialogProps) => {
         }
     };
 
+    const output = renderOutput(selectedOption, props.map.mapId);
+
+    // only fetch svg when requested
     useEffect(() => {
         if (selectedOption == "svg") {
             fetchSvg();
         }
     }, [selectedOption]);
 
+    // reset selected output option and rendered svg
     useEffect(() => {
         setSelectedOption(OUTPUT_OPTIONS[0].value);
         setSvgOutput(undefined);
@@ -89,9 +97,11 @@ export const MapOutputModalDialog = (props: MapOutputModalDialogProps) => {
                 return (
                     <>
                         <p className="text-text-wrap break-all min-h-32 p-2 monospace rounded-lg bg-light-surface_1">
-                            {renderOutput(option, props.map.mapId)}
+                            {output}
                         </p>
-                        <ESButton variant="secondary">Copy to Clipboard</ESButton>
+                        <ESButton variant="secondary" onClick={() => copyToClipboard(output)}>
+                            Copy to Clipboard
+                        </ESButton>
                     </>
                 );
             case "svg":

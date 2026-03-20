@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "../../../static/settings";
 import { ModalDialog } from "../ModalDialog";
-import { useAuth } from "react-oidc-context";
-import { Icon } from "../Icon.component";
 import { ESButton, ESCommaSeperatedList } from "@esnet/packets-ui";
-import { CheckSquare, X } from "lucide-react";
+import { useAuth } from "../../AuthService";
+import { setAuthHeaders } from "../../DataController";
 
 interface MapPublishModalDialogProps {
     map: any;
@@ -25,6 +24,7 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
     }, [props.visible]);
 
     const publishMap = async () => {
+        if (!auth || !auth.user) return;
         if (!props.map.mapId) {
             console.error("Missing mapId when opening publish modal.");
             return;
@@ -32,18 +32,15 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
         if (status === "loading") return;
         setStatus("loading");
 
-        let headers = {
+        const headers = setAuthHeaders({
             "Content-type": "application/json",
-        } as any;
-        if (auth.user) {
-            const token = auth.user?.access_token;
-            headers["Authorization"] = `Bearer ${token}`;
-        }
+        });
         const url = `${API_URL}/map/id/${props.map.mapId}/publish/`;
         const response = await fetch(url, {
             method: "POST",
             headers: headers,
         });
+
         if (response.ok) {
             setStatus("success");
             // TODO: determine if dismissing dialog is best UX
