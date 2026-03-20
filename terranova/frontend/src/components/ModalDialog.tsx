@@ -36,6 +36,8 @@ export const ModalDialog = ({
                 className="w-1/2 min-w-96 overflow-hidden rounded-xl"
                 onClick={(e) => e.stopPropagation()}
                 role="dialog"
+                // change this when porting to packets to be a prop or similar
+                aria-label="confirmation-modal"
                 tabIndex={-1}
             >
                 <div className="flex justify-between items-center grow w-full px-3 py-2 bg-light-secondary text-white">
