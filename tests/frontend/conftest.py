@@ -1,8 +1,10 @@
+from playwright.sync_api import expect
 import pytest
 import os
 import shutil
 import subprocess
 import time
+import random
 
 
 # AUTH_BACKEND can be basic or keycloak, in which different tests would apply
@@ -72,5 +74,63 @@ def login(setup_server_processes, page):
         page.locator('input[name="password"]').fill("admin")
         page.locator('input[name="password"]').press("Enter")
         page.get_by_role("button", name="Login").click()
+        expect(page.locator("#root")).to_contain_text("Terranova")
     else:
         raise Exception("Unsupported Auth Backend: " + AUTH_BACKEND)
+
+
+@pytest.fixture
+def create_test_map(page, login):
+    """
+    Fixture that sets up an independent map to be used for testing. Automatically runs login fixture.
+    Automatically navigates to the map editor for the created map,
+    but can be navigated to as such: `page.goto("http://localhost:5173/map/" + create_test_map)`.
+    Returns the map ID."""
+    map_name = f"Generated Test Map: {random.randint(0, 1000)}"
+    # Create new map
+    page.goto("http://localhost:5173/map/new")
+    # Fill out new map creation form
+    page.get_by_role("textbox", name="Name*").click()
+    page.get_by_role("textbox", name="Name*").fill(map_name)
+    page.get_by_role("button", name="Create Map").click()
+    expect(page.get_by_role("main")).to_contain_text(map_name)
+
+    return page.url.split("/")[-1]
+
+
+@pytest.fixture
+def create_test_dataset(page, login):
+    """
+    Fixture that sets up an independent dataset to be used for testing. Automatically runs login fixture.
+    Automatically navigates to the dataset editor for the created dataset,
+    but can be navigated to as such: `page.goto("http://localhost:5173/dataset/" + create_test_dataset)`.
+    Returns the dataset ID."""
+    dataset_name = f"Generated Test Dataset: {random.randint(0, 1000)}"
+    # Create new map
+    page.goto("http://localhost:5173/dataset/new")
+    # Fill out new map creation form
+    page.get_by_role("textbox", name="Name*").click()
+    page.get_by_role("textbox", name="Name*").fill(dataset_name)
+    page.get_by_role("button", name="Create Dataset").click()
+    expect(page.get_by_role("main")).to_contain_text(dataset_name)
+
+    return page.url.split("/")[-1]
+
+
+@pytest.fixture
+def create_test_node(page, login):
+    """
+    Fixture that sets up an independent node template to be used for testing. Automatically runs login fixture.
+    Automatically navigates to the node editor for the created node,
+    but can be navigated to as such: `page.goto("http://localhost:5173/template/" + create_test_node)`.
+    Returns the node template ID."""
+    dataset_name = f"Generated Test Node: {random.randint(0, 1000)}"
+    # Create new map
+    page.goto("http://localhost:5173/template/new")
+    # Fill out new map creation form
+    page.get_by_role("textbox", name="Name*").click()
+    page.get_by_role("textbox", name="Name*").fill(dataset_name)
+    page.get_by_role("button", name="Create Template").click()
+    expect(page.get_by_role("main")).to_contain_text(dataset_name)
+
+    return page.url.split("/")[-1]

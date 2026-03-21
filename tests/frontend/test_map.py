@@ -56,21 +56,7 @@ def test_create_forked_map(page, login):
     expect(page).to_have_url(re.compile(r".*/map/\w{7}$"))
 
 
-# THE FOLLOWING TESTS MUST BE RAN SEQUENTIALLY
-MAP_NAME = f"Map Editor Test: {random.randint(0, 1000)}"
-
-
-def test_map_change_cancel(page, login):
-    # Create new map
-    page.locator("#sidebar").get_by_role("link", name="Maps").click()
-    page.get_by_role("button", name="Create New").click()
-    expect(page.get_by_role("heading", name="Terranova")).to_be_visible()
-    # Fill out new map creation form
-    page.get_by_role("textbox", name="Name*").click()
-    page.get_by_role("textbox", name="Name*").fill(MAP_NAME)
-    page.get_by_role("button", name="Create Map").click()
-    expect(page.get_by_role("group", name="Node Style")).to_be_visible()
-
+def test_map_discard_changes(page, create_test_map):
     # Modify something random
     page.get_by_role("combobox").filter(has_text="Map Tiles").click()
     expect(page.get_by_role("listbox", name="Input Select Options")).to_be_visible()
@@ -79,51 +65,35 @@ def test_map_change_cancel(page, login):
     page.get_by_role("button", name="Discard Changes").click()
     expect(page.get_by_role("main")).to_contain_text("Current Version: 1")
     # Ensure persistence
-    time.sleep(1)
     page.reload()
     expect(page.get_by_role("main")).to_contain_text("Current Version: 1")
 
 
-# def test_rename_map(page, login):
-#     pass # TODO:
-
-
-def test_change_map_center_manually(page, login):
-    # Navigate to map
-    page.get_by_role("link", name=MAP_NAME).click()
+def test_change_map_center_manually(page, create_test_map):
     # Modify map center and zoom
     page.get_by_role("spinbutton", name="Starting Latitude").fill("40")
     page.get_by_role("spinbutton", name="Starting Longitude").fill("-100")
     page.get_by_role("slider", name="Start Zoom").fill("5.5")
     page.get_by_role("button", name="Save Changes").click()
     # ensure persist on reload
-    time.sleep(0.5)
     page.reload()
-    time.sleep(0.5)
     expect(page.get_by_role("slider", name="Start Zoom")).to_have_value("5.5")
     expect(page.get_by_role("spinbutton", name="Starting Latitude")).to_have_value("40")
     expect(page.get_by_role("spinbutton", name="Starting Longitude")).to_have_value("-100")
 
 
-def test_change_map_center_via_map_view(page, login):
-    # Navigate to map
-    page.get_by_role("link", name=MAP_NAME).click()
-    # Modify map center via map view on left (shrink by .125 12 times to get 5.5 - (12*0.125) = 4)
-    for i in range(12):
+def test_change_map_center_via_map_view(page, create_test_map):
+    for _ in range(4):
         page.get_by_test_id("06b943").click()
     page.get_by_role("button", name="Set Center & Zoom From Map").click()
-    expect(page.get_by_role("slider", name="Start Zoom")).to_have_value("4")
+    expect(page.get_by_role("slider", name="Start Zoom")).to_have_value("2.5")
     page.get_by_role("button", name="Save Changes").click()
     # ensure persist on reload
-    time.sleep(0.5)
     page.reload()
-    time.sleep(0.5)
-    expect(page.get_by_role("slider", name="Start Zoom")).to_have_value("4")
+    expect(page.get_by_role("slider", name="Start Zoom")).to_have_value("2.5")
 
 
-def test_publish_map(page, login):
-    # Navigate to map
-    page.get_by_role("link", name=MAP_NAME).click()
+def test_publish_map(page, create_test_map):
     # Publish map
     page.get_by_role("button", name="Publish Map").click()
     dialog = page.get_by_role("dialog")
@@ -134,10 +104,8 @@ def test_publish_map(page, login):
     expect(dialog).to_contain_text("Map Published")
 
 
-def test_output_map_url(page, login, context):
+def test_output_map_url(page, create_test_map, context):
     context.grant_permissions(["clipboard-write", "clipboard-read"])
-    # Navigate to map
-    page.get_by_role("link", name=MAP_NAME).click()
     # View default (Grafana) output, a link
     page.get_by_role("button", name="Get Map Output").click()
     dialog = page.get_by_role("dialog")
@@ -153,16 +121,15 @@ def test_output_map_url(page, login, context):
     ), f"Map output copied to clipboard: '{clipboard_text}' failed to match."
 
 
-def test_output_map_svg(page, login, context):
+def test_output_map_svg(page, create_test_map, context):
     context.grant_permissions(["clipboard-write", "clipboard-read"])
-    # Navigate to map
-    page.get_by_role("link", name=MAP_NAME).click()
     # View Raw SVG Output
     page.get_by_role("button", name="Get Map Output").click()
     dialog = page.get_by_role("dialog")
     dialog.get_by_role("combobox").filter(has_text="Grafana").click()
     dialog.get_by_role("option", name="Raw SVG Output").click()
     dialog.get_by_role("button", name="Copy to Clipboard").click()
+
     # TODO: check what is even in clipboard
 
     with page.expect_download() as download_info:
@@ -172,13 +139,10 @@ def test_output_map_svg(page, login, context):
         "Error fetching SVG output. Check to see if your map is published."
     )
     # TODO: fix this test: API failing to generate SVG
-    # Error is:
-    #   |   File "/home/echennau/LBNL/terranova/terranova/output/svg.py", line 81, in render_map_svg
-    #   |     layers = [json.loads(layer["mapjson"]) for layer in configuration["layers"]]
-    #   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    #   | orjson.JSONDecodeError: Input must be bytes, bytearray, memoryview, or str: line 1 column 1 (char 0)
+    # Error is due to a CORS issue:
+    # Access to fetch at 'http://localhost:8000/odmin   utput/map/HmOQATH/svg/' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+    # Will be fixed with TERR-475
     pytest.fail("See test_output_map_svg for more info.")
 
 
 # TODO: add tests involving modifying map layers
-# TODO: implement COPY TO CLIPBOARD FUNCTIONALITY
