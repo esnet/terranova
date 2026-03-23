@@ -12,6 +12,9 @@ type CardProps = {
     className?: string;
 };
 
+/**
+ * Custom Terranova dotted border card.
+ */
 function Card({ icon, header, headerButton, children, className = "" }: CardProps) {
     return (
         <div className={`surface p-6 rounded-2xl border border-dotted h-fit ${className}`}>
