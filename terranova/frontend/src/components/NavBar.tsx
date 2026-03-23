@@ -57,7 +57,7 @@ function NavigationItems({ navigation }: NavigationProps) {
     return (
         <div className="flex gap-8 items-center">
             {navigation?.map((item) => (
-                <h6 key={item.name} className="mb-0">
+                <h6 key={item.name} className="pb-0">
                     <a
                         href={item.href}
                         className="text-light-copyAlt dark:text-dark-copyAlt text-2xl no-underline"
@@ -75,7 +75,7 @@ export function NavBar() {
     const navigation = [{ name: "Terranova", href: "/", current: false }];
 
     return (
-        <nav className="flex justify-between items-center p-2 bg-light-primary">
+        <nav className="flex justify-between items-center py-2 px-2 bg-light-primary">
             <div className="flex gap-x-4">
                 <Logo />
                 <NavigationItems navigation={navigation} />
