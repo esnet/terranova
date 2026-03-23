@@ -1,4 +1,4 @@
-import { ESDropdown, ESAvatar } from "@esnet/packets-ui";
+import { PktsDropdown, PktsAvatar } from "@esnet/packets-ui-react";
 import { useState } from "react";
 import { useAuth } from "react-oidc-context";
 
@@ -18,9 +18,9 @@ function ProfileMenu() {
     ];
 
     return (
-        <ESDropdown
+        <PktsDropdown
             anchor={
-                <ESAvatar
+                <PktsAvatar
                     srcSet={auth?.user?.profile?.picture ?? "/user.svg"}
                     size="medium"
                     className="cursor-pointer"
@@ -38,7 +38,7 @@ function ProfileMenu() {
                     {item.name}
                 </a>
             ))}
-        </ESDropdown>
+        </PktsDropdown>
     );
 }
 

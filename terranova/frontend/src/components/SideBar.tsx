@@ -3,9 +3,9 @@ import { LastEdited } from "../context/LastEditedContextProvider";
 import { GlobalLastEdited } from "../context/GlobalLastEditedContextProvider";
 import { PUBLISH_SCOPE, ADMIN_SCOPE } from "../../static/settings";
 import { useAuth } from "../AuthService";
-import { ESIconButton } from "@esnet/packets-ui";
-import { FileText, FolderOpen, ToolCase } from "lucide-react";
+import { ChevronLeft, FileText, FolderOpen, Menu, ToolCase } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PktsIconButton } from "@esnet/packets-ui-react";
 
 export function Sidebar() {
     let auth = useAuth();
@@ -79,15 +79,16 @@ export function Sidebar() {
             className={`fixed sm:relative h-full p-4 flex flex-col gap-2 sm:bg-light-surface_1 shadow-2xl ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto" : "w-16"}`}
         >
             <div className={"absolute right-3.5 top-3"}>
-                <ESIconButton
+                <PktsIconButton
                     onClick={toggleMenu}
                     variant="tertiary"
                     square
-                    name={open ? "chevron-left" : "menu"}
                     aria-expanded={open}
                     aria-controls="sidebar"
                     aria-label={open ? "Close Sidebar" : "Open Sidebar"}
-                />
+                >
+                    {open ? <ChevronLeft /> : <Menu />}
+                </PktsIconButton>
             </div>
             {open && (
                 <nav

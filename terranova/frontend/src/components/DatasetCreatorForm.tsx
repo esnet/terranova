@@ -4,15 +4,15 @@ import { DEFAULT_DATASET } from "../data/constants";
 import { DataController } from "../DataController";
 import { API_URL } from "../../static/settings";
 import {
-    ESAccordion,
-    ESInputRow,
-    ESInputText,
-    ESInputSwitch,
-    ESButton,
-    ESDivider,
-    ESInputOption,
-    ESInputTypeahead,
-} from "@esnet/packets-ui";
+    PktsAccordion,
+    PktsInputRow,
+    PktsInputText,
+    PktsInputSwitch,
+    PktsButton,
+    PktsDivider,
+    PktsInputTypeahead,
+    PktsInputOption,
+} from "@esnet/packets-ui-react";
 
 type Form = {
     name?: string;
@@ -71,23 +71,23 @@ export function DatasetCreatorForm(props: any) {
     };
 
     return (
-        <ESAccordion header="Create New Dataset">
+        <PktsAccordion header="Create New Dataset">
             <form onSubmit={onSubmit} className="flex flex-col gap-4">
-                <ESInputRow label="Name" required>
-                    <ESInputText
+                <PktsInputRow label="Name" required>
+                    <PktsInputText
                         name="name"
                         value={formValues.name}
                         onChange={(e) => setFormValue("name")(e.target.value)}
                         required
                     />
-                </ESInputRow>
-                <ESInputRow label="Fork Existing Dataset">
-                    <ESInputSwitch
+                </PktsInputRow>
+                <PktsInputRow label="Fork Existing Dataset">
+                    <PktsInputSwitch
                         name="fork"
                         checked={formValues.fork}
                         onChange={(e) => setFormValue("fork")(e.target.checked)}
                     />
-                </ESInputRow>
+                </PktsInputRow>
                 {formValues.fork && (
                     <ForkOptionsFieldset
                         formValues={formValues}
@@ -96,12 +96,12 @@ export function DatasetCreatorForm(props: any) {
                     />
                 )}
                 <div className="mt-2 ml-auto w-fit">
-                    <ESButton variant="secondary" type="submit">
+                    <PktsButton variant="secondary" type="submit">
                         Create Dataset
-                    </ESButton>
+                    </PktsButton>
                 </div>
             </form>
-        </ESAccordion>
+        </PktsAccordion>
     );
 }
 
@@ -143,25 +143,25 @@ function ForkOptionsFieldset({
         <small>No datasets exist to fork from.</small>
     ) : (
         <>
-            <ESDivider />
+            <PktsDivider />
             <fieldset className="flex flex-col gap-2">
                 <legend className="block mb-2">Fork Existing Dataset Options</legend>
-                <ESInputRow label="Dataset Name" required>
-                    <ESInputTypeahead
+                <PktsInputRow label="Dataset Name" required>
+                    <PktsInputTypeahead
                         multi={false}
                         value={formValues.forkDataset ? [formValues.forkDataset] : []}
                         onChange={(e) => setFormValue("forkDataset")(e.target.value)}
                         name="forkDataset"
                     >
                         {Object.values(datasetHash).map(({ datasetId, name }: any) => (
-                            <ESInputOption key={datasetId} value={datasetId}>
+                            <PktsInputOption key={datasetId} value={datasetId}>
                                 {name}
-                            </ESInputOption>
+                            </PktsInputOption>
                         ))}
-                    </ESInputTypeahead>
-                </ESInputRow>
-                <ESInputRow label="Version" disabled={!formValues.forkDataset} required>
-                    <ESInputTypeahead
+                    </PktsInputTypeahead>
+                </PktsInputRow>
+                <PktsInputRow label="Version" disabled={!formValues.forkDataset} required>
+                    <PktsInputTypeahead
                         multi={false}
                         disabled={!formValues.forkDataset}
                         value={formValues.forkDatasetVersion ? [formValues.forkDatasetVersion] : []}
@@ -171,16 +171,16 @@ function ForkOptionsFieldset({
                         {formValues.forkDataset &&
                             datasetHash[formValues.forkDataset].versions.map(
                                 (versionNumber: any) => (
-                                    <ESInputOption
+                                    <PktsInputOption
                                         key={`${formValues.forkDataset}-${versionNumber}`}
                                         value={versionNumber}
                                     >
                                         {`v${versionNumber}`}
-                                    </ESInputOption>
+                                    </PktsInputOption>
                                 ),
                             )}
-                    </ESInputTypeahead>
-                </ESInputRow>
+                    </PktsInputTypeahead>
+                </PktsInputRow>
             </fieldset>
         </>
     );

@@ -2,9 +2,13 @@ import { useState, useEffect } from "react";
 import { OUTPUT_OPTIONS, OUTPUT_INSTRUCTIONS } from "../../data/constants";
 import { API_URL } from "../../../static/settings";
 import { setAuthHeaders } from "../../DataController";
-import { Icon } from "../Icon.component";
 import { ModalDialog } from "../ModalDialog";
-import { ESButton, ESCodeBlock, ESInputOption, ESInputRow, ESInputSelect } from "@esnet/packets-ui";
+import {
+    PktsButton,
+    PktsInputRow,
+    PktsInputSelect,
+    PktsInputOption,
+} from "@esnet/packets-ui-react";
 
 const renderOutput = (option: string, mapId: string) => {
     switch (option) {
@@ -99,9 +103,9 @@ export const MapOutputModalDialog = (props: MapOutputModalDialogProps) => {
                         <p className="text-text-wrap break-all min-h-32 p-2 monospace rounded-lg bg-light-surface_1">
                             {output}
                         </p>
-                        <ESButton variant="secondary" onClick={() => copyToClipboard(output)}>
+                        <PktsButton variant="secondary" onClick={() => copyToClipboard(output)}>
                             Copy to Clipboard
-                        </ESButton>
+                        </PktsButton>
                     </>
                 );
             case "svg":
@@ -118,15 +122,15 @@ export const MapOutputModalDialog = (props: MapOutputModalDialogProps) => {
                             </span>
                         )}
                         <div className="flex flex-col gap-2">
-                            <ESButton variant="secondary">Copy to Clipboard</ESButton>
-                            <ESButton
+                            <PktsButton variant="secondary">Copy to Clipboard</PktsButton>
+                            <PktsButton
                                 variant="secondary"
                                 as="a"
                                 download={`${props.map.name}.svg`}
                                 href={window.URL.createObjectURL(new Blob([svgOutput as BlobPart]))}
                             >
                                 Download
-                            </ESButton>
+                            </PktsButton>
                         </div>
                     </>
                 );
@@ -148,8 +152,8 @@ export const MapOutputModalDialog = (props: MapOutputModalDialogProps) => {
             header={"Map Output"}
         >
             <div className="w-1/2 flex flex-col gap-4">
-                <ESInputRow label="Output Format">
-                    <ESInputSelect
+                <PktsInputRow label="Output Format">
+                    <PktsInputSelect
                         value={selectedOption}
                         onChange={(e) => {
                             setSelectedOption(e.target.value);
@@ -157,10 +161,10 @@ export const MapOutputModalDialog = (props: MapOutputModalDialogProps) => {
                         name="output-format"
                     >
                         {OUTPUT_OPTIONS.map((opt) => {
-                            return <ESInputOption value={opt.value}>{opt.label}</ESInputOption>;
+                            return <PktsInputOption value={opt.value}>{opt.label}</PktsInputOption>;
                         })}
-                    </ESInputSelect>
-                </ESInputRow>
+                    </PktsInputSelect>
+                </PktsInputRow>
                 <p className="m-0">
                     <b className="block mb-1 tn-bold text-black">Instructions</b>
                     {OUTPUT_INSTRUCTIONS[selectedOption]}

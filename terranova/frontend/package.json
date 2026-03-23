@@ -12,8 +12,9 @@
         "build-test": "vite build -c vite.config.test.ts --mode=production && pnpm run build-test-static-overwrites"
     },
     "dependencies": {
-        "@esnet/esnet-tokens": "file:../../../esnet-esnet-tokens-1.1.1.tgz",
-        "@esnet/packets-ui": "file:../../../esnet-packets-ui-0.8.0.tgz",
+        "@esnet/esnet-tokens": "file:esnet-esnet-tokens-1.1.1.tgz",
+        "@esnet/packets-ui-css": "file:esnet-packets-ui-css-0.1.0.tgz",
+        "@esnet/packets-ui-react": "file:esnet-packets-ui-react-0.9.0.tgz",
         "esnet-networkmap-panel": "^3.0.0-beta5",
         "jwt-decode": "^3.1.2",
         "keycloak-js": "^22.0.0",
@@ -25,6 +26,12 @@
         "react-dom": "^18.2.0",
         "react-oidc-context": "^2.2.2",
         "react-router-dom": "^6.11.1"
+    },
+    "pnpm": {
+        "overrides": {
+            "@esnet/packets-ui-css": "file:./esnet-packets-ui-css-0.1.0.tgz",
+            "@esnet/esnet-tokens": "file:./esnet-esnet-tokens-1.1.1.tgz"
+        }
     },
     "devDependencies": {
         "@tailwindcss/cli": "^4.1.14",

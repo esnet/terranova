@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Icon } from "./Icon.component";
 import { Eye, EyeOff } from "lucide-react";
-import { ESAccordion, ESButton } from "@esnet/packets-ui";
+import { PktsAccordion } from "@esnet/packets-ui-react";
 
 interface AccordionProps {
     header: string;
@@ -38,8 +37,8 @@ export function Accordion({
     ) : undefined;
 
     return (
-        <ESAccordion header={header} footer={footer} actionButtons={eyeButton}>
+        <PktsAccordion header={header} footer={footer} actionButtons={eyeButton}>
             {children}
-        </ESAccordion>
+        </PktsAccordion>
     );
 }

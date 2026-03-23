@@ -4,16 +4,23 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@esnet/packets-ui-css': file:./esnet-packets-ui-css-0.1.0.tgz
+  '@esnet/esnet-tokens': file:./esnet-esnet-tokens-1.1.1.tgz
+
 importers:
 
   .:
     dependencies:
       '@esnet/esnet-tokens':
-        specifier: file:../../../esnet-esnet-tokens-1.1.1.tgz
-        version: file:../../../esnet-esnet-tokens-1.1.1.tgz(style-dictionary@5.1.1(tslib@2.8.1))
-      '@esnet/packets-ui':
-        specifier: file:../../../esnet-packets-ui-0.8.0.tgz
-        version: file:../../../esnet-packets-ui-0.8.0.tgz(antd@5.29.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.525.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: file:esnet-esnet-tokens-1.1.1.tgz
+        version: file:esnet-esnet-tokens-1.1.1.tgz(style-dictionary@5.1.1(tslib@2.8.1))
+      '@esnet/packets-ui-css':
+        specifier: file:esnet-packets-ui-css-0.1.0.tgz
+        version: file:esnet-packets-ui-css-0.1.0.tgz(style-dictionary@5.1.1(tslib@2.8.1))
+      '@esnet/packets-ui-react':
+        specifier: file:esnet-packets-ui-react-0.9.0.tgz
+        version: file:esnet-packets-ui-react-0.9.0.tgz(antd@5.29.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.525.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(style-dictionary@5.1.1(tslib@2.8.1))
       esnet-networkmap-panel:
         specifier: ^3.0.0-beta5
         version: 3.1.0
@@ -400,13 +407,17 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@esnet/esnet-tokens@file:../../../esnet-esnet-tokens-1.1.1.tgz':
-    resolution: {integrity: sha512-Wjz+hgtx2cMpVt0Z6Gbvzyjc9jJ0TjQEu2ZKKyoNxe9tBRWcAhFGas/KtqAoh4vkYLN8GAQrVA41o4FzivwaLQ==, tarball: file:../../../esnet-esnet-tokens-1.1.1.tgz}
+  '@esnet/esnet-tokens@file:esnet-esnet-tokens-1.1.1.tgz':
+    resolution: {integrity: sha512-tS1x96e3onREveVCG2n/847TJ0JOKjaDaHEYoFShkzC4qL+2+lducDPZnd38zYTCd6rHTfqaAcZ11zbRs2sWvQ==, tarball: file:esnet-esnet-tokens-1.1.1.tgz}
     version: 1.1.1
 
-  '@esnet/packets-ui@file:../../../esnet-packets-ui-0.8.0.tgz':
-    resolution: {integrity: sha512-XAcnhFluWpxskreub2FHArouEjSvVhLvVwPPinHE5mtt8oVig5gYQA3YTtvDdChst+O6RGdcAQB5WAe7KHHiLw==, tarball: file:../../../esnet-packets-ui-0.8.0.tgz}
-    version: 0.8.0
+  '@esnet/packets-ui-css@file:esnet-packets-ui-css-0.1.0.tgz':
+    resolution: {integrity: sha512-gCXAWEB67DgQ6c3Tb46wLPr047foWY3gD9c26jn+q0pyDjpPQtNq92RSEG/TiOxhFDIiUU6mx9uYvEfLfnCyAQ==, tarball: file:esnet-packets-ui-css-0.1.0.tgz}
+    version: 0.1.0
+
+  '@esnet/packets-ui-react@file:esnet-packets-ui-react-0.9.0.tgz':
+    resolution: {integrity: sha512-gr8dkCqPB1GKMeklCNQuG7z2NXYndEsXz88/vQ8tZvK5AymsdMpiU9RBy7BCWKqdPISWc7ourJxhPDF5VWvmLw==, tarball: file:esnet-packets-ui-react-0.9.0.tgz}
+    version: 0.9.0
     peerDependencies:
       antd: ^5.4.0
       lucide-react: ^0.525.0
@@ -2503,18 +2514,27 @@ snapshots:
   '@esbuild/win32-x64@0.27.3':
     optional: true
 
-  '@esnet/esnet-tokens@file:../../../esnet-esnet-tokens-1.1.1.tgz(style-dictionary@5.1.1(tslib@2.8.1))':
+  '@esnet/esnet-tokens@file:esnet-esnet-tokens-1.1.1.tgz(style-dictionary@5.1.1(tslib@2.8.1))':
     dependencies:
       sd-tailwindcss-transformer: 1.4.6(style-dictionary@5.1.1(tslib@2.8.1))
     transitivePeerDependencies:
       - style-dictionary
 
-  '@esnet/packets-ui@file:../../../esnet-packets-ui-0.8.0.tgz(antd@5.29.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.525.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@esnet/packets-ui-css@file:esnet-packets-ui-css-0.1.0.tgz(style-dictionary@5.1.1(tslib@2.8.1))':
     dependencies:
+      '@esnet/esnet-tokens': file:esnet-esnet-tokens-1.1.1.tgz(style-dictionary@5.1.1(tslib@2.8.1))
+    transitivePeerDependencies:
+      - style-dictionary
+
+  '@esnet/packets-ui-react@file:esnet-packets-ui-react-0.9.0.tgz(antd@5.29.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.525.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(style-dictionary@5.1.1(tslib@2.8.1))':
+    dependencies:
+      '@esnet/packets-ui-css': file:esnet-packets-ui-css-0.1.0.tgz(style-dictionary@5.1.1(tslib@2.8.1))
       antd: 5.29.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       lucide-react: 0.525.0(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - style-dictionary
 
   '@isaacs/cliui@9.0.0': {}
 

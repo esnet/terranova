@@ -22,9 +22,9 @@ import "esnet-networkmap-panel";
 import { signals } from "esnet-networkmap-panel";
 import { debounce } from "lodash";
 import MapEditorTopbar from "../components/mapEditor/MapEditorTopbar";
-import { ESAlert, ESButton } from "@esnet/packets-ui";
 import Card from "../components/Card";
 import { Plus } from "lucide-react";
+import { PktsAlert } from "@esnet/packets-ui-react";
 
 export const MapController = createContext<DataControllerContextType | null>(null);
 export const DatasetListController = createContext<DataControllerContextType | null>(null);
@@ -370,9 +370,9 @@ export function MapEditorPageComponent() {
 
                         {showSaveAlert && (
                             <div className="fixed right-4 bottom-4">
-                                <ESAlert variant="success" title="Map Saved">
+                                <PktsAlert variant="success" title="Map Saved">
                                     New Version: v{mapController.instance.version}.
-                                </ESAlert>
+                                </PktsAlert>
                             </div>
                         )}
                     </TemplateListController.Provider>

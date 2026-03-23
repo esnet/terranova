@@ -5,7 +5,13 @@ import { DataControllerContextType } from "../types/mapeditor";
 import { Icon } from "../components/Icon.component";
 import { Favorites } from "../context/FavoritesContextProvider";
 import { UserDataController } from "../context/UserDataContextProvider";
-import { ESAccordion, ESButton, ESInputRow, ESInputText, ESInputTextArea } from "@esnet/packets-ui";
+import {
+    PktsAccordion,
+    PktsInputRow,
+    PktsInputText,
+    PktsInputTextArea,
+    PktsButton,
+} from "@esnet/packets-ui-react";
 
 /**
  * This form has two "modes" for node template creation and updating,
@@ -14,12 +20,10 @@ import { ESAccordion, ESButton, ESInputRow, ESInputText, ESInputTextArea } from 
 export function TemplateEditorForm(props: any) {
     const { templateId } = useParams();
     const create = templateId === undefined;
-    const { controller, instance } = useContext(
-        TemplateDataController,
-    ) as DataControllerContextType;
+    const { controller } = useContext(TemplateDataController) as DataControllerContextType;
 
     let favorites = useContext(Favorites);
-    let { controller: userDataController, instance: userdata } = useContext(
+    let { controller: userDataController } = useContext(
         UserDataController,
     ) as DataControllerContextType;
 
@@ -45,26 +49,30 @@ export function TemplateEditorForm(props: any) {
     };
 
     return (
-        <ESAccordion header={create ? "Create Node Template" : "Update Node Template"}>
+        <PktsAccordion header={create ? "Create Node Template" : "Update Node Template"}>
             <form onSubmit={props.persistTemplate} className="flex flex-col gap-4">
                 {templateId && (
-                    <ESInputRow label="ID">
-                        <ESInputText name="id" defaultValue={templateId} />
-                    </ESInputRow>
+                    <PktsInputRow label="ID">
+                        <PktsInputText name="id" defaultValue={templateId} />
+                    </PktsInputRow>
                 )}
-                <ESInputRow label="Name">
-                    <ESInputText name="name" value={props.instance.name} onChange={setName} />
-                </ESInputRow>
-                <ESInputRow label="SVG Code">
-                    <ESInputTextArea
+                <PktsInputRow label="Name">
+                    <PktsInputText name="name" value={props.instance.name} onChange={setName} />
+                </PktsInputRow>
+                <PktsInputRow label="SVG Code">
+                    <PktsInputTextArea
                         resize="vertical"
                         className="h-64"
                         name="template"
                         value={props.instance.template}
                         onChange={setTemplate}
                     />
-                </ESInputRow>
-                {create ? <ESButton>Create</ESButton> : <ESButton>Update</ESButton>}
+                </PktsInputRow>
+                {create ? (
+                    <PktsButton variant="primary">Create</PktsButton>
+                ) : (
+                    <PktsButton variant="primary">Update</PktsButton>
+                )}
                 {!create && (
                     <div className="panel-body">
                         {favorites?.templates?.includes(templateId) ? (
@@ -129,6 +137,6 @@ export function TemplateEditorForm(props: any) {
                     </div>
                 )}
             </form>
-        </ESAccordion>
+        </PktsAccordion>
     );
 }

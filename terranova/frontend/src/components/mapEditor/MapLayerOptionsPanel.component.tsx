@@ -14,16 +14,16 @@ import {
     DATASET_STATIC_OR_LIVE_OPTIONS,
     NumericMapType,
 } from "../../data/constants";
-import {
-    ESButton,
-    ESDivider,
-    ESInputOption,
-    ESInputRow,
-    ESInputSelect,
-    ESInputText,
-} from "@esnet/packets-ui";
 import { Accordion } from "../Accordion";
 import InputColor from "../InputColor";
+import {
+    PktsInputOption,
+    PktsInputRow,
+    PktsInputSelect,
+    PktsInputText,
+    PktsDivider,
+    PktsButton,
+} from "@esnet/packets-ui-react";
 
 export function MapLayerOptionsPanel(props: any) {
     const { controller: mapController, instance: theMap } = useContext(
@@ -111,18 +111,18 @@ export function MapLayerOptionsPanel(props: any) {
         var output = [];
         DATASET_STATIC_OR_LIVE_OPTIONS.forEach((item) => {
             output.push(
-                <ESInputOption key={`${item.value}`} value={`${item.value}`}>
+                <PktsInputOption key={`${item.value}`} value={`${item.value}`}>
                     {item.label}
-                </ESInputOption>,
+                </PktsInputOption>,
             );
         });
         output.push();
         for (let i = maxVersionForSelectedDataset; i >= 1; i--) {
             output.push(
                 // @ts-ignore - genuine hurdles to satisfy TS
-                <ESInputOption key={`static-${i}`} value={`static-${i}`}>
+                <PktsInputOption key={`static-${i}`} value={`static-${i}`}>
                     Static &#128247; Version {i as unknown as string}
-                </ESInputOption>,
+                </PktsInputOption>,
             );
         }
         return output;
@@ -189,8 +189,8 @@ export function MapLayerOptionsPanel(props: any) {
                     <legend>
                         <b>Dataset Options</b>
                     </legend>
-                    <ESInputRow label="Import Dataset">
-                        <ESInputSelect
+                    <PktsInputRow label="Import Dataset">
+                        <PktsInputSelect
                             name="dataset"
                             value={selectedDataset}
                             onChange={(e: any) => {
@@ -199,17 +199,17 @@ export function MapLayerOptionsPanel(props: any) {
                             }}
                         >
                             {DSL?.controller?.instance?.map((dataset: any) => (
-                                <ESInputOption
+                                <PktsInputOption
                                     value={dataset.datasetId}
                                     key={`dataset-selector-option-${dataset.datasetId}`}
                                 >
                                     {dataset.name}
-                                </ESInputOption>
+                                </PktsInputOption>
                             ))}
-                        </ESInputSelect>
-                    </ESInputRow>
-                    <ESInputRow label="Dataset View">
-                        <ESInputSelect
+                        </PktsInputSelect>
+                    </PktsInputRow>
+                    <PktsInputRow label="Dataset View">
+                        <PktsInputSelect
                             name="version"
                             value={renderMode}
                             onChange={(e: any) => {
@@ -218,18 +218,21 @@ export function MapLayerOptionsPanel(props: any) {
                         >
                             {DATASET_RENDER_MODES.map((renderMode) => {
                                 return (
-                                    <ESInputOption key={renderMode.value} value={renderMode.value}>
+                                    <PktsInputOption
+                                        key={renderMode.value}
+                                        value={renderMode.value}
+                                    >
                                         {renderMode.label}
-                                    </ESInputOption>
+                                    </PktsInputOption>
                                 );
                             })}
-                        </ESInputSelect>
-                    </ESInputRow>
-                    <ESInputRow
+                        </PktsInputSelect>
+                    </PktsInputRow>
+                    <PktsInputRow
                         label="Dataset Version"
                         tooltip='Using the "Dynamic" version will always keep your map up to date with the database, whereas "Static" versions represent a specific point in time. For some maps, stability is more important.'
                     >
-                        <ESInputSelect
+                        <PktsInputSelect
                             name="version"
                             value={`${liveOrStatic}-${version}`}
                             onChange={(e) => {
@@ -239,23 +242,23 @@ export function MapLayerOptionsPanel(props: any) {
                             }}
                         >
                             {renderVersionSelections()}
-                        </ESInputSelect>
-                    </ESInputRow>
-                    <ESInputRow label="Layer Name">
-                        <ESInputText
+                        </PktsInputSelect>
+                    </PktsInputRow>
+                    <PktsInputRow label="Layer Name">
+                        <PktsInputText
                             placeholder="Layer Name"
                             value={layerName}
                             onChange={(e) => setLayerName(e.target.value)}
                         />
-                    </ESInputRow>
+                    </PktsInputRow>
                 </fieldset>
-                <ESDivider className="block lg:hidden" />
+                <PktsDivider className="block lg:hidden" />
                 <fieldset className="w-full flex flex-col gap-2">
                     <legend>
                         <b>Node Style</b>
                     </legend>
-                    <ESInputRow label="Shape">
-                        <ESInputSelect
+                    <PktsInputRow label="Shape">
+                        <PktsInputSelect
                             name="shape"
                             value={template}
                             onChange={(e: any) => {
@@ -266,25 +269,25 @@ export function MapLayerOptionsPanel(props: any) {
                                 ?.sort((a: any, b: any) => (a.name > b.name ? 1 : -1))
                                 .map((template: { templateId: string; name: string }) => {
                                     return (
-                                        <ESInputOption
+                                        <PktsInputOption
                                             key={template.templateId}
                                             value={template.templateId}
                                         >
                                             {template.name}
-                                        </ESInputOption>
+                                        </PktsInputOption>
                                     );
                                 })}
-                        </ESInputSelect>
-                    </ESInputRow>
-                    <ESInputRow label="Color">
+                        </PktsInputSelect>
+                    </PktsInputRow>
+                    <PktsInputRow label="Color">
                         <InputColor
                             defaultValue={thisLayer?.color}
                             onChange={(e) =>
                                 handleConfigChange(`layers[${props.layerId}].color`, e.target.value)
                             }
                         />
-                    </ESInputRow>
-                    <ESInputRow label="Highlight Color">
+                    </PktsInputRow>
+                    <PktsInputRow label="Highlight Color">
                         <InputColor
                             defaultValue={thisLayer?.nodeHighlight}
                             onChange={(e) =>
@@ -294,8 +297,8 @@ export function MapLayerOptionsPanel(props: any) {
                                 )
                             }
                         />
-                    </ESInputRow>
-                    <ESInputRow label="Size">
+                    </PktsInputRow>
+                    <PktsInputRow label="Size">
                         <InputRange
                             name={`layer[${props.layerId}].nodewidth`}
                             min="1"
@@ -310,14 +313,14 @@ export function MapLayerOptionsPanel(props: any) {
                             }
                             defaultValue={thisLayer?.nodeWidth}
                         />
-                    </ESInputRow>
+                    </PktsInputRow>
                 </fieldset>
-                <ESDivider className="block lg:hidden" />
+                <PktsDivider className="block lg:hidden" />
                 <fieldset className="w-full flex flex-col gap-2">
                     <legend>
                         <b>Edge Style</b>
                     </legend>
-                    <ESInputRow label="Width">
+                    <PktsInputRow label="Width">
                         <InputRange
                             name={`layer[${props.layerId}].edgeWidth`}
                             min="0.5"
@@ -332,9 +335,9 @@ export function MapLayerOptionsPanel(props: any) {
                             }
                             defaultValue={thisLayer?.edgeWidth}
                         />
-                    </ESInputRow>
+                    </PktsInputRow>
 
-                    <ESInputRow label="Offset">
+                    <PktsInputRow label="Offset">
                         <InputRange
                             name={`layer[${props.layerId}].edgeWidth`}
                             min="0.5"
@@ -349,12 +352,12 @@ export function MapLayerOptionsPanel(props: any) {
                             }
                             defaultValue={thisLayer?.pathOffset}
                         />
-                    </ESInputRow>
+                    </PktsInputRow>
 
                     <div className="ml-auto mt-auto w-40">
-                        <ESButton variant="destructive" onClick={props.deleteLayer}>
+                        <PktsButton variant="destructive" onClick={props.deleteLayer}>
                             Delete Layer
-                        </ESButton>
+                        </PktsButton>
                     </div>
                 </fieldset>
             </div>

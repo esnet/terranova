@@ -2,11 +2,11 @@ import { useAuth } from "../AuthService";
 import React, { useContext, useEffect, useState } from "react";
 import { API_URL, ADMIN_SCOPE } from "../../static/settings";
 import Card from "../components/Card";
-import { ESIconButton } from "@esnet/packets-ui";
 import { Favorites } from "../context/FavoritesContextProvider";
 import { LastEdited } from "../context/LastEditedContextProvider";
-import { Database, History, Map, MapPin, Star } from "lucide-react";
+import { Copy, Database, History, Map, MapPin, Plus, Star } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import { PktsIconButton } from "@esnet/packets-ui-react";
 
 export function HomePageComponent() {
     const auth = useAuth();
@@ -79,14 +79,15 @@ export function HomePageComponent() {
                     header={<Link to="/library/datasets">Datasets</Link>}
                     icon={<Database />}
                     headerButton={
-                        <ESIconButton
+                        <PktsIconButton
                             variant="secondary"
-                            square
-                            name="plus"
+                            className="h-fit"
                             onClick={() => {
                                 navigation("/dataset/new");
                             }}
-                        />
+                        >
+                            <Plus />
+                        </PktsIconButton>
                     }
                 >
                     <h4>About Datasets</h4>
@@ -101,14 +102,15 @@ export function HomePageComponent() {
                     header={<Link to="/library/maps">Maps</Link>}
                     icon={<Map />}
                     headerButton={
-                        <ESIconButton
+                        <PktsIconButton
                             variant="secondary"
-                            square
-                            name="plus"
+                            className="h-fit"
                             onClick={() => {
                                 navigation("/map/new");
                             }}
-                        />
+                        >
+                            <Plus />
+                        </PktsIconButton>
                     }
                 >
                     <h4>About Maps</h4>
@@ -124,14 +126,15 @@ export function HomePageComponent() {
                     icon={<MapPin />}
                     headerButton={
                         showTemplates ? (
-                            <ESIconButton
+                            <PktsIconButton
                                 variant="secondary"
-                                square
-                                name="plus"
+                                className="h-fit"
                                 onClick={() => {
-                                    navigation("/template/new");
+                                    navigation("/templates/new");
                                 }}
-                            />
+                            >
+                                <Plus />
+                            </PktsIconButton>
                         ) : undefined
                     }
                 >
@@ -175,13 +178,14 @@ function LinkTable({ links, dataType }: LinkTableProps) {
                 return (
                     <li key={item[id]} className="list-none flex items-center gap-4 mb-2">
                         {dataType === "maps" && (
-                            <ESIconButton
+                            <PktsIconButton
                                 onClick={() => {
                                     navigator.clipboard.writeText(mapUrl.href);
                                 }}
                                 variant="secondary"
-                                name="copy"
-                            />
+                            >
+                                <Copy />
+                            </PktsIconButton>
                         )}
                         <a className="font-semibold" href={url.href}>
                             {item["name"]}

@@ -2,29 +2,25 @@ import { API_URL, PUBLISH_SCOPE } from "../../../static/settings";
 import React, { useState, useContext, useEffect } from "react";
 import { MapController } from "../../pages/MapEditor.page";
 import { DataControllerContextType } from "../../types/mapeditor";
-import { resolvePath, setPath } from "../../data/utils";
 import { DEFAULT_MAP } from "../../data/constants";
 import { InputRange } from "../InputRange";
 import { signals } from "esnet-networkmap-panel";
-import { ClipboardCopyInput } from "../ClipboardCopyInput.component";
 import { MapOutputModalDialog } from "./MapOutputModalDialog.component";
 import { MapPublishModalDialog } from "./MapPublishModalDialog.component";
 import { useAuth } from "../../AuthService";
-import { Icon } from "../Icon.component";
-
 // TODO: This will be imported through engagemap
 import { MapBackgrounds, ViewStrategies, BaseTilesets } from "./MapEditor.constants";
-import {
-    ESButton,
-    ESDivider,
-    ESInputNumber,
-    ESInputOption,
-    ESInputRow,
-    ESInputSelect,
-    ESInputText,
-} from "@esnet/packets-ui";
 import { ArrowUpToLine } from "lucide-react";
 import InputColor from "../InputColor";
+import {
+    PktsButton,
+    PktsDivider,
+    PktsInputRow,
+    PktsInputSelect,
+    PktsInputOption,
+    PktsInputNumber,
+    PktsInputText,
+} from "@esnet/packets-ui-react";
 
 /**
  * TODO: map publish functionality
@@ -162,7 +158,7 @@ export const MapEditorSidebar = (props: any) => {
                 }}
             />
             {showPublishButton && (
-                <ESButton
+                <PktsButton
                     disabled={!instance?.mapId}
                     variant="secondary"
                     onClick={() => setShowPublishModal(true)}
@@ -171,36 +167,39 @@ export const MapEditorSidebar = (props: any) => {
                         <ArrowUpToLine />
                         &nbsp;Publish Map
                     </span>
-                </ESButton>
+                </PktsButton>
             )}
-            <ESButton
+            <PktsButton
                 disabled={!instance?.mapId}
                 variant="secondary"
                 onClick={() => setShowModal(true)}
             >
                 Get Map Output
-            </ESButton>
+            </PktsButton>
             <div className="text-center">Current Version: {controller?.instance?.version}</div>
-            <ESDivider />
-            <ESInputRow label="Background">
-                <ESInputSelect
+            <PktsDivider />
+            <PktsInputRow label="Background">
+                <PktsInputSelect
                     name="map-background"
                     onChange={handleMapBackgroundChange}
                     value={mapBackground}
                 >
                     {MapBackgrounds.map((d) => {
                         return (
-                            <ESInputOption value={d.value} key={`map-background-option-${d.value}`}>
+                            <PktsInputOption
+                                value={d.value}
+                                key={`map-background-option-${d.value}`}
+                            >
                                 {d.label}
-                            </ESInputOption>
+                            </PktsInputOption>
                         );
                     })}
-                </ESInputSelect>
-            </ESInputRow>
+                </PktsInputSelect>
+            </PktsInputRow>
 
             {mapBackground === "tiles" ? (
-                <ESInputRow label="Geographic Tileset">
-                    <ESInputSelect
+                <PktsInputRow label="Geographic Tileset">
+                    <PktsInputSelect
                         name="map-background-tiles"
                         onChange={(e) =>
                             handleConfigChange("tileset.geographic", e.target.value, BaseTilesets)
@@ -210,25 +209,28 @@ export const MapEditorSidebar = (props: any) => {
                         {BaseTilesets.map((d) => {
                             const value = d.value ?? d.label;
                             return (
-                                <ESInputOption value={value} key={`map-background-option-${value}`}>
+                                <PktsInputOption
+                                    value={value}
+                                    key={`map-background-option-${value}`}
+                                >
                                     {d.label}
-                                </ESInputOption>
+                                </PktsInputOption>
                             );
                         })}
-                    </ESInputSelect>
-                </ESInputRow>
+                    </PktsInputSelect>
+                </PktsInputRow>
             ) : (
-                <ESInputRow label="Background Color">
+                <PktsInputRow label="Background Color">
                     <InputColor
                         name="map-background-color"
                         onChange={(e) => handleConfigChange("background", e.target.value, null)}
                         value={instance.configuration.background}
                     />
-                </ESInputRow>
+                </PktsInputRow>
             )}
 
-            <ESInputRow label="Map Initial Position">
-                <ESInputSelect
+            <PktsInputRow label="Map Initial Position">
+                <PktsInputSelect
                     name="map-background-tiles"
                     onChange={(e) =>
                         handleConfigChange("initialViewStrategy", e.target.value, ViewStrategies)
@@ -237,21 +239,21 @@ export const MapEditorSidebar = (props: any) => {
                 >
                     {ViewStrategies.map((d) => {
                         return (
-                            <ESInputOption
+                            <PktsInputOption
                                 role="option"
                                 value={d.value}
                                 key={`map-background-option-${d.value}`}
                             >
                                 {d.label}
-                            </ESInputOption>
+                            </PktsInputOption>
                         );
                     })}
-                </ESInputSelect>
-            </ESInputRow>
+                </PktsInputSelect>
+            </PktsInputRow>
 
             {instance.configuration.initialViewStrategy === "viewport" && (
                 <div className="flex flex-col gap-4 mt-2">
-                    <ESButton
+                    <PktsButton
                         className="w-full"
                         variant="secondary"
                         onClick={(e) => {
@@ -259,16 +261,16 @@ export const MapEditorSidebar = (props: any) => {
                         }}
                     >
                         Set Viewport from Map State
-                    </ESButton>
+                    </PktsButton>
 
                     <div className="flex flex-col gap-2">
                         <div className="flex flex-row gap-4">
                             <div className="flex-1">
-                                <ESInputRow
+                                <PktsInputRow
                                     label="Top-left Lat"
                                     key={`vpt-${instance.configuration?.viewport?.top}`}
                                 >
-                                    <ESInputNumber
+                                    <PktsInputNumber
                                         step="0.01"
                                         name="viewport.top"
                                         onChange={(e) =>
@@ -280,14 +282,14 @@ export const MapEditorSidebar = (props: any) => {
                                         }
                                         defaultValue={instance.configuration?.viewport?.top}
                                     />
-                                </ESInputRow>
+                                </PktsInputRow>
                             </div>
                             <div className="flex-1">
-                                <ESInputRow
+                                <PktsInputRow
                                     label="Top-left Lng"
                                     key={`vpt-${instance.configuration?.viewport?.left}`}
                                 >
-                                    <ESInputNumber
+                                    <PktsInputNumber
                                         step="0.01"
                                         name="viewport.left"
                                         onChange={(e) =>
@@ -299,17 +301,17 @@ export const MapEditorSidebar = (props: any) => {
                                         }
                                         defaultValue={instance.configuration?.viewport?.left}
                                     />
-                                </ESInputRow>
+                                </PktsInputRow>
                             </div>
                         </div>
 
                         <div className="flex flex-row gap-4">
                             <div className="flex-1">
-                                <ESInputRow
+                                <PktsInputRow
                                     label="Bottom-right Lat"
                                     key={`vpt-${instance.configuration?.viewport?.bottom}`}
                                 >
-                                    <ESInputNumber
+                                    <PktsInputNumber
                                         step="0.01"
                                         name="viewport.bottom"
                                         onChange={(e) =>
@@ -321,14 +323,14 @@ export const MapEditorSidebar = (props: any) => {
                                         }
                                         defaultValue={instance.configuration?.viewport?.bottom}
                                     />
-                                </ESInputRow>
+                                </PktsInputRow>
                             </div>
                             <div className="flex-1">
-                                <ESInputRow
+                                <PktsInputRow
                                     label="Bottom-right Lng"
                                     key={`vpt-${instance.configuration?.viewport?.right}`}
                                 >
-                                    <ESInputNumber
+                                    <PktsInputNumber
                                         step="0.01"
                                         name="viewport.right"
                                         onChange={(e) =>
@@ -340,7 +342,7 @@ export const MapEditorSidebar = (props: any) => {
                                         }
                                         defaultValue={instance.configuration?.viewport?.right}
                                     />
-                                </ESInputRow>
+                                </PktsInputRow>
                             </div>
                         </div>
                     </div>
@@ -349,20 +351,20 @@ export const MapEditorSidebar = (props: any) => {
 
             {instance.configuration.initialViewStrategy === "static" && (
                 <div className="flex flex-col gap-2 mt-2">
-                    <ESButton
+                    <PktsButton
                         onClick={() =>
                             props.mapCanvasRef.current.emit(signals.REQUEST_MAP_CENTER_AND_ZOOM)
                         }
                         variant="secondary"
                     >
                         Set Center & Zoom From Map State
-                    </ESButton>
+                    </PktsButton>
                     <div className="flex gap-2">
-                        <ESInputRow
+                        <PktsInputRow
                             label="Starting Latitude"
                             key={`slat-${instance.configuration?.viewport?.center?.lat}`}
                         >
-                            <ESInputNumber
+                            <PktsInputNumber
                                 step="0.01"
                                 name="start-lat"
                                 onChange={(e) =>
@@ -374,12 +376,12 @@ export const MapEditorSidebar = (props: any) => {
                                 }
                                 defaultValue={instance.configuration?.viewport?.center?.lat}
                             />
-                        </ESInputRow>
-                        <ESInputRow
+                        </PktsInputRow>
+                        <PktsInputRow
                             label="Starting Longitude"
                             key={`slng-${instance.configuration?.viewport?.center?.lng}`}
                         >
-                            <ESInputNumber
+                            <PktsInputNumber
                                 step="0.01"
                                 name="start-lng"
                                 onChange={(e) =>
@@ -391,9 +393,9 @@ export const MapEditorSidebar = (props: any) => {
                                 }
                                 defaultValue={instance.configuration?.viewport?.center?.lng}
                             />
-                        </ESInputRow>
+                        </PktsInputRow>
                     </div>
-                    <ESInputRow label="Start Zoom" key={`szoom-${rerenderViewportZoom}`}>
+                    <PktsInputRow label="Start Zoom" key={`szoom-${rerenderViewportZoom}`}>
                         <InputRange
                             name="viewport.zoom"
                             min="1"
@@ -404,33 +406,33 @@ export const MapEditorSidebar = (props: any) => {
                             }
                             defaultValue={instance.configuration?.viewport?.zoom}
                         />
-                    </ESInputRow>
+                    </PktsInputRow>
                 </div>
             )}
 
             {instance.configuration.initialViewStrategy === "variables" && (
                 <div className="flex flex-col gap-2 mt-2">
-                    <ESInputRow label="Latitude Variable">
-                        <ESInputText
+                    <PktsInputRow label="Latitude Variable">
+                        <PktsInputText
                             name="latitudeVar"
                             onChange={(e) =>
                                 handleConfigChange("latitudeVar", e.target.value, null)
                             }
                             defaultValue={instance.configuration?.latitudeVar}
                         />
-                    </ESInputRow>
+                    </PktsInputRow>
 
-                    <ESInputRow label="Longitude Variable">
-                        <ESInputText
+                    <PktsInputRow label="Longitude Variable">
+                        <PktsInputText
                             name="longitudeVar"
                             onChange={(e) =>
                                 handleConfigChange("longitudeVar", e.target.value, null)
                             }
                             defaultValue={instance.configuration?.longitudeVar}
                         />
-                    </ESInputRow>
+                    </PktsInputRow>
 
-                    <ESInputRow label="Initial Zoom">
+                    <PktsInputRow label="Initial Zoom">
                         <InputRange
                             name="viewport.zoom"
                             min="1"
@@ -441,7 +443,7 @@ export const MapEditorSidebar = (props: any) => {
                             }
                             defaultValue={instance.configuration?.viewport?.zoom}
                         />
-                    </ESInputRow>
+                    </PktsInputRow>
                 </div>
             )}
         </div>

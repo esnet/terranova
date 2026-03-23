@@ -1,8 +1,8 @@
-import { Map, Pencil, Save } from "lucide-react";
+import { Map, Pencil, Save, Trash } from "lucide-react";
 import React, { useContext, useState } from "react";
 import { DataControllerContextType } from "../../types/mapeditor";
 import { MapController } from "../../pages/MapEditor.page";
-import { ESButton, ESIconButton, ESInputText } from "@esnet/packets-ui";
+import { PktsInputText, PktsButton, PktsIconButton } from "@esnet/packets-ui-react";
 
 type MapEditorTopbarProps = {
     saveMapConfig: () => void;
@@ -42,7 +42,7 @@ const MapEditorTopbar = ({ loading, saveMapConfig }: MapEditorTopbarProps) => {
                     ) : (
                         <form onSubmit={nameFormSubmit} className="flex gap-x-2 items-center">
                             <div className="w-full">
-                                <ESInputText name="map-name" defaultValue={mapName} />
+                                <PktsInputText name="map-name" defaultValue={mapName} />
                             </div>
                             <button className="contents">
                                 <Save className="cursor-pointer" />
@@ -51,34 +51,41 @@ const MapEditorTopbar = ({ loading, saveMapConfig }: MapEditorTopbarProps) => {
                     )}
                 </div>
 
-                <div className="hidden lg:flex gap-2">
-                    <ESButton
+                <div className="hidden lg:flex w-96 gap-2">
+                    <PktsButton
                         variant="destructive"
                         disabled={loading}
-                        className="hidden md:auto"
+                        className=""
                         onClick={() => window.location.reload()}
                     >
                         Discard Changes
-                    </ESButton>
-                    <ESButton disabled={loading} className="hidden md:auto" onClick={saveMapConfig}>
+                    </PktsButton>
+                    <PktsButton
+                        variant="primary"
+                        disabled={loading}
+                        className=""
+                        onClick={saveMapConfig}
+                    >
                         Save Changes
-                    </ESButton>
+                    </PktsButton>
                 </div>
                 <div className="flex lg:hidden gap-2">
-                    <ESIconButton
+                    <PktsIconButton
                         variant="destructive"
-                        name="trash"
                         disabled={loading}
-                        className="block md:hidden"
+                        className="block"
                         onClick={() => window.location.reload()}
-                    />
-                    <ESIconButton
+                    >
+                        <Trash />
+                    </PktsIconButton>
+                    <PktsIconButton
                         variant="primary"
-                        name="save"
                         disabled={loading}
-                        className="block md:hidden"
+                        className="block"
                         onClick={saveMapConfig}
-                    />
+                    >
+                        <Save />
+                    </PktsIconButton>
                 </div>
             </div>
         </div>

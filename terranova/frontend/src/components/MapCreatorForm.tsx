@@ -1,18 +1,18 @@
-import {
-    ESAccordion,
-    ESButton,
-    ESDivider,
-    ESInputOption,
-    ESInputRow,
-    ESInputSwitch,
-    ESInputText,
-    ESInputTypeahead,
-} from "@esnet/packets-ui";
 import React, { useMemo, useState } from "react";
 import { DEFAULT_LAYER_CONFIGURATION, DEFAULT_MAP } from "../data/constants";
 import { DataController } from "../DataController";
 import { API_URL } from "../../static/settings";
 import { useNavigate } from "react-router-dom";
+import {
+    PktsAccordion,
+    PktsInputRow,
+    PktsInputText,
+    PktsInputSwitch,
+    PktsButton,
+    PktsDivider,
+    PktsInputTypeahead,
+    PktsInputOption,
+} from "@esnet/packets-ui-react";
 
 type Form = {
     name?: string;
@@ -66,23 +66,23 @@ export function MapCreatorForm(props: any) {
     };
 
     return (
-        <ESAccordion header="Create New Map">
+        <PktsAccordion header="Create New Map">
             <form onSubmit={onSubmit} className="flex flex-col gap-4">
-                <ESInputRow label="Name" required>
-                    <ESInputText
+                <PktsInputRow label="Name" required>
+                    <PktsInputText
                         name="name"
                         value={formValues.name}
                         onChange={(e) => setFormValue("name")(e.target.value)}
                         required
                     />
-                </ESInputRow>
-                <ESInputRow label="Fork Existing Map">
-                    <ESInputSwitch
+                </PktsInputRow>
+                <PktsInputRow label="Fork Existing Map">
+                    <PktsInputSwitch
                         name="fork"
                         checked={formValues.fork}
                         onChange={(e) => setFormValue("fork")(e.target.checked)}
                     />
-                </ESInputRow>
+                </PktsInputRow>
                 {formValues.fork && (
                     <ForkOptionsFieldset
                         formValues={formValues}
@@ -91,12 +91,12 @@ export function MapCreatorForm(props: any) {
                     />
                 )}
                 <div className="mt-2 ml-auto w-fit">
-                    <ESButton variant="secondary" type="submit">
+                    <PktsButton variant="secondary" type="submit">
                         Create Map
-                    </ESButton>
+                    </PktsButton>
                 </div>
             </form>
-        </ESAccordion>
+        </PktsAccordion>
     );
 }
 
@@ -135,25 +135,25 @@ function ForkOptionsFieldset({
         <small>No maps exist to fork from.</small>
     ) : (
         <>
-            <ESDivider />
+            <PktsDivider />
             <fieldset className="flex flex-col gap-2">
                 <legend className="block mb-2">Fork Existing Map Options</legend>
-                <ESInputRow label="Map Name" required>
-                    <ESInputTypeahead
+                <PktsInputRow label="Map Name" required>
+                    <PktsInputTypeahead
                         multi={false}
                         value={formValues.forkMap ? [formValues.forkMap] : []}
                         onChange={(e) => setFormValue("forkMap")(e.target.value)}
                         name="forkMap"
                     >
                         {Object.values(mapHash).map(({ mapId, name }: any) => (
-                            <ESInputOption key={mapId} value={mapId}>
+                            <PktsInputOption key={mapId} value={mapId}>
                                 {name}
-                            </ESInputOption>
+                            </PktsInputOption>
                         ))}
-                    </ESInputTypeahead>
-                </ESInputRow>
-                <ESInputRow label="Version" disabled={!formValues.forkMap} required>
-                    <ESInputTypeahead
+                    </PktsInputTypeahead>
+                </PktsInputRow>
+                <PktsInputRow label="Version" disabled={!formValues.forkMap} required>
+                    <PktsInputTypeahead
                         multi={false}
                         disabled={!formValues.forkMap}
                         value={formValues.forkMapVersion ? [formValues.forkMapVersion] : []}
@@ -162,15 +162,15 @@ function ForkOptionsFieldset({
                     >
                         {formValues.forkMap &&
                             mapHash[formValues.forkMap].versions.map((versionNumber: any) => (
-                                <ESInputOption
+                                <PktsInputOption
                                     key={`${formValues.forkMap}-${versionNumber}`}
                                     value={versionNumber}
                                 >
                                     {`v${versionNumber}`}
-                                </ESInputOption>
+                                </PktsInputOption>
                             ))}
-                    </ESInputTypeahead>
-                </ESInputRow>
+                    </PktsInputTypeahead>
+                </PktsInputRow>
             </fieldset>
         </>
     );

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "../../../static/settings";
 import { ModalDialog } from "../ModalDialog";
-import { ESButton, ESCommaSeperatedList } from "@esnet/packets-ui";
 import { useAuth } from "../../AuthService";
 import { setAuthHeaders } from "../../DataController";
+import { PktsButton, PktsCommaSeperatedList } from "@esnet/packets-ui-react";
 
 interface MapPublishModalDialogProps {
     map: any;
@@ -57,28 +57,28 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
         status !== "success" ? (
             <>
                 <div className="flex gap-2">
-                    <ESButton
+                    <PktsButton
                         variant="destructive"
                         onClick={props.dismiss}
                         disabled={status === "loading"}
                     >
                         {/* <X /> */}
                         Cancel
-                    </ESButton>
-                    <ESButton
+                    </PktsButton>
+                    <PktsButton
                         variant="primary"
                         onClick={publishMap}
                         disabled={status === "loading"}
                     >
                         {/* <CheckSquare /> */}
                         Publish
-                    </ESButton>
+                    </PktsButton>
                 </div>
             </>
         ) : (
-            <ESButton variant="branded" onClick={props.dismiss}>
+            <PktsButton variant="branded" onClick={props.dismiss}>
                 Close
-            </ESButton>
+            </PktsButton>
         );
 
     const renderMessage = () => {
@@ -108,7 +108,7 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
                 <p>Please confirm that you'd like to publish this map.</p>
                 <p>
                     This action will make{" "}
-                    <ESCommaSeperatedList
+                    <PktsCommaSeperatedList
                         items={[
                             "the current saved version of the map",
                             "coordinates of all visible objects",

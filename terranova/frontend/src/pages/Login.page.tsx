@@ -3,7 +3,12 @@ import { useAuth, doBasicAuth } from "../AuthService";
 import { SignoutRedirectArgs } from "oidc-client-ts";
 import { AUTH_BACKEND, READ_SCOPE } from "../../static/settings";
 import { useEffect, useState } from "react";
-import { ESButton, ESInputPassword, ESInputRow, ESInputText } from "@esnet/packets-ui";
+import {
+    PktsButton,
+    PktsInputRow,
+    PktsInputText,
+    PktsInputPassword,
+} from "@esnet/packets-ui-react";
 
 /**
  * This component is multi-faceted, serving as the page for both `/login` and `/logout`
@@ -65,7 +70,7 @@ export function LoginPageComponent(props: any) {
                 )}
                 {AUTH_BACKEND === "oidc" && (
                     <div className="grid h-auto w-full">
-                        <ESButton onClick={onOIDCAuth}>Login with Keycloak</ESButton>
+                        <PktsButton onClick={onOIDCAuth}>Login with Keycloak</PktsButton>
                     </div>
                 )}
                 {AUTH_BACKEND === "basic" && (
@@ -73,15 +78,15 @@ export function LoginPageComponent(props: any) {
                         className="[&_span]:text-white flex flex-col gap-y-4"
                         onSubmit={onBasicAuth}
                     >
-                        <ESInputRow label="Username">
-                            <ESInputText name="username" autoComplete="username" />
-                        </ESInputRow>
-                        <ESInputRow label="Password">
-                            <ESInputPassword name="password" autoComplete="current-password" />
-                        </ESInputRow>
-                        <ESButton type="submit" as="button" className="mt-4">
+                        <PktsInputRow label="Username">
+                            <PktsInputText name="username" autoComplete="username" />
+                        </PktsInputRow>
+                        <PktsInputRow label="Password">
+                            <PktsInputPassword name="password" autoComplete="current-password" />
+                        </PktsInputRow>
+                        <PktsButton type="submit" as="button" className="mt-4">
                             Login
-                        </ESButton>
+                        </PktsButton>
                     </form>
                 )}
             </div>
