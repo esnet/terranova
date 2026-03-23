@@ -1,6 +1,6 @@
-import { Database, Pencil, Save } from "lucide-react";
+import { PktsInputText, PktsButton, PktsIconButton } from "@esnet/packets-ui-react";
+import { Database, Pencil, Save, Trash } from "lucide-react";
 import React, { useState } from "react";
-import { ESButton, ESIconButton, ESInputText } from "@esnet/packets-ui";
 
 interface IDatasetEditorTopbarProps {
     datasetName: string;
@@ -45,7 +45,7 @@ export const DatasetEditorTopbar = ({
                     ) : (
                         <form onSubmit={nameFormSubmit} className="flex gap-x-2 items-center">
                             <div className="w-full">
-                                <ESInputText name="dataset-name" defaultValue={datasetName} />
+                                <PktsInputText name="dataset-name" defaultValue={datasetName} />
                             </div>
                             <button className="contents">
                                 <Save className="cursor-pointer" />
@@ -54,37 +54,29 @@ export const DatasetEditorTopbar = ({
                     )}
                 </div>
 
-                {/* Desktop Buttons */}
-                <div className="hidden lg:flex gap-2">
-                    <ESButton
+                <div className="hidden lg:flex w-96 gap-2">
+                    <PktsButton
                         variant="destructive"
                         disabled={loading}
-                        className="hidden md:auto"
-                        onClick={onDiscard}
+                        onClick={() => window.location.reload()}
                     >
                         Discard Changes
-                    </ESButton>
-                    <ESButton disabled={loading} className="hidden md:auto" onClick={onSave}>
+                    </PktsButton>
+                    <PktsButton variant="primary" disabled={loading} onClick={onSave}>
                         Save Changes
-                    </ESButton>
+                    </PktsButton>
                 </div>
-
-                {/* Mobile Icon Buttons */}
                 <div className="flex lg:hidden gap-2">
-                    <ESIconButton
+                    <PktsIconButton
                         variant="destructive"
-                        name="trash"
                         disabled={loading}
-                        className="block md:hidden"
-                        onClick={onDiscard}
-                    />
-                    <ESIconButton
-                        variant="primary"
-                        name="save"
-                        disabled={loading}
-                        className="block md:hidden"
-                        onClick={onSave}
-                    />
+                        onClick={() => window.location.reload()}
+                    >
+                        <Trash />
+                    </PktsIconButton>
+                    <PktsIconButton variant="primary" disabled={loading} onClick={onSave}>
+                        <Save />
+                    </PktsIconButton>
                 </div>
             </div>
         </div>

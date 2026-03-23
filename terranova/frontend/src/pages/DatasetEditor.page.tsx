@@ -12,8 +12,8 @@ import { GeographicDatasetMap } from "../components/datasetEditor/GeographicData
 import { DEFAULT_LAYER_TOPOLOGY, DEFAULT_CIRCUIT_TABLE_DATA } from "../data/constants";
 import { API_URL, TOOLTIP_TTL } from "../../static/settings";
 import { DataControllerContextType } from "../types/mapeditor";
-import { ESAlert } from "@esnet/packets-ui";
 import { DatasetEditorTopbar } from "../components/datasetEditor/DatasetEditorTopbar";
+import { PktsAlert } from "@esnet/packets-ui-react";
 
 interface IDatasetEditorPageProps {}
 
@@ -255,9 +255,9 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
 
                 {showSaveAlert && (
                     <div className="fixed right-4 bottom-4">
-                        <ESAlert variant="success" title="Dataset Saved">
+                        <PktsAlert variant="success" title="Dataset Saved">
                             New Version: v{controller.instance?.version}.
-                        </ESAlert>
+                        </PktsAlert>
                     </div>
                 )}
             </main>

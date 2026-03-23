@@ -2,7 +2,12 @@ import React, { ChangeEvent } from "react";
 import { API_URL } from "../../../static/settings";
 import { InputCopy } from "../InputCopy";
 import { PREVIEW_MODE_OPTIONS } from "../../data/constants";
-import { ESInputRow, ESInputSelect, ESInputOption, ESDivider } from "@esnet/packets-ui";
+import {
+    PktsDivider,
+    PktsInputRow,
+    PktsInputSelect,
+    PktsInputOption,
+} from "@esnet/packets-ui-react";
 
 interface IDatasetEditorSidebarProps {
     visualizationMode: string;
@@ -49,30 +54,30 @@ export const DatasetEditorSidebar = ({
     return (
         <div className="min-w-64 w-2/5 2xl:w-1/4 flex flex-col gap-2">
             <div className="text-center">Current Version: {dataset.version}</div>
-            <ESDivider />
+            <PktsDivider />
 
-            <ESInputRow label="Preview Mode">
-                <ESInputSelect
+            <PktsInputRow label="Preview Mode">
+                <PktsInputSelect
                     name="preview-mode"
                     onChange={handleOnModeChange}
                     value={visualizationMode}
                     className="w-full"
                 >
                     {PREVIEW_MODE_OPTIONS.map(({ label, value }) => (
-                        <ESInputOption value={value} key={`preview-mode-option-${value}`}>
+                        <PktsInputOption value={value} key={`preview-mode-option-${value}`}>
                             {label}
-                        </ESInputOption>
+                        </PktsInputOption>
                     ))}
-                </ESInputSelect>
-            </ESInputRow>
+                </PktsInputSelect>
+            </PktsInputRow>
 
-            <ESInputRow label="Static Dataset URL">
+            <PktsInputRow label="Static Dataset URL">
                 <InputCopy id="static-dataset-input" value={staticURL} />
-            </ESInputRow>
+            </PktsInputRow>
 
-            <ESInputRow label="Dynamic Dataset URL">
+            <PktsInputRow label="Dynamic Dataset URL">
                 <InputCopy id="dynamic-dataset-input" value={dynamicURL} />
-            </ESInputRow>
+            </PktsInputRow>
         </div>
     );
 };
