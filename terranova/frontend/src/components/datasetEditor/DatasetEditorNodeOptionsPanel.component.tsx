@@ -1,15 +1,11 @@
-import { useContext, useId, useState } from "react";
+import { useContext } from "react";
 import { DatasetController } from "../../pages/DatasetEditor.page";
-import { ContentAccordion } from "../ContentAccordion.component";
 import { QueryGroupField } from "./queryPanel/QueryGroupField.component";
-
-interface DatasetEditorQueryPanelProps {
-    datasetVisible: boolean;
-    toggleDatasetVisible: any;
-}
+import { Accordion } from "../Accordion";
+import { PktsInputRow } from "@esnet/packets-ui-react";
 
 export function DatasetEditorNodeOptionsPanel() {
-    const { controller, instance: dataset } = useContext<any>(DatasetController);
+    const { controller } = useContext<any>(DatasetController);
 
     const setDeduplicationField = (value: string) => {
         controller.setProperty("query.node_deduplication_field", value);
@@ -29,34 +25,19 @@ export function DatasetEditorNodeOptionsPanel() {
     };
 
     return (
-        <div className="mt-6">
-            <ContentAccordion
-                header="Advanced Options"
-                isOpen={false}
-                footer="&nbsp;"
-                showEye={false}
-                visibility={true}
-            >
-                <div className="flex flex-wrap">
-                    <div className="w-6/12 -mt-2">
-                        <fieldset>
-                            <legend>Node Grouping</legend>
-                            <div className="flex flex-wrap">
-                                <div className="w-7/12">
-                                    <label className="-mt-1 block">
-                                        Form Node Groups On&hellip;
-                                    </label>
-                                    <QueryGroupField
-                                        criteria={controller.instance?.query?.node_group_criteria}
-                                        endpoint={controller.instance?.query?.endpoint}
-                                        setCriterion={setCriterion}
-                                    />
-                                </div>
-                            </div>
-                        </fieldset>
-                    </div>
-                </div>
-            </ContentAccordion>
-        </div>
+        <Accordion header="Advanced Options" footer showEye={false}>
+            <div className="flex gap-2">
+                <fieldset className="w-1/2">
+                    <legend>Node Grouping</legend>
+                    <PktsInputRow label="Form Node Groups On...">
+                        <QueryGroupField
+                            criteria={controller.instance?.query?.node_group_criteria}
+                            endpoint={controller.instance?.query?.endpoint}
+                            setCriterion={setCriterion}
+                        />
+                    </PktsInputRow>
+                </fieldset>
+            </div>
+        </Accordion>
     );
 }

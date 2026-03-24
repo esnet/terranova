@@ -177,20 +177,6 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
         controller.setProperty("name", newDatasetName);
         setEditingName(false);
     };
-
-    const nameFormSubmit = (e: any) => {
-        e.preventDefault();
-        setDatasetName((datasetNameRefInput.current as HTMLInputElement).value.trim());
-    };
-
-    const showNameForm = () => {
-        setEditingName(true);
-    };
-
-    const hideNameForm = () => {
-        setEditingName(false);
-    };
-
     const toggleDatasetVisible = (visibility: boolean) => {
         mapRef.current.toggleLayer(0, visibility);
         setDatasetVisible(visibility);
