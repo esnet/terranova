@@ -12,21 +12,23 @@ else
 TEST_CONFIG := ./SAMPLE_CONFIG.yml
 endif
 
-# TODO: figure out how to create a single Make development target that runs
-# - Docker/Elasticsearch
-# - Start the backend
-# - Start the frontend development server
 .PHONY: run
-run:
-	@echo "To begin development on Terranova, you'll need to run three seperate processes to start Elasticsearch, Python API, and Node frontend."
-	@echo "To see how, visit the Development section of the project's README.md."
-	exit 1
+run: node_modules venv
+	@echo "Starting API and Frontend side-by-side (Ctrl+C to stop both)..."
+	@trap 'kill 0' EXIT; \
+	(cd $(FRONTEND_DIR) && pnpm run dev 2>&1 | sed 's/^/[FRONTEND] /' & \
+	$(VENV_DIR)/bin/uvicorn terranova.api:app --reload 2>&1 | sed 's/^/[API] /' & \
+	wait)
 
 
 # ----- FRONTEND TARGETS -----
 .PHONY: run_frontend
 run_frontend: node_modules
 	@cd $(FRONTEND_DIR) && pnpm run dev
+
+.PHONY: run_frontend_bg
+run_frontend_bg: node_modules
+	@cd $(FRONTEND_DIR) && pnpm run dev &
 
 .PHONY: build
 build: node_modules
@@ -68,14 +70,16 @@ api-test: venv
 test_anonymous_api_access: venv
 	TERRANOVA_CONF=$(TEST_CONFIG) $(VENV_DIR)/bin/pytest -v -s tests/*.py -m anonymous
 
-# TODO: make run_staging, perhaps, points to the staging instance of ES
-.PHONY: run_staging
-run_staging:
-	docker run different options to point to staging
-
-
 # ----- UTILITY/ENVIRONMENT TARGETS -----
 install: venv node_modules
+	$(VENV_DIR)/bin/pip install -r requirements-dev.txt || (echo "Failed to install requirements-dev.txt, stopping here." && exit 1)
+
+# Recompile requirements.txt and requirements-dev.txt from their .in source files.
+# Run this after editing requirements.in or requirements-dev.in, then commit all four files.
+.PHONY: compile-requirements
+compile-requirements: venv
+	$(VENV_DIR)/bin/pip-compile requirements.in -o requirements.txt
+	$(VENV_DIR)/bin/pip-compile requirements-dev.in -o requirements-dev.txt
 
 # these targets ensure that the node modules are installed
 $(FRONTEND_DIR)/node_modules:
@@ -84,9 +88,12 @@ $(FRONTEND_DIR)/node_modules:
 .PHONY: node_modules
 node_modules: $(FRONTEND_DIR)/node_modules
 
-# these targets ensure that the venv is created and the Python packages are installed
+# these targets ensure that the venv is created and all packages are installed.
+# requirements.txt and requirements-dev.txt are generated lockfiles — to add or update
+# a dependency, edit requirements.in or requirements-dev.in and run `make compile-requirements`.
 $(VENV_DIR):
 	python3 -m venv $(VENV_DIR)
+	$(VENV_DIR)/bin/pip install pip-tools
 	$(VENV_DIR)/bin/pip install -r requirements.txt || (echo "Failed to install requirements.txt, stopping here." && exit 1)
 
 # include venv target as a dependency anywhere it needs to exist

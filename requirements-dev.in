@@ -1,0 +1,14 @@
+# Development and test dependencies.
+# Edit this file to add or update dev/test dependencies, then run `make compile-requirements`
+# to regenerate requirements-dev.txt. Do not edit requirements-dev.txt directly.
+
+-r requirements.in
+
+pip-tools
+pre-commit
+pytest
+pytest-base-url
+pytest-playwright
+playwright
+python-jose
+testcontainers
