@@ -22,6 +22,9 @@ ENVIRONMENT = config.get("environment", "")
 VERSION = config.get("version")
 SERVICENAME = "terranova"
 
+STORAGE = config.get("storage", {})  # Storage backend configuration
+STORAGE_BACKEND = STORAGE.get("backend", "sqlite")  # Default to sqlite for simplicity
+
 ELASTIC = config.get("elastic", {})  # default to empty dict so we can set further defaults
 AUTH = config.get("auth", {})
 KEYCLOAK = config.get("keycloak", {})  # default to empty dict so we can set further defaults
@@ -54,16 +57,21 @@ ELASTIC_INDICES = {
     },
 }
 
-for index, value in ELASTIC_INDICES.items():
-    for name, endpoint in value.items():
-        if endpoint is None:
-            raise RuntimeError(
-                "Misconfiguration in elastic.indices. Please provide a read and write index for %s.\n\n Current values: \n%s"
-                % (
-                    ", ".join([k for k in ELASTIC_INDICES.keys()]),
-                    yaml.safe_dump(ELASTIC.get("indices")),
+# Only validate Elasticsearch indices if using elasticsearch backend
+if STORAGE_BACKEND == "elasticsearch":
+    for index, value in ELASTIC_INDICES.items():
+        for name, endpoint in value.items():
+            if endpoint is None:
+                raise RuntimeError(
+                    "Misconfiguration in elastic.indices. Please provide a read and write index for %s.\n\n Current values: \n%s"
+                    % (
+                        ", ".join([k for k in ELASTIC_INDICES.keys()]),
+                        yaml.safe_dump(ELASTIC.get("indices")),
+                    )
                 )
-            )
+
+# SQLite configuration
+SQLITE_DB_PATH = STORAGE.get("sqlite_path", "./terranova.db")
 
 KEYCLOAK_SERVER = KEYCLOAK.get("server")
 KEYCLOAK_REALM = KEYCLOAK.get("realm")

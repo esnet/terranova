@@ -75,7 +75,7 @@ def render_map_svg(map_instance: Map):
     """
     templ = JinjaTemplate(SVG_OUTPUT_TEMPLATE)
 
-    map_instance = map_instance.dict()
+    map_instance = map_instance.model_dump()
     configuration = map_instance["configuration"]
 
     layers = [json.loads(layer["mapjson"]) for layer in configuration["layers"]]

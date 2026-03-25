@@ -4,7 +4,7 @@ from fastapi_versioning import version
 from typing import List, Any
 
 from terranova.backends.auth import User, auth_check
-from terranova.backends.elasticsearch import backend as elastic_backend
+from terranova.backends.storage import backend as storage_backend
 from terranova.models import (
     Template,
     TemplateFieldEnum,
@@ -21,7 +21,7 @@ router = APIRouter(tags=["Terranova Node Templates"])
 def template_by_id(
     templateId: str, user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]])
 ) -> Template:
-    result = elastic_backend.get_templates(template_id=templateId)
+    result = storage_backend.get_templates(template_id=templateId)
     if len(result) < 1:
         raise HTTPException(status_code=404, detail="Template not found")
     return result[0]
@@ -55,7 +55,7 @@ def templates(
     if not type(version) == str:
         version = version.name
     # deal with parsing versions
-    result = elastic_backend.get_templates(
+    result = storage_backend.get_templates(
         fields=[f.name for f in fields], filters=filters, version=version
     )
     if len(result) < 1:
@@ -70,7 +70,7 @@ def update_template(
     new_template: NewTemplate,
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
 ) -> dict:
-    result = elastic_backend.update_template(templateId, new_template, user)
+    result = storage_backend.update_template(templateId, new_template, user)
     if not result:
         raise HTTPException(status_code=404, detail="Template not updated")
     return result
@@ -81,5 +81,5 @@ def update_template(
 def create_template(
     new_template: NewTemplate, user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]])
 ):
-    result = elastic_backend.create_template(new_template, user)
+    result = storage_backend.create_template(new_template, user)
     return result

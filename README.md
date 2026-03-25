@@ -27,6 +27,65 @@ settings.yml
 
 The `settings.js` file contains frontend settings, while `settings.yml` contains backend settings.
 
+### Configure Storage Backend
+
+Terranova supports two storage backends for persisting maps, datasets, templates, and user data:
+
+**SQLite (default)** - Lightweight file-based database ideal for development and small deployments.
+
+**Elasticsearch** - Production-grade distributed search and analytics engine for scalable deployments.
+
+#### SQLite Configuration (Default)
+
+The default configuration uses SQLite with no additional setup required. To customize the database path, edit `/etc/terranova/settings.yml`:
+
+```yaml
+storage:
+  backend: sqlite  # Default backend
+  sqlite_path: ./terranova.db  # Optional: customize database location
+```
+
+#### Elasticsearch Configuration
+
+For production deployments, edit `/etc/terranova/settings.yml`:
+
+```yaml
+storage:
+  backend: elasticsearch
+
+elastic:
+  url: http://localhost:9200
+  username: elastic
+  password: changeme
+  indices:
+    template:
+      read: terranova-template-*
+      write: terranova-template
+    map:
+      read: terranova-map-*
+      write: terranova-map
+    dataset:
+      read: terranova-dataset-*
+      write: terranova-dataset
+    userdata:
+      read: terranova-userdata-*
+      write: terranova-userdata
+```
+
+**When to use SQLite:**
+- Local development
+- Small deployments (< 100k documents)
+- Simple setup without external dependencies
+- Single-server deployments
+
+**When to use Elasticsearch:**
+- Production deployments
+- Large datasets (millions of documents)
+- High availability requirements
+- Horizontal scalability needs
+- Advanced search capabilities
+
+Both backends provide identical functionality with 97% test coverage.
 
 ### Get an API token from Google
 

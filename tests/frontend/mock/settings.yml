@@ -1,6 +1,10 @@
 version: "0.0.1"
 environment: dev
 
+storage:
+  backend: sqlite
+  sqlite_path: ./terranova-test.db
+
 elastic:
   username: elastic
   password: DkIedPPSCb
