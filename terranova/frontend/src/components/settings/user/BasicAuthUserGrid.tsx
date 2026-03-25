@@ -1,12 +1,12 @@
 import * as React from "react";
-import { setAuthHeaders } from "../../DataController";
+import { setAuthHeaders } from "../../../DataController";
 import {
     API_URL,
     READ_SCOPE,
     READ_WRITE_SCOPE,
     PUBLISH_SCOPE,
     ADMIN_SCOPE,
-} from "../../../static/settings";
+} from "../../../../static/settings";
 import {
     PktsInputText,
     PktsInputSelect,
@@ -31,8 +31,7 @@ import {
     Plus,
     Save,
 } from "lucide-react";
-import { ModalDialog } from "../ModalDialog";
-import { Accordion } from "../Accordion";
+import { Accordion } from "../../Accordion";
 import DeletionModal from "./DeletionModal";
 
 interface DeletionData {

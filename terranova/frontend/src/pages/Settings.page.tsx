@@ -1,26 +1,14 @@
-import { Icon } from "../components/Icon.component";
-import { BasicAuthUserGrid } from "../components/BasicAuthUserGrid.component";
-import { GoogleSheetsSettings } from "../components/GoogleSheetsSettings.component";
+import { BasicAuthUserGrid } from "../components/settings/user/BasicAuthUserGrid";
 import { AUTH_BACKEND } from "../../static/settings";
+import { SettingsTopbar } from "../components/settings/SettingsTopbar";
+import { GoogleSheetsSettings } from "../components/settings/googleSheets/GoogleSheets";
 
 export function SettingsPageComponent() {
     return (
-        <main className="main-content">
-            <div className="main-content-header m-2 compound">
-                <div className="flex flex-row">
-                    <div className="icon sm mr-2">
-                        <Icon
-                            name="lucide-settings"
-                            className="stroke-white -mt-[0.125rem] -ml-[0.125rem]"
-                        />
-                    </div>
-                    Settings
-                </div>
-            </div>
-            <div className=" bg-transparent border-none">
-                {AUTH_BACKEND == "basic" ? <BasicAuthUserGrid></BasicAuthUserGrid> : null}
-                <GoogleSheetsSettings></GoogleSheetsSettings>
-            </div>
+        <main className="flex flex-col gap-4 p-4 min-w-0 min-h-full">
+            <SettingsTopbar />
+            {AUTH_BACKEND == "basic" && <BasicAuthUserGrid />}
+            <GoogleSheetsSettings />
         </main>
     );
 }

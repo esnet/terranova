@@ -1,6 +1,6 @@
 import { PktsButton } from "@esnet/packets-ui-react";
 import { Trash2, X } from "lucide-react";
-import { ModalDialog } from "../ModalDialog";
+import { ModalDialog } from "../../ModalDialog";
 
 type Props = {
     visible: boolean;
