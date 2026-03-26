@@ -1,5 +1,5 @@
 """
-Tests for the home page of Terranova.
+Tests for the home page and sidebar of Terranova.
 """
 
 from playwright.sync_api import expect
@@ -21,14 +21,14 @@ def test_view_libraries(page, login):
 
 
 def test_new_buttons(page, login):
-    # ensure new button leads to some create new item menu
-    page.get_by_role("button").nth(1).click()
+    # fails because current PktsIconButton (and probably PktsButton) fails to pass aria labels props
+    page.get_by_role("button", name="Create new dataset").click()
     expect(page.locator("main").first).to_contain_text("Create New Dataset")
     page.get_by_role("link", name="Terranova").click()
 
-    page.get_by_role("button").nth(2).click()
+    page.get_by_role("button", name="Create new map").click()
     expect(page.locator("main").first).to_contain_text("Create New Map")
     page.get_by_role("link", name="Terranova").click()
 
-    page.get_by_role("button").nth(3).click()
+    page.get_by_role("button", name="Create new node template").click()
     expect(page.locator("main").first).to_contain_text("Node Template Builder")

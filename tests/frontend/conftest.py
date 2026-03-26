@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import time
 import random
+import re
 
 
 # AUTH_BACKEND can be basic or keycloak, in which different tests would apply
@@ -68,15 +69,12 @@ def login(setup_server_processes, page):
     """Fixture that automatically logs in when included in a test. Does not return anything."""
     if AUTH_BACKEND == "basic":
         page.goto("http://localhost:5173/")
-        page.locator('input[name="username"]').click()
         page.locator('input[name="username"]').fill("admin")
-        page.locator('input[name="username"]').press("Tab")
         page.locator('input[name="password"]').fill("admin")
-        page.locator('input[name="password"]').press("Enter")
         page.get_by_role("button", name="Login").click()
         expect(page.locator("#root")).to_contain_text("Terranova")
     else:
-        raise Exception("Unsupported Auth Backend: " + AUTH_BACKEND)
+        raise Exception("Testing Unsupported Auth Backend: " + AUTH_BACKEND)
 
 
 @pytest.fixture
@@ -93,6 +91,7 @@ def create_test_map(page, login):
     page.get_by_role("textbox", name="Name*").click()
     page.get_by_role("textbox", name="Name*").fill(map_name)
     page.get_by_role("button", name="Create Map").click()
+    expect(page).to_have_url(re.compile(r".*/map/.*"))
     expect(page.get_by_role("main")).to_contain_text(map_name)
 
     return page.url.split("/")[-1]
@@ -112,6 +111,7 @@ def create_test_dataset(page, login):
     page.get_by_role("textbox", name="Name*").click()
     page.get_by_role("textbox", name="Name*").fill(dataset_name)
     page.get_by_role("button", name="Create Dataset").click()
+    expect(page).to_have_url(re.compile(r".*/dataset/.*"))
     expect(page.get_by_role("main")).to_contain_text(dataset_name)
 
     return page.url.split("/")[-1]
@@ -131,6 +131,7 @@ def create_test_node(page, login):
     page.get_by_role("textbox", name="Name*").click()
     page.get_by_role("textbox", name="Name*").fill(dataset_name)
     page.get_by_role("button", name="Create Template").click()
+    expect(page).to_have_url(re.compile(r".*/template/.*"))
     expect(page.get_by_role("main")).to_contain_text(dataset_name)
 
     return page.url.split("/")[-1]
@@ -149,10 +150,9 @@ def create_test_user(page, login):
     # wait for user table to stabilize and whatnot
     page.wait_for_timeout(1000)
     create_user_button = page.get_by_role("button", name="Add User")
-    expect(create_user_button).to_be_enabled()
     create_user_button.click()
     new_row = page.locator("tr").filter(has=page.get_by_role("button", name="Save new user"))
-    expect(new_row).to_be_visible()
+    expect(new_row).to_be_visible()  # typically fails if user table hasn't yet stabilized
 
     username = f"Generated Test User: {random.randint(0, 1000)}"
     name = "Test Name"
