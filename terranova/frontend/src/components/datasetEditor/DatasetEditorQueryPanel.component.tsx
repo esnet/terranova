@@ -30,7 +30,7 @@ export const DatasetEditorQueryPanel = (props: DatasetEditorQueryPanelProps) => 
         let currentFilters = dataset.query?.filters || [];
         // may want to move this into constants?
         let defaultQueryCriterion = {
-            field: filterableFields?.[0]?.field || null,
+            field: null,
             operator: "",
             value: [],
         };
@@ -146,7 +146,9 @@ export const DatasetEditorQueryPanel = (props: DatasetEditorQueryPanelProps) => 
                 >
                     <div className="w-full flex gap-2 items-center">
                         <PktsInputSelect
-                            className="w-72!"
+                            name="Data source"
+                            placeholder="Select data source"
+                            className="w-lg!"
                             onChange={setEndpoint}
                             value={controller.instance.query.endpoint}
                         >

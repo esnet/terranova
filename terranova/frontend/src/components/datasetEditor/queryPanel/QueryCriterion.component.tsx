@@ -141,12 +141,14 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
             </PktsIconButton>
 
             <PktsInputSelect
-                defaultValue={props.criterion.field}
+                placeholder="Field"
+                value={props.criterion.field}
                 onChange={(e) => {
                     set("field", e.target.value);
                     fetchColumnMatches(e.target.value);
                     fetchResultCount();
                 }}
+                name="field"
             >
                 {props.filterableFields?.map &&
                     props.filterableFields?.map(
@@ -162,11 +164,13 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
 
             <PktsInputSelect
                 className="w-48! min-w-48!"
-                value={props.criterion.operator ?? INPUT_MODIFIER_OPTIONS[0].label}
+                placeholder="Operator"
+                value={props.criterion.operator}
                 onChange={(e) => {
                     set("operator", e.target.value);
                     fetchResultCount();
                 }}
+                name="operator"
             >
                 {INPUT_MODIFIER_OPTIONS.map(({ label, value }) => {
                     return (
@@ -183,15 +187,18 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
             props.criterion.operator !== "not_equal" ? (
                 /* show a text box */
                 <PktsInputText
+                    placeholder="Value"
                     defaultValue={props.criterion?.value?.[0]}
                     onChange={(e) => {
                         setInputTextValue(e.target.value);
                     }}
+                    name="operator-value"
                 />
             ) : (
                 /* otherwise, we have a direct "eq" or "neq" operation. We'll want to show a filterable multi-select */
                 <>
                     <PktsInputTypeahead
+                        placeholder="Value"
                         value={props.criterion.value}
                         onChange={(e) => {
                             const newValue = Array.from(e.target.selectedOptions).map((e) => {
@@ -200,6 +207,7 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
                             set("value", newValue);
                             fetchResultCount();
                         }}
+                        name="operator-values"
                     >
                         {filterResults?.map((filterResult, idx) => {
                             return (
