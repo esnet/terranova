@@ -39,10 +39,12 @@ from terranova.settings import ENVIRONMENT, AUTH_BACKEND
 import terranova.opentelemetry
 from terranova.request import RequestContextMiddleware
 
-# Only initialize Elasticsearch-specific features if using Elasticsearch backend
+# Elasticsearch requires index creation before use
 if STORAGE_BACKEND == "elasticsearch":
     backend.create_indices()
-    backend.initialize_templates()
+
+# Seed default node templates if none exist (safe to run on every startup)
+backend.initialize_templates()
 
 app = FastAPI(title="Terranova API")
 app.add_middleware(RequestContextMiddleware)

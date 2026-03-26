@@ -1,8 +1,12 @@
-import React, { useMemo, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import { DEFAULT_LAYER_CONFIGURATION, DEFAULT_MAP } from "../data/constants";
 import { DataController } from "../DataController";
 import { API_URL } from "../../static/settings";
 import { useNavigate } from "react-router-dom";
+import { GlobalLastEditedRefresh } from "../context/GlobalLastEditedContextProvider";
+import { LastEdited } from "../context/LastEditedContextProvider";
+import { UserDataController } from "../context/UserDataContextProvider";
+import { DataControllerContextType } from "../types/mapeditor";
 import {
     PktsAccordion,
     PktsInputRow,
@@ -39,6 +43,10 @@ export function MapCreatorForm(props: any) {
     };
 
     const navigate = useNavigate();
+    const refreshGlobalLastEdited = useContext(GlobalLastEditedRefresh);
+    const lastEdited = useContext(LastEdited) as any;
+    const { controller: userDataController } = useContext(UserDataController) as DataControllerContextType;
+
     const onSubmit = async (e: any) => {
         e.preventDefault();
         if (!formValues.name) return;
@@ -62,11 +70,22 @@ export function MapCreatorForm(props: any) {
 
         const MapPersistenceController = new DataController(API_URL + "/map/", newMap, null);
         await MapPersistenceController.create();
-        navigate(`/map/${MapPersistenceController.instance.mapId}`);
+        const newMapId = MapPersistenceController.instance.mapId;
+
+        // Track the new map in lastEdited so it gets sidebar priority
+        const newMaps = (lastEdited?.maps ?? []).filter((id: string) => id !== newMapId);
+        newMaps.push(newMapId);
+        if (newMaps.length > 3) newMaps.shift();
+        if (lastEdited) lastEdited.maps = newMaps;
+        userDataController.setProperty("lastEdited", lastEdited);
+        userDataController.update();
+
+        refreshGlobalLastEdited?.();
+        navigate(`/map/${newMapId}`);
     };
 
     return (
-        <PktsAccordion header="Create New Map">
+        <PktsAccordion className="tn-accordion" header="Create New Map">
             <form onSubmit={onSubmit} className="flex flex-col gap-4">
                 <PktsInputRow label="Name" required>
                     <PktsInputText

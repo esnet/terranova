@@ -28,7 +28,7 @@ const MapEditorTopbar = ({ loading, saveMapConfig }: MapEditorTopbarProps) => {
             {/* hide anything above the sticky topbar */}
             <div className="h-4 bg-light-background" />
             <div className="w-full flex justify-between py-2 px-4 bg-light-secondary text-white overflow-hidden">
-                <div className="flex gap-2 items-center justify-center">
+                <div className="flex gap-2 items-center justify-center text-lg">
                     <Map />
                     <b>Editing: </b>
                     {!editingName ? (

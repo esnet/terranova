@@ -37,7 +37,7 @@ export function Accordion({
     ) : undefined;
 
     return (
-        <PktsAccordion header={header} footer={footer} actionButtons={eyeButton}>
+        <PktsAccordion className="tn-accordion" header={header} footer={footer} actionButtons={eyeButton}>
             {children}
         </PktsAccordion>
     );

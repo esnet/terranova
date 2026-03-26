@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, useParams } from "react-router-dom";
 import oidcConfig from "./OIDCConfig";
 import { AuthenticationProvider } from "./AuthService";
 import { AuthProvider as OIDCAuthProvider } from "react-oidc-context";
@@ -14,6 +14,13 @@ import { LoginPageComponent } from "./pages/Login.page";
 import { ErrorPage } from "./pages/Error.page";
 import { SettingsPageComponent } from "./pages/Settings.page";
 import Layout from "./Layout";
+
+// Wrapper that keys MapEditorPageComponent on the mapId param so React
+// remounts (rather than reuses) the component when navigating between maps.
+function MapEditorRoute() {
+    const { mapId } = useParams();
+    return <MapEditorPageComponent key={mapId} />;
+}
 
 function App() {
     const router = createBrowserRouter([
@@ -42,7 +49,7 @@ function App() {
                     path: "map/:mapId/",
                     element: (
                         <Protected>
-                            <MapEditorPageComponent />
+                            <MapEditorRoute />
                         </Protected>
                     ),
                 },

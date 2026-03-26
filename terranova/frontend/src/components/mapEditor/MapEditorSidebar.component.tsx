@@ -14,6 +14,7 @@ import { ArrowUpToLine } from "lucide-react";
 import InputColor from "../InputColor";
 import {
     PktsButton,
+    PktsButtonGroup,
     PktsDivider,
     PktsInputRow,
     PktsInputSelect,
@@ -157,61 +158,47 @@ export const MapEditorSidebar = (props: any) => {
                     setShowPublishModal(false);
                 }}
             />
-            {showPublishButton && (
-                <PktsButton
-                    disabled={!instance?.mapId}
-                    variant="secondary"
-                    onClick={() => setShowPublishModal(true)}
-                >
-                    <span className="flex items-center">
-                        <ArrowUpToLine />
-                        &nbsp;Publish Map
-                    </span>
-                </PktsButton>
-            )}
-            <PktsButton
-                disabled={!instance?.mapId}
-                variant="secondary"
-                onClick={() => setShowModal(true)}
-            >
-                Get Map Output
-            </PktsButton>
-            <div className="text-center">Current Version: {controller?.instance?.version}</div>
-            <PktsDivider />
-            <PktsInputRow label="Background">
-                <PktsInputSelect
-                    name="map-background"
-                    onChange={handleMapBackgroundChange}
-                    value={mapBackground}
-                >
-                    {MapBackgrounds.map((d) => {
-                        return (
-                            <PktsInputOption
-                                value={d.value}
-                                key={`map-background-option-${d.value}`}
-                            >
-                                {d.label}
-                            </PktsInputOption>
-                        );
-                    })}
-                </PktsInputSelect>
-            </PktsInputRow>
-
-            {mapBackground === "tiles" ? (
-                <PktsInputRow label="Geographic Tileset">
-                    <PktsInputSelect
-                        name="map-background-tiles"
-                        onChange={(e) =>
-                            handleConfigChange("tileset.geographic", e.target.value, BaseTilesets)
-                        }
-                        value={controller?.instance?.configuration?.tileset?.geographic ?? "arcgis"}
+            <fieldset className="pt-2">
+                <legend><strong>Map Output</strong></legend>
+                <div className="flex flex-row">
+                    {showPublishButton && (
+                        <PktsButton
+                            className="m-1"
+                            disabled={!instance?.mapId}
+                            variant="secondary"
+                            onClick={() => setShowPublishModal(true)}
+                        >
+                            <span className="flex items-center">
+                                <ArrowUpToLine />
+                                &nbsp;Publish Map
+                            </span>
+                        </PktsButton>
+                    )}
+                    <PktsButton
+                        className="m-1"
+                        disabled={!instance?.mapId}
+                        variant="secondary"
+                        onClick={() => setShowModal(true)}
                     >
-                        {BaseTilesets.map((d) => {
-                            const value = d.value ?? d.label;
+                        Get Map Output
+                    </PktsButton>
+                </div>
+                <div className="text-center">Current Version: {controller?.instance?.version}</div>
+            </fieldset>
+            <fieldset className="pt-2">
+                <legend><strong>Background & Tileset</strong></legend>
+                <PktsInputRow label="Background" className='mb-2'>
+                    <PktsInputSelect
+                        name="map-background"
+                        className="mb-2"
+                        onChange={handleMapBackgroundChange}
+                        value={mapBackground}
+                    >
+                        {MapBackgrounds.map((d) => {
                             return (
                                 <PktsInputOption
-                                    value={value}
-                                    key={`map-background-option-${value}`}
+                                    value={d.value}
+                                    key={`map-background-option-${d.value}`}
                                 >
                                     {d.label}
                                 </PktsInputOption>
@@ -219,17 +206,42 @@ export const MapEditorSidebar = (props: any) => {
                         })}
                     </PktsInputSelect>
                 </PktsInputRow>
-            ) : (
-                <PktsInputRow label="Background Color">
-                    <InputColor
-                        name="map-background-color"
-                        onChange={(e) => handleConfigChange("background", e.target.value, null)}
-                        value={instance.configuration.background}
-                    />
-                </PktsInputRow>
-            )}
 
-            <PktsInputRow label="Map Initial Position">
+                {mapBackground === "tiles" ? (
+                    <PktsInputRow label="Geographic Tileset">
+                        <PktsInputSelect
+                            name="map-background-tiles"
+                            onChange={(e) =>
+                                handleConfigChange("tileset.geographic", e.target.value, BaseTilesets)
+                            }
+                            value={controller?.instance?.configuration?.tileset?.geographic ?? "arcgis"}
+                        >
+                            {BaseTilesets.map((d) => {
+                                const value = d.value ?? d.label;
+                                return (
+                                    <PktsInputOption
+                                        value={value}
+                                        key={`map-background-option-${value}`}
+                                    >
+                                        {d.label}
+                                    </PktsInputOption>
+                                );
+                            })}
+                        </PktsInputSelect>
+                    </PktsInputRow>
+                ) : (
+                    <PktsInputRow label="Background Color">
+                        <InputColor
+                            name="map-background-color"
+                            onChange={(e) => handleConfigChange("background", e.target.value, null)}
+                            value={instance.configuration.background}
+                        />
+                    </PktsInputRow>
+                )}
+            </fieldset>
+
+            <fieldset className="pt-3">
+                <legend><strong>Map Initial Position</strong></legend>
                 <PktsInputSelect
                     name="map-background-tiles"
                     onChange={(e) =>
@@ -249,203 +261,203 @@ export const MapEditorSidebar = (props: any) => {
                         );
                     })}
                 </PktsInputSelect>
-            </PktsInputRow>
 
-            {instance.configuration.initialViewStrategy === "viewport" && (
-                <div className="flex flex-col gap-4 mt-2">
-                    <PktsButton
-                        className="w-full"
-                        variant="secondary"
-                        onClick={(e) => {
-                            props.mapCanvasRef.current.emit(signals.REQUEST_VIEWPORT);
-                        }}
-                    >
-                        Set Viewport from Map State
-                    </PktsButton>
+                {instance.configuration.initialViewStrategy === "viewport" && (
+                    <div className="flex flex-col gap-4 mt-2">
+                        <PktsButton
+                            className="w-full"
+                            variant="secondary"
+                            onClick={(e) => {
+                                props.mapCanvasRef.current.emit(signals.REQUEST_VIEWPORT);
+                            }}
+                        >
+                            Set Viewport from Map State
+                        </PktsButton>
 
-                    <div className="flex flex-col gap-2">
-                        <div className="flex flex-row gap-4">
-                            <div className="flex-1">
-                                <PktsInputRow
-                                    label="Top-left Lat"
-                                    key={`vpt-${instance.configuration?.viewport?.top}`}
-                                >
-                                    <PktsInputNumber
-                                        step="0.01"
-                                        name="viewport.top"
-                                        onChange={(e) =>
-                                            handleConfigChange(
-                                                "viewport.top",
-                                                e.target.valueAsNumber,
-                                                null,
-                                            )
-                                        }
-                                        defaultValue={instance.configuration?.viewport?.top}
-                                    />
-                                </PktsInputRow>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex flex-row gap-4">
+                                <div className="flex-1">
+                                    <PktsInputRow
+                                        label="Top-left Lat"
+                                        key={`vpt-${instance.configuration?.viewport?.top}`}
+                                    >
+                                        <PktsInputNumber
+                                            step="0.01"
+                                            name="viewport.top"
+                                            onChange={(e) =>
+                                                handleConfigChange(
+                                                    "viewport.top",
+                                                    e.target.valueAsNumber,
+                                                    null,
+                                                )
+                                            }
+                                            defaultValue={instance.configuration?.viewport?.top}
+                                        />
+                                    </PktsInputRow>
+                                </div>
+                                <div className="flex-1">
+                                    <PktsInputRow
+                                        label="Top-left Lng"
+                                        key={`vpt-${instance.configuration?.viewport?.left}`}
+                                    >
+                                        <PktsInputNumber
+                                            step="0.01"
+                                            name="viewport.left"
+                                            onChange={(e) =>
+                                                handleConfigChange(
+                                                    "viewport.left",
+                                                    e.target.valueAsNumber,
+                                                    null,
+                                                )
+                                            }
+                                            defaultValue={instance.configuration?.viewport?.left}
+                                        />
+                                    </PktsInputRow>
+                                </div>
                             </div>
-                            <div className="flex-1">
-                                <PktsInputRow
-                                    label="Top-left Lng"
-                                    key={`vpt-${instance.configuration?.viewport?.left}`}
-                                >
-                                    <PktsInputNumber
-                                        step="0.01"
-                                        name="viewport.left"
-                                        onChange={(e) =>
-                                            handleConfigChange(
-                                                "viewport.left",
-                                                e.target.valueAsNumber,
-                                                null,
-                                            )
-                                        }
-                                        defaultValue={instance.configuration?.viewport?.left}
-                                    />
-                                </PktsInputRow>
-                            </div>
-                        </div>
 
-                        <div className="flex flex-row gap-4">
-                            <div className="flex-1">
-                                <PktsInputRow
-                                    label="Bottom-right Lat"
-                                    key={`vpt-${instance.configuration?.viewport?.bottom}`}
-                                >
-                                    <PktsInputNumber
-                                        step="0.01"
-                                        name="viewport.bottom"
-                                        onChange={(e) =>
-                                            handleConfigChange(
-                                                "viewport.bottom",
-                                                e.target.valueAsNumber,
-                                                null,
-                                            )
-                                        }
-                                        defaultValue={instance.configuration?.viewport?.bottom}
-                                    />
-                                </PktsInputRow>
-                            </div>
-                            <div className="flex-1">
-                                <PktsInputRow
-                                    label="Bottom-right Lng"
-                                    key={`vpt-${instance.configuration?.viewport?.right}`}
-                                >
-                                    <PktsInputNumber
-                                        step="0.01"
-                                        name="viewport.right"
-                                        onChange={(e) =>
-                                            handleConfigChange(
-                                                "viewport.right",
-                                                e.target.valueAsNumber,
-                                                null,
-                                            )
-                                        }
-                                        defaultValue={instance.configuration?.viewport?.right}
-                                    />
-                                </PktsInputRow>
+                            <div className="flex flex-row gap-4">
+                                <div className="flex-1">
+                                    <PktsInputRow
+                                        label="Bottom-right Lat"
+                                        key={`vpt-${instance.configuration?.viewport?.bottom}`}
+                                    >
+                                        <PktsInputNumber
+                                            step="0.01"
+                                            name="viewport.bottom"
+                                            onChange={(e) =>
+                                                handleConfigChange(
+                                                    "viewport.bottom",
+                                                    e.target.valueAsNumber,
+                                                    null,
+                                                )
+                                            }
+                                            defaultValue={instance.configuration?.viewport?.bottom}
+                                        />
+                                    </PktsInputRow>
+                                </div>
+                                <div className="flex-1">
+                                    <PktsInputRow
+                                        label="Bottom-right Lng"
+                                        key={`vpt-${instance.configuration?.viewport?.right}`}
+                                    >
+                                        <PktsInputNumber
+                                            step="0.01"
+                                            name="viewport.right"
+                                            onChange={(e) =>
+                                                handleConfigChange(
+                                                    "viewport.right",
+                                                    e.target.valueAsNumber,
+                                                    null,
+                                                )
+                                            }
+                                            defaultValue={instance.configuration?.viewport?.right}
+                                        />
+                                    </PktsInputRow>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {instance.configuration.initialViewStrategy === "static" && (
-                <div className="flex flex-col gap-2 mt-2">
-                    <PktsButton
-                        onClick={() =>
-                            props.mapCanvasRef.current.emit(signals.REQUEST_MAP_CENTER_AND_ZOOM)
-                        }
-                        variant="secondary"
-                    >
-                        Set Center & Zoom From Map State
-                    </PktsButton>
-                    <div className="flex gap-2">
-                        <PktsInputRow
-                            label="Starting Latitude"
-                            key={`slat-${instance.configuration?.viewport?.center?.lat}`}
+                {instance.configuration.initialViewStrategy === "static" && (
+                    <div className="flex flex-col gap-2 mt-2">
+                        <PktsButton
+                            onClick={() =>
+                                props.mapCanvasRef.current.emit(signals.REQUEST_MAP_CENTER_AND_ZOOM)
+                            }
+                            variant="secondary"
                         >
-                            <PktsInputNumber
-                                step="0.01"
-                                name="start-lat"
-                                onChange={(e) =>
-                                    handleConfigChange(
-                                        "viewport.center.lat",
-                                        e.target.valueAsNumber,
-                                        null,
-                                    )
+                            Set Center & Zoom From Map State
+                        </PktsButton>
+                        <div className="flex gap-2">
+                            <PktsInputRow
+                                label="Starting Latitude"
+                                key={`slat-${instance.configuration?.viewport?.center?.lat}`}
+                            >
+                                <PktsInputNumber
+                                    step="0.01"
+                                    name="start-lat"
+                                    onChange={(e) =>
+                                        handleConfigChange(
+                                            "viewport.center.lat",
+                                            e.target.valueAsNumber,
+                                            null,
+                                        )
+                                    }
+                                    defaultValue={instance.configuration?.viewport?.center?.lat}
+                                />
+                            </PktsInputRow>
+                            <PktsInputRow
+                                label="Starting Longitude"
+                                key={`slng-${instance.configuration?.viewport?.center?.lng}`}
+                            >
+                                <PktsInputNumber
+                                    step="0.01"
+                                    name="start-lng"
+                                    onChange={(e) =>
+                                        handleConfigChange(
+                                            "viewport.center.lng",
+                                            e.target.valueAsNumber,
+                                            null,
+                                        )
+                                    }
+                                    defaultValue={instance.configuration?.viewport?.center?.lng}
+                                />
+                            </PktsInputRow>
+                        </div>
+                        <PktsInputRow label="Start Zoom" key={`szoom-${rerenderViewportZoom}`}>
+                            <InputRange
+                                name="viewport.zoom"
+                                min="1"
+                                max="15"
+                                step="0.25"
+                                onChange={(e: { target: { valueAsNumber: any } }) =>
+                                    handleConfigChange("viewport.zoom", e.target.valueAsNumber, null)
                                 }
-                                defaultValue={instance.configuration?.viewport?.center?.lat}
-                            />
-                        </PktsInputRow>
-                        <PktsInputRow
-                            label="Starting Longitude"
-                            key={`slng-${instance.configuration?.viewport?.center?.lng}`}
-                        >
-                            <PktsInputNumber
-                                step="0.01"
-                                name="start-lng"
-                                onChange={(e) =>
-                                    handleConfigChange(
-                                        "viewport.center.lng",
-                                        e.target.valueAsNumber,
-                                        null,
-                                    )
-                                }
-                                defaultValue={instance.configuration?.viewport?.center?.lng}
+                                defaultValue={instance.configuration?.viewport?.zoom}
                             />
                         </PktsInputRow>
                     </div>
-                    <PktsInputRow label="Start Zoom" key={`szoom-${rerenderViewportZoom}`}>
-                        <InputRange
-                            name="viewport.zoom"
-                            min="1"
-                            max="15"
-                            step="0.25"
-                            onChange={(e: { target: { valueAsNumber: any } }) =>
-                                handleConfigChange("viewport.zoom", e.target.valueAsNumber, null)
-                            }
-                            defaultValue={instance.configuration?.viewport?.zoom}
-                        />
-                    </PktsInputRow>
-                </div>
-            )}
+                )}
 
-            {instance.configuration.initialViewStrategy === "variables" && (
-                <div className="flex flex-col gap-2 mt-2">
-                    <PktsInputRow label="Latitude Variable">
-                        <PktsInputText
-                            name="latitudeVar"
-                            onChange={(e) =>
-                                handleConfigChange("latitudeVar", e.target.value, null)
-                            }
-                            defaultValue={instance.configuration?.latitudeVar}
-                        />
-                    </PktsInputRow>
+                {instance.configuration.initialViewStrategy === "variables" && (
+                    <div className="flex flex-col gap-2 mt-2">
+                        <PktsInputRow label="Latitude Variable">
+                            <PktsInputText
+                                name="latitudeVar"
+                                onChange={(e) =>
+                                    handleConfigChange("latitudeVar", e.target.value, null)
+                                }
+                                defaultValue={instance.configuration?.latitudeVar}
+                            />
+                        </PktsInputRow>
 
-                    <PktsInputRow label="Longitude Variable">
-                        <PktsInputText
-                            name="longitudeVar"
-                            onChange={(e) =>
-                                handleConfigChange("longitudeVar", e.target.value, null)
-                            }
-                            defaultValue={instance.configuration?.longitudeVar}
-                        />
-                    </PktsInputRow>
+                        <PktsInputRow label="Longitude Variable">
+                            <PktsInputText
+                                name="longitudeVar"
+                                onChange={(e) =>
+                                    handleConfigChange("longitudeVar", e.target.value, null)
+                                }
+                                defaultValue={instance.configuration?.longitudeVar}
+                            />
+                        </PktsInputRow>
 
-                    <PktsInputRow label="Initial Zoom">
-                        <InputRange
-                            name="viewport.zoom"
-                            min="1"
-                            max="15"
-                            step="0.25"
-                            onChange={(e: { target: { valueAsNumber: any } }) =>
-                                handleConfigChange("viewport.zoom", e.target.valueAsNumber, null)
-                            }
-                            defaultValue={instance.configuration?.viewport?.zoom}
-                        />
-                    </PktsInputRow>
-                </div>
-            )}
+                        <PktsInputRow label="Initial Zoom">
+                            <InputRange
+                                name="viewport.zoom"
+                                min="1"
+                                max="15"
+                                step="0.25"
+                                onChange={(e: { target: { valueAsNumber: any } }) =>
+                                    handleConfigChange("viewport.zoom", e.target.valueAsNumber, null)
+                                }
+                                defaultValue={instance.configuration?.viewport?.zoom}
+                            />
+                        </PktsInputRow>
+                    </div>
+                )}
+            </fieldset>
         </div>
     );
 };

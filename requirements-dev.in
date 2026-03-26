@@ -12,3 +12,4 @@ pytest-playwright
 playwright
 python-jose
 testcontainers
+httpx

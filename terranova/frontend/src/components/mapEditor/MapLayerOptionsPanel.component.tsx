@@ -185,9 +185,9 @@ export function MapLayerOptionsPanel(props: any) {
             onVisibilityChange={props.toggleLayer}
         >
             <div className="flex flex-col gap-4 lg:flex-row w-full">
-                <fieldset className="w-full flex flex-col gap-2">
+                <fieldset className="w-full flex flex-col gap-2 pt-2 pb-4">
                     <legend>
-                        <b>Dataset Options</b>
+                        <strong>Dataset Options</strong>
                     </legend>
                     <PktsInputRow label="Import Dataset">
                         <PktsInputSelect
@@ -253,9 +253,9 @@ export function MapLayerOptionsPanel(props: any) {
                     </PktsInputRow>
                 </fieldset>
                 <PktsDivider className="block lg:hidden" />
-                <fieldset className="w-full flex flex-col gap-2">
+                <fieldset className="w-full flex flex-col gap-2 pt-2 pb-4">
                     <legend>
-                        <b>Node Style</b>
+                        <strong>Node Style</strong>
                     </legend>
                     <PktsInputRow label="Shape">
                         <PktsInputSelect
@@ -316,7 +316,7 @@ export function MapLayerOptionsPanel(props: any) {
                     </PktsInputRow>
                 </fieldset>
                 <PktsDivider className="block lg:hidden" />
-                <fieldset className="w-full flex flex-col gap-2">
+                <fieldset className="w-full flex flex-col gap-2 pt-2 pb-4">
                     <legend>
                         <b>Edge Style</b>
                     </legend>

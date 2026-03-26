@@ -49,13 +49,19 @@ td {
 select {
     @apply py-1 px-2 bg-color-surface-input rounded border-2 border-color-border-alt stroke-esnetblack-300 font-sans focus:outline-color-outline focus:outline-1 focus:outline-offset-0 focus:outline;
 }
-:where(select){
-    @apply min-w-fit;
+@layer base {
+    :where(select){
+        @apply min-w-fit;
+    }
 }
 
-/* fieldset {
-    @apply rounded border border-dotted border-color-border-alt p-3 pt-0
-} */
+@layer base {
+    fieldset {
+        @apply rounded border border-color-border-alt p-3 pt-0
+    }
+}
+
+legend > strong, legend > b { font-weight: 600; }
 
 fieldset.content-sidebar {
     @apply p-6 pt-2 pb-12 rounded-xl mt-6;
@@ -214,9 +220,9 @@ button.warning {
     @apply text-esnetwhite-500 bg-teal-700 text-2xl border-none h-12 px-4 py-1 w-full flex fixed z-[1000] align-middle drop-shadow-md
 }
 
-nav {
+/*nav {
     @apply fixed w-full [z-index:1000] ;
-}
+}*/
 
 .panel {
     @apply mb-6;
@@ -578,5 +584,18 @@ table.data-table td, table.data-table th {
     }
     .searchable-multiselect:focus-within input[type="search"] {
         @apply rounded-b-none;
+    }
+
+    /* accordion header text */
+    .tn-accordion div button {
+        font-size:16px !important;
+    }
+    /* accordion footer */
+    .tn-accordion > div > span {
+        font-size:14px !important;
+    }
+    /* accordion div first-child padding override */
+    .tn-accordion > div {
+        padding:10px 14px !important;
     }
 }

@@ -39,7 +39,7 @@ export function MapOverride(props: any) {
                 </td>
                 <td className="datatype pl-0">
                     <select
-                        className="w-full min-w-[4rem]"
+                        className="w-full min-w-[5rem]"
                         defaultValue={props.override.type}
                         onChange={(e) => {
                             props.setType(e.target.value);

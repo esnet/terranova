@@ -71,7 +71,7 @@ export function DatasetCreatorForm(props: any) {
     };
 
     return (
-        <PktsAccordion header="Create New Dataset">
+        <PktsAccordion className="tn-accordion" header="Create New Dataset">
             <form onSubmit={onSubmit} className="flex flex-col gap-4">
                 <PktsInputRow label="Name" required>
                     <PktsInputText

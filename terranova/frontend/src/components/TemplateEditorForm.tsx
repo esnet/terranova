@@ -49,7 +49,7 @@ export function TemplateEditorForm(props: any) {
     };
 
     return (
-        <PktsAccordion header={create ? "Create Node Template" : "Update Node Template"}>
+        <PktsAccordion className="tn-accordion" header={create ? "Create Node Template" : "Update Node Template"}>
             <form onSubmit={props.persistTemplate} className="flex flex-col gap-4">
                 {templateId && (
                     <PktsInputRow label="ID">
