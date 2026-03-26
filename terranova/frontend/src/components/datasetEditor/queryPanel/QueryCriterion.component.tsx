@@ -144,6 +144,7 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
                 placeholder="Field"
                 value={props.criterion.field}
                 onChange={(e) => {
+                    if (e.target.value !== props.criterion.field) set("value", []); // reset value field
                     set("field", e.target.value);
                     fetchColumnMatches(e.target.value);
                     fetchResultCount();
