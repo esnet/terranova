@@ -123,7 +123,6 @@ export const DatasetEditorQueryPanel = (props: DatasetEditorQueryPanelProps) => 
                 });
             }
         });
-        console.log("OBJECT:", controller.instance);
     };
 
     useEffect(fetchFilterableFields, [queryEndpoints, controller.instance?.query?.endpoint]);
@@ -154,7 +153,7 @@ export const DatasetEditorQueryPanel = (props: DatasetEditorQueryPanelProps) => 
                             {Object.keys(queryEndpoints).map((name) => {
                                 let endpoint = queryEndpoints[name];
                                 return (
-                                    <PktsInputOption value={name}>
+                                    <PktsInputOption key={name} value={name}>
                                         {endpoint.display_name}
                                     </PktsInputOption>
                                 );

@@ -142,35 +142,36 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     }
 
     const getVisualization = () => {
-        let output = null;
-        let classes = ["h-fit", "w-3/4", "border"];
         if (visualizationMode === "table-view") {
-            output = (
-                <TableView data={tableData} loading={loading} datasetVisible={datasetVisible} />
+            return (
+                <div className="overflow-auto max-w-3/4 w-full max-h-128">
+                    <TableView data={tableData} loading={loading} datasetVisible={datasetVisible} />
+                </div>
             );
-            classes.push("overflow-auto");
         }
         if (visualizationMode === "logical") {
-            output = (
-                <LogicalDatasetMap
-                    topology={topologyData}
-                    mapRef={mapRef}
-                    datasetVisible={datasetVisible}
-                />
+            return (
+                <div className="overflow-none border w-full">
+                    <LogicalDatasetMap
+                        topology={topologyData}
+                        mapRef={mapRef}
+                        datasetVisible={datasetVisible}
+                    />
+                </div>
             );
-            classes.push("overflow-none");
         }
         if (visualizationMode == "geographic") {
-            output = (
-                <GeographicDatasetMap
-                    topology={topologyData}
-                    mapRef={mapRef}
-                    datasetVisible={datasetVisible}
-                />
+            return (
+                <div className="overflow-none border w-full">
+                    <GeographicDatasetMap
+                        topology={topologyData}
+                        mapRef={mapRef}
+                        datasetVisible={datasetVisible}
+                    />
+                </div>
             );
-            classes.push("overflow-none");
         }
-        return <div className={classes.join(" ")}>{output}</div>;
+        return "Unknown visualization mode";
     };
 
     const setDatasetName = (newDatasetName: string) => {

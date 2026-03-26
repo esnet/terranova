@@ -54,7 +54,6 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
     }
 
     async function fetchColumnMatches(column: string) {
-        console.log("fetching");
         let timePrecisionKeyPart = (Date.now() / 1000 / CACHE_DURATION_IN_SECONDS).toFixed(0);
         let filters = JSON.parse(JSON.stringify(props.prevCriteria));
         filters.push(props.criterion);
@@ -73,13 +72,11 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
             let filterStr = composeFilters(props.prevCriteria, "?");
             let fetchUrl = `${API_URL}${endpoint}/${column}/${filterStr}`;
             let response = await fetch(fetchUrl, { headers });
-            console.log("////");
             if (response.ok) {
                 filterResults = await response.json();
                 localStorage.setItem(cacheKey, JSON.stringify(filterResults));
             }
         }
-        console.log("filterREsutls", filterResults);
         setFilterResults(filterResults);
     }
 
@@ -204,25 +201,22 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
                             fetchResultCount();
                         }}
                     >
-                        {filterResults}
+                        {filterResults?.map((filterResult, idx) => {
+                            return (
+                                <PktsInputOption
+                                    key={`filter-result-${filterResult}-${idx}`}
+                                    value={filterResult}
+                                >
+                                    {filterResult}
+                                </PktsInputOption>
+                            );
+                        })}
                     </PktsInputTypeahead>
-                    {/* <FilterableMultiSelect
-                        items={filterResults}
-                        placeholder={filterableFieldHash?.[props.criterion.field]?.["placeholder"]}
-                        values={props.criterion.value}
-                        onChange={(e: { target: { selectedOptions: any[] } }) => {
-                            let newValue = Array.from(e.target.selectedOptions).map((e) => {
-                                return e.value;
-                            });
-                            set("value", newValue);
-                            fetchResultCount();
-                        }}
-                    /> */}
                 </>
             )}
             <span className="mx-2" key={`hitcount-${hitCount}`}>
                 {(isNaN(parseFloat(hitCount)) && "0") || parseFloat(hitCount)}&nbsp;
-                {parseFloat(hitCount) === 1 ? "circuit" : "circuits"}
+                {parseFloat(hitCount) === 1 ? "value" : "values"}
             </span>
         </div>
     );

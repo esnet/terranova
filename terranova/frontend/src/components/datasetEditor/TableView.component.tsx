@@ -1,47 +1,61 @@
-interface TableViewProps {
-    data: any[];
-    loading: boolean;
-    datasetVisible: boolean;
+import { PktsDataTable as PDT, PktsSpinner } from "@esnet/packets-ui-react";
+import React from "react";
+
+export interface TableViewProps {
+    data: Record<string, any>[];
+    loading?: boolean;
+    datasetVisible?: boolean;
 }
 
-/**
- * Renders a table of data given a set of headers and an array of data object records. Each record should have keys matching the
- * given set of headers.
- *
- * @param {TableViewProps} props
- * @returns
- */
-export const TableView = (props: TableViewProps) => {
-    const { data, loading } = props;
-    if (!!loading) {
-        return <div className="m-2">Loading...</div>;
-    }
-    if (!Array.isArray(data) || data.length < 1 || !props.datasetVisible) {
-        return <div className="m-2">No Data</div>;
+export const TableView = ({ data, loading, datasetVisible }: TableViewProps) => {
+    if (loading) {
+        return (
+            <div className="w-full h-full flex justify-center items-center">
+                <PktsSpinner />
+            </div>
+        );
     }
 
-    let headers = Object.keys(data[0]);
+    if (!Array.isArray(data) || data.length < 1 || !datasetVisible) {
+        return (
+            <div className="w-full h-full flex justify-center items-center">
+                <span className="text-xl text-light-copyAlt">No data</span>
+            </div>
+        );
+    }
 
+    const headers = Object.keys(data[0]);
+
+    // TODO: improve UX of table by adding column sorting
+    // Also, format the endpoints better than just stringifying it
     return (
-        <table className="data-table overflow-scroll">
-            <thead>
-                <tr>
-                    {headers.map((header) => (
-                        <th key={`table-view-header-${header}`}>{header}</th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {data.map((record, idx) => (
-                    <tr key={`table-view-record-${idx}`}>
-                        {headers.map((header, headerIdx) => (
-                            <td key={`table-view-cell-${headerIdx}`}>
-                                {JSON.stringify(record[header])}
-                            </td>
-                        ))}
-                    </tr>
+        <PDT>
+            {/* Table Header */}
+            <PDT.PktsDataTableHead>
+                {headers.map((key) => (
+                    <PDT.PktsDataTableHeaderCell key={key} sort="NONE">
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                    </PDT.PktsDataTableHeaderCell>
                 ))}
-            </tbody>
-        </table>
+            </PDT.PktsDataTableHead>
+
+            {/* Table Body */}
+            <PDT.PktsDataTableBody>
+                {data.map((row, rowIndex) => (
+                    <PDT.PktsDataTableRow key={`row-${rowIndex}`}>
+                        {headers.map((key) => {
+                            let value = row[key] ?? "N/A";
+                            if (typeof value !== "string") value = JSON.stringify(value);
+
+                            return (
+                                <PDT.PktsDataTableCell key={`${rowIndex}-${key}`}>
+                                    {value}
+                                </PDT.PktsDataTableCell>
+                            );
+                        })}
+                    </PDT.PktsDataTableRow>
+                ))}
+            </PDT.PktsDataTableBody>
+        </PDT>
     );
 };
