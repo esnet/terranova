@@ -149,7 +149,6 @@ export function BasicAuthUserGrid() {
                 "Content-Type": "application/json",
             } as any;
             headers = setAuthHeaders(headers);
-            console.log(headers);
             let payload = {
                 username: user.username,
                 password: user._newPassword,
@@ -183,7 +182,13 @@ export function BasicAuthUserGrid() {
                 "Content-Type": "application/json",
             } as any;
             headers = setAuthHeaders(headers);
-            let payload = user;
+            // based off of the UserUpdate in models.py
+            const payload = {
+                username: user.username,
+                email: user.email,
+                name: user.name,
+                scope: user.scope,
+            };
             fetch(apiUrl, {
                 headers: headers,
                 method: "PUT",
@@ -302,13 +307,17 @@ export function BasicAuthUserGrid() {
     function renderUsersList() {
         return users.map((user, idx) => {
             return (
-                <tr className="border-b border-color-text" key={JSON.stringify(user)}>
+                <tr
+                    className="border-b border-color-text"
+                    key={`${user.username}-${idx}` || `new-user-${idx}`}
+                >
                     <td className="p-2 max-w-64">
                         {user._edit || user._new ? (
                             <PktsInputText
                                 defaultValue={user.name}
-                                className="w-full"
+                                placeholder="Name"
                                 required
+                                name="name"
                                 onChange={setUserName(user, idx)}
                                 onInvalid={invalidMessage("Please enter the user's full name")}
                             />
@@ -321,26 +330,32 @@ export function BasicAuthUserGrid() {
                     <td className="p-2 max-w-64">
                         {user._edit || user._new ? (
                             <PktsInputText
-                                defaultValue={user.email}
-                                className="w-full"
+                                name="username"
+                                // TODO: investigate and determine how basic auth should handle username vs email
+                                // currently, removing the disabled and trying to modify the username fails w/ 422
+                                disabled={user._edit}
+                                defaultValue={user.username}
+                                placeholder="Username"
                                 required
                                 onChange={setUserUsername(user, idx)}
                                 onInvalid={invalidMessage(
-                                    "Please enter the user's email address (used as username)",
+                                    "Please enter the user's username or email address",
                                 )}
                             />
                         ) : (
-                            <div className="ml-1 truncate" title={user.email}>
-                                {user.email}
+                            <div className="ml-1 truncate" title={user.username}>
+                                {user.username}
                             </div>
                         )}
                     </td>
-                    <td className="p-2 max-w-64" key={JSON.stringify(Object.values(user))}>
+                    <td className="p-2 max-w-64">
                         <div className="relative w-full">
                             {user._new ? (
                                 <PktsInputText
                                     type="password"
-                                    className="w-full"
+                                    name="password"
+                                    placeholder="Password"
+                                    defaultValue={user._newPassword}
                                     required
                                     onChange={setUserPassword(user, idx)}
                                     onInvalid={invalidMessage("Please enter a password")}
@@ -349,27 +364,35 @@ export function BasicAuthUserGrid() {
                                 <div className="compound flex flex-nowrap gap-2 items-center">
                                     <PktsInputPassword
                                         required
+                                        name="password"
+                                        defaultValue={user._newPassword}
+                                        placeholder="Password"
                                         onChange={setUserPassword(user, idx)}
                                         onInvalid={invalidMessage("Please enter a password")}
                                     />
-                                    <PktsIconButton onClick={commitPassword(user, idx)}>
+                                    <PktsIconButton
+                                        disabled={loading}
+                                        aria-label="Update password"
+                                        onClick={commitPassword(user, idx)}
+                                    >
                                         <Check />
                                     </PktsIconButton>
-                                    <PktsIconButton onClick={cancelSetPassword(user, idx)}>
+                                    <PktsIconButton
+                                        disabled={loading}
+                                        aria-label="Cancel save password"
+                                        onClick={cancelSetPassword(user, idx)}
+                                    >
                                         <X />
                                     </PktsIconButton>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-4 w-full">
-                                    <div className="w-full grow truncate">••••••••</div>
-                                    <PktsButton
-                                        className="w-24!"
-                                        onClick={setPassword(user, idx)}
-                                        variant="secondary"
-                                    >
-                                        Reset
-                                    </PktsButton>
-                                </div>
+                                <PktsButton
+                                    disabled={loading}
+                                    onClick={setPassword(user, idx)}
+                                    variant="secondary"
+                                >
+                                    Reset Password
+                                </PktsButton>
                             )}
                         </div>
                     </td>
@@ -378,6 +401,7 @@ export function BasicAuthUserGrid() {
                             <PktsInputSelect
                                 defaultValue={JSON.stringify(user.scope)}
                                 onChange={setScopes(user, idx)}
+                                name="scope"
                             >
                                 <PktsInputOption value={JSON.stringify(ROLES["READ_ONLY"])}>
                                     Read-Only
@@ -400,28 +424,52 @@ export function BasicAuthUserGrid() {
                         <div className="flex gap-2">
                             {user._new ? (
                                 <>
-                                    <PktsIconButton onClick={createUser(user, idx)}>
+                                    <PktsIconButton
+                                        disabled={loading}
+                                        onClick={createUser(user, idx)}
+                                        aria-label="Save new user"
+                                    >
                                         <Save />
                                     </PktsIconButton>
-                                    <PktsIconButton onClick={cancelAddUser(user, idx)}>
+                                    <PktsIconButton
+                                        disabled={loading}
+                                        onClick={cancelAddUser(user, idx)}
+                                        aria-label="Cancel adding user"
+                                    >
                                         <X />
                                     </PktsIconButton>
                                 </>
                             ) : user._edit ? (
                                 <>
-                                    <PktsIconButton onClick={commitUser(user, idx)}>
+                                    <PktsIconButton
+                                        disabled={loading}
+                                        onClick={commitUser(user, idx)}
+                                        aria-label="Save changes"
+                                    >
                                         <Save />
                                     </PktsIconButton>
-                                    <PktsIconButton onClick={cancelEditUser(user, idx)}>
+                                    <PktsIconButton
+                                        disabled={loading}
+                                        onClick={cancelEditUser(user, idx)}
+                                        aria-label="Cancel editing"
+                                    >
                                         <X />
                                     </PktsIconButton>
                                 </>
                             ) : (
                                 <>
-                                    <PktsIconButton onClick={editUser(user, idx)}>
+                                    <PktsIconButton
+                                        disabled={loading}
+                                        onClick={editUser(user, idx)}
+                                        aria-label="Edit user"
+                                    >
                                         <Pencil />
                                     </PktsIconButton>
-                                    <PktsIconButton onClick={deleteUser(user, idx)}>
+                                    <PktsIconButton
+                                        disabled={loading}
+                                        onClick={deleteUser(user, idx)}
+                                        aria-label="Delete user"
+                                    >
                                         <Trash2 />
                                     </PktsIconButton>
                                 </>
@@ -449,7 +497,7 @@ export function BasicAuthUserGrid() {
 
                 <div className="grid grid-cols-1 w-full">
                     <form id="table-form" className="w-full min-w-0 overflow-x-auto pb-2">
-                        <table className="table-fixed w-full text-left min-w-268">
+                        <table className="table-fixed w-full text-left min-w-272">
                             <tbody>
                                 <tr className="border-b border-light-copy">
                                     <th>
@@ -461,7 +509,7 @@ export function BasicAuthUserGrid() {
                                     <th>
                                         <div className="flex items-center gap-2">
                                             <Mail />
-                                            Username
+                                            Email/Username
                                         </div>
                                     </th>
                                     <th>
@@ -489,7 +537,13 @@ export function BasicAuthUserGrid() {
                     </form>
                 </div>
 
-                <PktsButton variant="primary" className="mt-4" prepend={<Plus />} onClick={addUser}>
+                <PktsButton
+                    disabled={loading}
+                    variant="primary"
+                    className="mt-4"
+                    prepend={<Plus />}
+                    onClick={addUser}
+                >
                     Add User
                 </PktsButton>
             </fieldset>

@@ -86,6 +86,7 @@ export function HomePageComponent() {
                             onClick={() => {
                                 navigation("/dataset/new");
                             }}
+                            aria-label="Create new dataset"
                         >
                             <Plus />
                         </PktsIconButton>
@@ -109,6 +110,7 @@ export function HomePageComponent() {
                             onClick={() => {
                                 navigation("/map/new");
                             }}
+                            aria-label="Create new map"
                         >
                             <Plus />
                         </PktsIconButton>
@@ -133,6 +135,7 @@ export function HomePageComponent() {
                                 onClick={() => {
                                     navigation("/templates/new");
                                 }}
+                                aria-label="Create new node template"
                             >
                                 <Plus />
                             </PktsIconButton>

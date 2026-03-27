@@ -24,7 +24,7 @@ run: node_modules venv
 # ----- FRONTEND TARGETS -----
 .PHONY: run_frontend
 run_frontend: node_modules
-	@cd $(FRONTEND_DIR) && pnpm run dev
+	cd $(FRONTEND_DIR) && pnpm run dev
 
 .PHONY: run_frontend_bg
 run_frontend_bg: node_modules
@@ -32,18 +32,18 @@ run_frontend_bg: node_modules
 
 .PHONY: build
 build: node_modules
-	@cd ${FRONTEND_DIR} && pnpm run build
+	cd ${FRONTEND_DIR} && pnpm run build
 
 
 # ----- BACKEND TARGETS -----
 .PHONY: run_api
-run_api: venv
+run_api: venv fetch
 	$(VENV_DIR)/bin/uvicorn terranova.api:app --reload
 
-# make fetch, populate sqlite3 db from esdb
+# make fetch, populate sqlite3 db from datasources (google sheet)
 .PHONY: fetch
 fetch: venv
-	$(VENV_DIR)/bin/python3 -m terranova.datasources.esdb.fetcher
+	$(VENV_DIR)/bin/python3 -m terranova.datacacher
 
 
 # ----- TESTING TARGETS -----
@@ -53,12 +53,12 @@ test: frontend-test api-test
 # run tests in a headed browser, allowing better analysis of test failures
 .PHONY: frontend-test-headed
 frontend-test-headed: venv node_modules
-	@cd ${FRONTEND_DIR} && pnpm run build-test
+	cd ${FRONTEND_DIR} && pnpm run build-test
 	$(VENV_DIR)/bin/pytest tests/frontend --headed
 
 .PHONY: frontend-test
 frontend-test: venv node_modules
-	@cd ${FRONTEND_DIR} && pnpm run build-test
+	cd ${FRONTEND_DIR} && pnpm run build-test
 	$(VENV_DIR)/bin/pytest tests/frontend
 
 
@@ -83,7 +83,7 @@ compile-requirements: venv
 
 # these targets ensure that the node modules are installed
 $(FRONTEND_DIR)/node_modules:
-	@cd $(FRONTEND_DIR) && pnpm i
+	cd $(FRONTEND_DIR) && pnpm i
 
 .PHONY: node_modules
 node_modules: $(FRONTEND_DIR)/node_modules
@@ -95,6 +95,8 @@ $(VENV_DIR):
 	python3 -m venv $(VENV_DIR)
 	$(VENV_DIR)/bin/pip install pip-tools
 	$(VENV_DIR)/bin/pip install -r requirements.txt || (echo "Failed to install requirements.txt, stopping here." && exit 1)
+# 	install with --no-deps flag since they were installed above
+	$(VENV_DIR)/bin/pip install -e . --no-deps || (echo "Failed to finish setup.py, stopping here." && exit 1)
 
 # include venv target as a dependency anywhere it needs to exist
 .PHONY: venv
