@@ -1,8 +1,14 @@
 import React, { ChangeEvent } from "react";
-
 import { API_URL } from "../../../static/settings";
-import { ClipboardCopyInput } from "../ClipboardCopyInput.component";
+import { InputCopy } from "../InputCopy";
 import { PREVIEW_MODE_OPTIONS } from "../../data/constants";
+import {
+    PktsDivider,
+    PktsInputRow,
+    PktsInputSelect,
+    PktsInputOption,
+} from "@esnet/packets-ui-react";
+
 interface IDatasetEditorSidebarProps {
     visualizationMode: string;
     handleOnModeChange: (e: ChangeEvent<HTMLSelectElement>) => void;
@@ -14,71 +20,64 @@ interface IDatasetEditorSidebarProps {
  * It contains of the following controls and components:
  *
  * <ul>
- *  <li>
- *      <label>Type: Dropdown</label>
- *      <dl>
- *          <dt>Preview Mode</dt>
- *          <dd>Selects the preview mode to display, one of Edge Graph, Table View, or Geographic</dd>
- *      </dl>
- *   </li>
- *   <li>
- *      <label>Type: ClipboardCopyInput</label>
- *      <dl>
- *          <dt>Static Dataset URL</dt>
- *          <dd>Displays a readonly field and button to copy for static dataset endpoint</dd>
- *      </dl>
- *   </li>
- *   <li>
- *      <label>Type: ClipboardCopyInput</label>
- *      <dl>
- *          <dt>Dynamic Dataset URL</dt>
- *          <dd>Displays a readonly field and button to copy for the dynamic dataset endpoint</dd>
- *      </dl>
- *   </li>
+ * <li>
+ * <label>Type: Dropdown</label>
+ * <dl>
+ * <dt>Preview Mode</dt>
+ * <dd>Selects the preview mode to display, one of Edge Graph, Table View, or Geographic</dd>
+ * </dl>
+ * </li>
+ * <li>
+ * <label>Type: ClipboardCopyInput</label>
+ * <dl>
+ * <dt>Static Dataset URL</dt>
+ * <dd>Displays a readonly field and button to copy for static dataset endpoint</dd>
+ * </dl>
+ * </li>
+ * <li>
+ * <label>Type: ClipboardCopyInput</label>
+ * <dl>
+ * <dt>Dynamic Dataset URL</dt>
+ * <dd>Displays a readonly field and button to copy for the dynamic dataset endpoint</dd>
+ * </dl>
+ * </li>
  * </ul>
  */
-export const DatasetEditorSidebar = (props: IDatasetEditorSidebarProps) => {
-    const { visualizationMode, handleOnModeChange, dataset } = props;
-
-    const datasetInstance = dataset;
-
-    const staticURL = `${API_URL}/output/dataset/${datasetInstance.datasetId}/${visualizationMode}/static`;
-    const dynamicURL = `${API_URL}/output/dataset/${datasetInstance.datasetId}/${visualizationMode}/live`;
+export const DatasetEditorSidebar = ({
+    visualizationMode,
+    handleOnModeChange,
+    dataset,
+}: IDatasetEditorSidebarProps) => {
+    const staticURL = `${API_URL}/output/dataset/${dataset.datasetId}/${visualizationMode}/static`;
+    const dynamicURL = `${API_URL}/output/dataset/${dataset.datasetId}/${visualizationMode}/live`;
 
     return (
-        <div id="dataset-editor-sidebar" className="w-4/12 p-2 self-start sidebar-form relative">
-            <div className="absolute right-0 opacity-50">
-                <label key={dataset.version} className="-mt-2 -mb-4">
-                    Current Version: {dataset.version}
-                </label>
-            </div>
-            {/* Preview Mode dropdown */}
-            <label htmlFor="preview-mode">Preview Mode:</label>
-            <br />
-            <select
-                id="preview-mode"
-                onChange={handleOnModeChange}
-                className="w-full"
-                role="listbox"
-            >
-                {PREVIEW_MODE_OPTIONS.map(({ label, value }) => (
-                    <option role="option" value={value} key={`preview-mode-option-${value}`}>
-                        {label}
-                    </option>
-                ))}
-            </select>
-            <ClipboardCopyInput
-                id="static-dataset-input"
-                label="Static Dataset URL"
-                iconName="clipboard-copy"
-                defaultValue={staticURL}
-            />
-            <ClipboardCopyInput
-                id="dynamic-dataset-input"
-                label="Dynamic Dataset URL"
-                iconName="clipboard-copy"
-                defaultValue={dynamicURL}
-            />
+        <div className="min-w-64 w-2/5 2xl:w-1/4 flex flex-col gap-2">
+            <div className="text-center">Current Version: {dataset.version}</div>
+            <PktsDivider />
+
+            <PktsInputRow label="Preview Mode">
+                <PktsInputSelect
+                    name="preview-mode"
+                    onChange={handleOnModeChange}
+                    value={visualizationMode}
+                    className="w-full"
+                >
+                    {PREVIEW_MODE_OPTIONS.map(({ label, value }) => (
+                        <PktsInputOption value={value} key={`preview-mode-option-${value}`}>
+                            {label}
+                        </PktsInputOption>
+                    ))}
+                </PktsInputSelect>
+            </PktsInputRow>
+
+            <PktsInputRow label="Static Dataset URL">
+                <InputCopy id="static-dataset-input" value={staticURL} />
+            </PktsInputRow>
+
+            <PktsInputRow label="Dynamic Dataset URL">
+                <InputCopy id="dynamic-dataset-input" value={dynamicURL} />
+            </PktsInputRow>
         </div>
     );
 };

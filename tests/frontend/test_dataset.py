@@ -6,18 +6,6 @@ from playwright.sync_api import expect
 import re
 
 
-def test_create_dataset(page, login):
-    # unreliable way of clicking on the create dataset icon button
-    page.get_by_role("button").nth(1).click()
-
-    page.get_by_role("textbox", name="Name*").click()
-    page.get_by_role("textbox", name="Name*").fill("Create Dataset Test")
-    page.get_by_role("button", name="Create Dataset").click()
-
-    expect(page.get_by_role("main")).to_contain_text("Create Dataset Test")
-    expect(page).to_have_url(re.compile(r".*/dataset/\w{7}$"))
-
-
 def test_create_forked_dataset(page, login):
     page.get_by_role("main").get_by_role("link", name="Datasets").click()
     page.get_by_role("button", name="Create New").click()
@@ -40,20 +28,44 @@ def test_create_forked_dataset(page, login):
     expect(page).to_have_url(re.compile(r".*/dataset/\w{7}$"))
 
 
-def test_dataset_discard_Changes(page, create_test_dataset):
-    expect(page.get_by_label("Preview Mode")).to_have_value("logical")
-    # change arbitrary value
-    page.get_by_label("Preview Mode").select_option("geographic")
-    expect(page.get_by_label("Preview Mode")).to_have_value("geographic")
+def test_dataset_discard_changes(page, create_test_dataset):
+    # NOTE: This test requires a service account to be set up,
+    # NOTE: the Terranova Network Toplogy Template to be shared with it
+    # NOTE: and the cache to be filled. Otherwise, it will fail.
+
+    expect(page.get_by_role("main")).to_contain_text("Current Version: 1")
+    page.get_by_role("combobox").filter(has_text="Select data source").click()
+    expect(page.get_by_role("option", name="Terranova Network Topology Template")).to_be_visible()
+    page.get_by_role("option", name="Terranova Network Topology Template").click()
+
     page.get_by_role("button", name="Discard Changes").click()
-    expect(page.get_by_label("Preview Mode")).to_have_value("logical")
+    expect(page.get_by_role("main")).to_contain_text("Current Version: 1")
 
 
-def test_dataset_discard_Changes(page, create_test_dataset):
-    expect(page.locator("#dataset-editor-sidebar")).to_contain_text("Current Version 1")
-    page.get_by_label("Preview Mode").select_option("geographic")
+def test_dataset_query(page, create_test_dataset):
+    # NOTE: This test requires a service account to be set up,
+    # NOTE: the Terranova Network Toplogy Template to be shared with it
+    # NOTE: and the cache to be filled. Otherwise, it will fail.
+
+    expect(page.get_by_role("main")).to_contain_text("Current Version: 1")
+    page.get_by_role("combobox").filter(has_text="Select data source").click()
+    expect(page.get_by_role("option", name="Terranova Network Topology Template")).to_be_visible()
+    page.get_by_role("option", name="Terranova Network Topology Template").click()
+    page.wait_for_timeout(500)
+    page.get_by_role("button", name="Add Query").click()
+    page.wait_for_timeout(500)
+    page.mouse.wheel(0, 400)
+    # select name field
+    page.get_by_role("combobox").filter(has_text="Field").click()
+    page.get_by_role("option", name="Name", exact=True).click()
+    # select two typeahead options
+    page.get_by_role("textbox", name="Value").click()
+    page.get_by_role("option", name="A--B").click()
+    page.get_by_role("textbox", name="Value").click()
+    page.get_by_role("option", name="A--Z").click()
+    # assertions
+    expect(page.locator("form")).to_contain_text("2 values")
     page.get_by_role("button", name="Save Changes").click()
-    # ensure persistence
     page.reload()
-    expect(page.get_by_label("Preview Mode")).to_have_value("logical")
-    expect(page.locator("#dataset-editor-sidebar")).to_contain_text("Current Version 2")
+    expect(page.locator("form")).to_contain_text("2 values")
+    expect(page.get_by_role("main")).to_contain_text("Current Version: 2")

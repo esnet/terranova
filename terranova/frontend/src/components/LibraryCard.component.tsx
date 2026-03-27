@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { API_URL } from "../../static/settings";
 import { Icon } from "./Icon.component";
-import { ClipboardCopyInput } from "./ClipboardCopyInput.component";
+import { InputCopy } from "./InputCopy";
 import { DataController } from "../DataController";
 import { DataControllerType, DataControllerContextType } from "../types/mapeditor";
 import { Favorites } from "../context/FavoritesContextProvider";
@@ -29,7 +29,7 @@ export function DatasetLibraryCard() {
 
     let favorites = useContext(Favorites);
     let { controller: userDataController, instance: userdata } = useContext(
-        UserDataController
+        UserDataController,
     ) as DataControllerContextType;
 
     function buildDatasetLibrary(datasets: any) {
@@ -56,7 +56,7 @@ export function DatasetLibraryCard() {
                                             markFavorite(
                                                 userDataController,
                                                 "datasets",
-                                                values[0].datasetId
+                                                values[0].datasetId,
                                             )
                                         }
                                     ></Icon>
@@ -68,7 +68,7 @@ export function DatasetLibraryCard() {
                                             markFavorite(
                                                 userDataController,
                                                 "datasets",
-                                                values[0].datasetId
+                                                values[0].datasetId,
                                             )
                                         }
                                     ></Icon>
@@ -103,7 +103,7 @@ export function DatasetLibraryCard() {
 
     // set up the DataController
     const [controller, _setController] = useState<DataControllerType>(
-        new DataController(API_URL + "/datasets/" + fieldsetString, datasetList, setDatasetList)
+        new DataController(API_URL + "/datasets/" + fieldsetString, datasetList, setDatasetList),
     ) as any;
 
     useEffect(() => {
@@ -115,7 +115,7 @@ export function DatasetLibraryCard() {
 
     let filteredItems = datasetList;
     filteredItems = datasetList.filter(
-        (item: any) => item.name && item.name.toLowerCase().includes(filterText?.toLowerCase())
+        (item: any) => item.name && item.name.toLowerCase().includes(filterText?.toLowerCase()),
     );
 
     // Create new datastructure
@@ -168,7 +168,7 @@ export function MapLibraryCard() {
     let [filterText, setFilterText] = useState("");
     let favorites = useContext(Favorites);
     let { controller: userDataController, instance: userdata } = useContext(
-        UserDataController
+        UserDataController,
     ) as DataControllerContextType;
 
     function buildMapLibrary(maps: any) {
@@ -187,7 +187,7 @@ export function MapLibraryCard() {
                                         markFavorite(
                                             userDataController,
                                             "maps",
-                                            values[0].mapId
+                                            values[0].mapId,
                                         )
                                     }
                                 ></Icon>
@@ -199,7 +199,7 @@ export function MapLibraryCard() {
                                         markFavorite(
                                             userDataController,
                                             "maps",
-                                            values[0].mapId
+                                            values[0].mapId,
                                         )
                                     }
                                 ></Icon>
@@ -207,11 +207,11 @@ export function MapLibraryCard() {
                             <a href={`/map/${key}`}>{values[0].name}</a>
                         </div>
                         <div className="p-4">
-                            <ClipboardCopyInput
+                            <InputCopy
                                 label="URL"
                                 iconName="clipboard-copy"
                                 defaultValue={`${API_URL}/output/map/${key}`}
-                            ></ClipboardCopyInput>
+                            ></InputCopy>
                         </div>
                         <div className="flex text-esnetblack-500 px-4">
                             Last Updated: {values[0].lastUpdatedOn}
@@ -234,7 +234,7 @@ export function MapLibraryCard() {
 
     // set up the DataController
     const [controller, _setController] = useState<DataControllerType>(
-        new DataController(API_URL + "/maps/" + fieldsetString, mapList, setMapList)
+        new DataController(API_URL + "/maps/" + fieldsetString, mapList, setMapList),
     ) as any;
 
     useEffect(() => {
@@ -246,7 +246,7 @@ export function MapLibraryCard() {
 
     let filteredItems = mapList;
     filteredItems = mapList.filter(
-        (item: any) => item.name && item.name.toLowerCase().includes(filterText?.toLowerCase())
+        (item: any) => item.name && item.name.toLowerCase().includes(filterText?.toLowerCase()),
     );
 
     // Create new datastructure
@@ -317,7 +317,7 @@ export function TemplateLibraryCard() {
 
     let favorites = useContext(Favorites);
     let { controller: userDataController, instance: userdata } = useContext(
-        UserDataController
+        UserDataController,
     ) as DataControllerContextType;
 
     function buildTemplateLibrary(templates: any) {
@@ -337,7 +337,7 @@ export function TemplateLibraryCard() {
                                             markFavorite(
                                                 userDataController,
                                                 "templates",
-                                                values[0].templateId
+                                                values[0].templateId,
                                             )
                                         }
                                     ></Icon>
@@ -349,7 +349,7 @@ export function TemplateLibraryCard() {
                                             markFavorite(
                                                 userDataController,
                                                 "templates",
-                                                values[0].templateId
+                                                values[0].templateId,
                                             )
                                         }
                                     ></Icon>
@@ -392,7 +392,7 @@ export function TemplateLibraryCard() {
 
     // set up the DataController
     const [controller, _setController] = useState<DataControllerType>(
-        new DataController(API_URL + "/templates/" + fieldsetString, templateList, setTemplateList)
+        new DataController(API_URL + "/templates/" + fieldsetString, templateList, setTemplateList),
     ) as any;
 
     useEffect(() => {
@@ -404,7 +404,7 @@ export function TemplateLibraryCard() {
 
     let filteredItems = templateList;
     filteredItems = templateList.filter(
-        (item: any) => item.name && item.name.toLowerCase().includes(filterText?.toLowerCase())
+        (item: any) => item.name && item.name.toLowerCase().includes(filterText?.toLowerCase()),
     );
 
     // Create new datastructure

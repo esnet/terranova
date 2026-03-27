@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
-import { Icon } from "../../Icon.component";
 import { FilterableMultiSelect } from "../../FilterableMultiSelect.component";
 import { setAuthHeaders } from "../../../DataController";
-import { useAuth } from "../../../AuthService";
 import { INPUT_MODIFIER_OPTIONS } from "../../../data/constants";
 import { quickhash } from "../../../data/utils";
 import { API_URL, CACHE_DURATION_IN_SECONDS } from "../../../../static/settings";
+import {
+    PktsIconButton,
+    PktsInputSelect,
+    PktsInputOption,
+    PktsInputText,
+    PktsInputTypeahead,
+} from "@esnet/packets-ui-react";
+import { Trash2 } from "lucide-react";
 
 interface QueryCriterionProps {
     prevCriteria: any[];
@@ -19,7 +25,6 @@ interface QueryCriterionProps {
 
 export const QueryCriterion = (props: QueryCriterionProps) => {
     if (!props.criterion) return <></>;
-    const auth = useAuth();
 
     var [filterResults, setFilterResults] = useState<any[] | null>(null);
     var [filterableFieldHash, setFilterableFieldHash] = useState<any | null>(null);
@@ -130,86 +135,98 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
     }, [inputTextValue]);
 
     return (
-        <div
-            className="
-                compound-query-criterion
-                flex
-                justify-left
-                items-start
-                gap-2
-                mb-4
-            "
-        >
-            <Icon
-                name="trash2"
-                className="icon btn bordered w-9 h-9"
-                onClick={props.deleteCriterion}
-            />
-            <select
-                defaultValue={props.criterion.field}
+        <div className="flex justify-left items-center gap-2">
+            <PktsIconButton onClick={props.deleteCriterion}>
+                <Trash2 />
+            </PktsIconButton>
+
+            <PktsInputSelect
+                placeholder="Field"
+                value={props.criterion.field}
                 onChange={(e) => {
+                    if (e.target.value !== props.criterion.field) set("value", []); // reset value field
                     set("field", e.target.value);
                     fetchColumnMatches(e.target.value);
                     fetchResultCount();
                 }}
+                name="field"
             >
                 {props.filterableFields?.map &&
                     props.filterableFields?.map(
                         ({ label, field }: { label: string; field: any }) => {
                             return (
-                                <option key={field} value={field}>
+                                <PktsInputOption key={field} value={field}>
                                     {label}
-                                </option>
+                                </PktsInputOption>
                             );
-                        }
+                        },
                     )}
-            </select>
-            <select
-                defaultValue={props.criterion.operator}
+            </PktsInputSelect>
+
+            <PktsInputSelect
+                className="w-48! min-w-48!"
+                placeholder="Operator"
+                value={props.criterion.operator}
                 onChange={(e) => {
                     set("operator", e.target.value);
                     fetchResultCount();
                 }}
+                name="operator"
             >
                 {INPUT_MODIFIER_OPTIONS.map(({ label, value }) => {
                     return (
-                        <option key={value} value={value}>
+                        <PktsInputOption key={value} value={value}>
                             {label}
-                        </option>
+                        </PktsInputOption>
                     );
                 })}
-            </select>
+            </PktsInputSelect>
+
             {/* if 'operator' is not null, empty string, or "not_equal" */}
             {props.criterion.operator !== "" &&
             props.criterion.operator !== null &&
             props.criterion.operator !== "not_equal" ? (
                 /* show a text box */
-                <input
-                    type="text"
+                <PktsInputText
+                    placeholder="Value"
                     defaultValue={props.criterion?.value?.[0]}
                     onChange={(e) => {
                         setInputTextValue(e.target.value);
                     }}
+                    name="operator-value"
                 />
             ) : (
                 /* otherwise, we have a direct "eq" or "neq" operation. We'll want to show a filterable multi-select */
-                <FilterableMultiSelect
-                    items={filterResults}
-                    placeholder={filterableFieldHash?.[props.criterion.field]?.["placeholder"]}
-                    values={props.criterion.value}
-                    onChange={(e: { target: { selectedOptions: any[] } }) => {
-                        let newValue = Array.from(e.target.selectedOptions).map((e) => {
-                            return e.value;
-                        });
-                        set("value", newValue);
-                        fetchResultCount();
-                    }}
-                />
+                <>
+                    <PktsInputTypeahead
+                        placeholder="Value"
+                        value={props.criterion.value}
+                        onChange={(e) => {
+                            const newValue = Array.from(e.target.selectedOptions).map((e) => {
+                                return e.value;
+                            });
+                            set("value", newValue);
+                            fetchResultCount();
+                        }}
+                        name="operator-values"
+                    >
+                        {filterResults?.map((filterResult, idx) => {
+                            return (
+                                <PktsInputOption
+                                    key={`filter-result-${filterResult}-${idx}`}
+                                    value={filterResult}
+                                >
+                                    {filterResult}
+                                </PktsInputOption>
+                            );
+                        })}
+                    </PktsInputTypeahead>
+                </>
             )}
-            <label className="text-pink-500" key="hitcount-${hitCount}">
-                {(isNaN(parseFloat(hitCount)) && "...") || parseFloat(hitCount)}&nbsp;
-                {parseFloat(hitCount) === 1 ? "circuit" : "circuits"}
-            </label>
+            <span className="mx-2" key={`hitcount-${hitCount}`}>
+                {(isNaN(parseFloat(hitCount)) && "0") || parseFloat(hitCount)}&nbsp;
+                {parseFloat(hitCount) === 1 ? "value" : "values"}
+            </span>
         </div>
     );
 };

@@ -70,7 +70,9 @@ export function LoginPageComponent(props: any) {
                 )}
                 {AUTH_BACKEND === "oidc" && (
                     <div className="grid h-auto w-full">
-                        <PktsButton onClick={onOIDCAuth}>Login with Keycloak</PktsButton>
+                        <PktsButton variant="primary" onClick={onOIDCAuth}>
+                            Login with Keycloak
+                        </PktsButton>
                     </div>
                 )}
                 {AUTH_BACKEND === "basic" && (
@@ -84,7 +86,7 @@ export function LoginPageComponent(props: any) {
                         <PktsInputRow label="Password">
                             <PktsInputPassword name="password" autoComplete="current-password" />
                         </PktsInputRow>
-                        <PktsButton type="submit" as="button" className="mt-4">
+                        <PktsButton variant="primary" type="submit" as="button" className="mt-4">
                             Login
                         </PktsButton>
                     </form>

@@ -277,10 +277,6 @@ button.warning {
 .dialog-form.tight-form-func tr { @apply py-0 }
 
 
-table.data-table td, table.data-table th {
-    @apply bg-white border whitespace-nowrap max-w-2xl py-1 overflow-hidden;
-}
-
 /* -- Library Card -- */
 /* TODO: This should probably be generalized */
 .library-card {

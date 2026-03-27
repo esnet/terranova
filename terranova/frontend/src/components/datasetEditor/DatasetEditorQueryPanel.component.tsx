@@ -7,6 +7,16 @@ import { DEFAULT_INPUT_DEBOUNCE } from "../../data/constants";
 import { API_URL } from "../../../static/settings";
 import { quickhash } from "../../data/utils";
 import { setAuthHeaders } from "../../DataController";
+import { Accordion } from "../Accordion";
+import {
+    PktsButton,
+    PktsIconButton,
+    PktsInputOption,
+    PktsInputSearch,
+    PktsInputSelect,
+    PktsSpinner,
+} from "@esnet/packets-ui-react";
+import { Plus, PlusSquare } from "lucide-react";
 
 interface DatasetEditorQueryPanelProps {
     datasetVisible: boolean;
@@ -18,10 +28,11 @@ export const DatasetEditorQueryPanel = (props: DatasetEditorQueryPanelProps) => 
 
     const addQueryCriterion = () => {
         let currentFilters = dataset.query?.filters || [];
+        // may want to move this into constants?
         let defaultQueryCriterion = {
-            field: filterableFields?.[0].field,
-            operator: null,
-            value: null,
+            field: null,
+            operator: "",
+            value: [],
         };
         currentFilters.push(JSON.parse(JSON.stringify(defaultQueryCriterion)));
         controller.setProperty("query.filters", currentFilters);
@@ -117,29 +128,40 @@ export const DatasetEditorQueryPanel = (props: DatasetEditorQueryPanelProps) => 
     useEffect(fetchFilterableFields, [queryEndpoints, controller.instance?.query?.endpoint]);
 
     return (
-        <ContentAccordion
+        <Accordion
             header="Query"
             footer="&nbsp;"
-            visibility={props.datasetVisible}
-            setVisibilityToggle={props.toggleDatasetVisible}
-            showEye={true}
+            defaultVisibility={props.datasetVisible}
+            onVisibilityChange={props.toggleDatasetVisible}
+            showEye
         >
             {queryEndpointsLoading ? (
-                <label>Loading Datasource Metadata...</label>
+                <div className="p-2 flex justify-center items-center">
+                    <PktsSpinner />
+                </div>
             ) : (
-                <div role="form" key={quickhash(JSON.stringify(controller.instance.query.filters))}>
-                    <div className="mb-4">
-                        <select
+                <form
+                    className="flex flex-col gap-2"
+                    key={quickhash(JSON.stringify(controller.instance.query.filters))}
+                >
+                    <div className="w-full flex gap-2 items-center">
+                        <PktsInputSelect
+                            name="Data source"
+                            placeholder="Select data source"
+                            className="w-lg!"
                             onChange={setEndpoint}
-                            id="dataset-selector"
                             value={controller.instance.query.endpoint}
                         >
                             {Object.keys(queryEndpoints).map((name) => {
                                 let endpoint = queryEndpoints[name];
-                                return <option value={name}>{endpoint.display_name}</option>;
+                                return (
+                                    <PktsInputOption key={name} value={name}>
+                                        {endpoint.display_name}
+                                    </PktsInputOption>
+                                );
                             })}
-                        </select>
-                        &nbsp;where&hellip;
+                        </PktsInputSelect>
+                        <span className="">&nbsp;where&hellip;</span>
                     </div>
                     {controller.instance?.query?.filters.map((criterion: any, idx: number) => {
                         return (
@@ -151,18 +173,20 @@ export const DatasetEditorQueryPanel = (props: DatasetEditorQueryPanelProps) => 
                                 deleteCriterion={deleteCriterion(idx)}
                                 filterableFields={filterableFields}
                                 queryEndpoints={queryEndpoints}
-                                key={`${idx}`}
+                                key={`query-criterion-${idx}`}
                             />
                         );
                     })}
-                    <Icon
-                        id="add-query-criterion"
-                        name="plus"
-                        className="btn icon bordered -mt-0.5"
+                    <PktsButton
+                        variant="secondary"
+                        append={<Plus />}
+                        className="w-fit"
                         onClick={addQueryCriterion}
-                    />
-                </div>
+                    >
+                        Add Query
+                    </PktsButton>
+                </form>
             )}
-        </ContentAccordion>
+        </Accordion>
     );
 };

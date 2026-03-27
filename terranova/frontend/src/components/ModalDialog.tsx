@@ -1,5 +1,5 @@
 /**
- * This component should be ported to Packets Design System - but utilizing HTML's dialog component.
+ * TODO: This component should be ported to Packets Design System - but utilizing HTML's dialog component.
  * I've confined all relevant code and styling into this file.
  * The styling isn't fully harmonious with Packets-esque styling.
  */

@@ -11,7 +11,6 @@ import { DataController, setAuthHeaders } from "../DataController";
 import { Map, DataControllerType, DataControllerContextType } from "../types/mapeditor";
 import { UserDataController } from "../context/UserDataContextProvider";
 import { LastEdited } from "../context/LastEditedContextProvider";
-import { Favorites } from "../context/FavoritesContextProvider";
 import { MapEditorSidebar } from "../components/mapEditor/MapEditorSidebar.component";
 import { MapLayerOptionsPanel } from "../components/mapEditor/MapLayerOptionsPanel.component";
 import { MapOverridesPanel } from "../components/mapEditor/MapOverridesPanel.component";
