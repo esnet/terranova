@@ -12,7 +12,8 @@ export function HomePageComponent() {
     const auth = useAuth();
     const navigation = useNavigate();
 
-    const sortOnUpdate = (a: any, b: any) => b.lastUpdatedOn - a.lastUpdatedOn;
+    const sortOnUpdate = (a: any, b: any) =>
+        new Date(b.lastUpdatedOn).getTime() - new Date(a.lastUpdatedOn).getTime();
 
     const lastEdited = useContext(LastEdited);
     const favorites = useContext(Favorites);
@@ -202,14 +203,25 @@ type FavLinkListProps = {
     dataType: "maps" | "datasets" | "templates";
 };
 function FavLinkList({ links, dataType }: FavLinkListProps) {
+    const idField = {
+        maps: "mapId",
+        datasets: "datasetId",
+        templates: "templateId",
+    }[dataType];
+    const urlPrefix = {
+        maps: "map",
+        datasets: "dataset",
+        templates: "template",
+    }[dataType];
+
     if (links.length === 0) {
         return <p>You have not marked any {dataType} as favorite.</p>;
     }
     return (
         <ul>
             {links.map((item) => (
-                <li key={item["datasetId"]}>
-                    <a href={`/dataset/${item["datasetId"]}`}>{item["name"]}</a>
+                <li key={item[idField]}>
+                    <a href={`/${urlPrefix}/${item[idField]}`}>{item["name"]}</a>
                 </li>
             ))}
         </ul>

@@ -105,9 +105,11 @@ export function Sidebar() {
                         <li>
                             <Link to="/map/new">Create New Map</Link>
                         </li>
-                        <li>
-                            <Link to="/template/new">Node SVG Builder</Link>
-                        </li>
+                        {showTemplates && (
+                            <li>
+                                <Link to="/template/new">Node SVG Builder</Link>
+                            </li>
+                        )}
                     </ul>
                     <h5 className="flex gap-1 items-center">
                         <FolderOpen /> Libraries

@@ -117,6 +117,9 @@ export function AuthenticationProvider(props: any) {
                             setAuth(newAuth);
                         }
                     });
+            } else {
+                // No stored credentials — not loading, not authenticated; show login page.
+                setAuth(new AuthState({ isLoading: false, isAuthenticated: false, user: null }));
             }
         }
     };

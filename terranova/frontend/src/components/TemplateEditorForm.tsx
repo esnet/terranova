@@ -28,16 +28,17 @@ export function TemplateEditorForm(props: any) {
     ) as DataControllerContextType;
 
     const markFavorite = () => {
-        if (favorites?.templates?.includes(templateId)) {
-            const index = favorites?.templates?.indexOf(templateId);
-            favorites?.templates?.splice(index, 1);
-            userDataController.setProperty(`favorites`, favorites);
-            userDataController.update();
+        // Use raw ID list from userdata for bookkeeping (favorites context stores full objects for display)
+        const rawFavorites = userDataController.instance?.favorites ?? {};
+        const currentList: string[] = rawFavorites.templates ?? [];
+        if (currentList.includes(templateId)) {
+            currentList.splice(currentList.indexOf(templateId), 1);
         } else {
-            favorites?.templates?.push(templateId);
-            userDataController.setProperty(`favorites`, favorites);
-            userDataController.update();
+            currentList.push(templateId);
         }
+        rawFavorites.templates = currentList;
+        userDataController.setProperty(`favorites`, rawFavorites);
+        userDataController.update();
     };
 
     const setName = (e: any) => {
@@ -69,13 +70,13 @@ export function TemplateEditorForm(props: any) {
                     />
                 </PktsInputRow>
                 {create ? (
-                    <PktsButton variant="primary">Create</PktsButton>
+                    <PktsButton variant="primary" type="submit">Create</PktsButton>
                 ) : (
-                    <PktsButton variant="primary">Update</PktsButton>
+                    <PktsButton variant="primary" type="submit">Update</PktsButton>
                 )}
                 {!create && (
                     <div className="panel-body">
-                        {favorites?.templates?.includes(templateId) ? (
+                        {userDataController.instance?.favorites?.templates?.includes(templateId) ? (
                             <div className="icon sm p-1 mr-2">
                                 <Icon
                                     name="lucide-star"

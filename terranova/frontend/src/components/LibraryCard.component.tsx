@@ -9,17 +9,18 @@ import { UserDataController } from "../context/UserDataContextProvider";
 import React from "react";
 
 // @ts-ignore
-const markFavorite = (userDataController, favorites, datatype, id) => {
-    if (favorites?.[datatype]?.includes(id)) {
-        const index = favorites?.[datatype]?.indexOf(id);
-        favorites?.[datatype]?.splice(index, 1);
-        userDataController.setProperty(`favorites`, favorites);
-        userDataController.update();
+const markFavorite = (userDataController, datatype, id) => {
+    // Use raw ID list from userdata for bookkeeping (favorites context stores full objects for display)
+    const rawFavorites = userDataController.instance?.favorites ?? {};
+    const currentList: string[] = rawFavorites[datatype] ?? [];
+    if (currentList.includes(id)) {
+        currentList.splice(currentList.indexOf(id), 1);
     } else {
-        favorites?.[datatype]?.push(id);
-        userDataController.setProperty(`favorites`, favorites);
-        userDataController.update();
+        currentList.push(id);
     }
+    rawFavorites[datatype] = currentList;
+    userDataController.setProperty(`favorites`, rawFavorites);
+    userDataController.update();
 };
 
 export function DatasetLibraryCard() {
@@ -46,7 +47,7 @@ export function DatasetLibraryCard() {
                     <fieldset className="main-page-panel" key={key}>
                         <div className="flex compound">
                             <div className="name">
-                                {favorites?.datasets?.includes(values[0].datasetId) ? (
+                                {userDataController.instance?.favorites?.datasets?.includes(values[0].datasetId) ? (
                                     <Icon
                                         name={"star"}
                                         fill="#00a0d6"
@@ -54,7 +55,6 @@ export function DatasetLibraryCard() {
                                         onClick={() =>
                                             markFavorite(
                                                 userDataController,
-                                                favorites,
                                                 "datasets",
                                                 values[0].datasetId
                                             )
@@ -67,7 +67,6 @@ export function DatasetLibraryCard() {
                                         onClick={() =>
                                             markFavorite(
                                                 userDataController,
-                                                favorites,
                                                 "datasets",
                                                 values[0].datasetId
                                             )
@@ -179,7 +178,7 @@ export function MapLibraryCard() {
                 let map = (
                     <fieldset className="main-page-panel" key={key}>
                         <div className="name">
-                            {favorites?.maps?.includes(values[0].mapId) ? (
+                            {userDataController.instance?.favorites?.maps?.includes(values[0].mapId) ? (
                                 <Icon
                                     name={"star"}
                                     fill="#00a0d6"
@@ -187,7 +186,6 @@ export function MapLibraryCard() {
                                     onClick={() =>
                                         markFavorite(
                                             userDataController,
-                                            favorites,
                                             "maps",
                                             values[0].mapId
                                         )
@@ -200,7 +198,6 @@ export function MapLibraryCard() {
                                     onClick={() =>
                                         markFavorite(
                                             userDataController,
-                                            favorites,
                                             "maps",
                                             values[0].mapId
                                         )
@@ -331,7 +328,7 @@ export function TemplateLibraryCard() {
                     <fieldset className="main-page-panel" key={key}>
                         <div className="flex compound">
                             <div className="name">
-                                {favorites?.templates?.includes(values[0].templateId) ? (
+                                {userDataController.instance?.favorites?.templates?.includes(values[0].templateId) ? (
                                     <Icon
                                         name={"star"}
                                         fill="#00a0d6"
@@ -339,7 +336,6 @@ export function TemplateLibraryCard() {
                                         onClick={() =>
                                             markFavorite(
                                                 userDataController,
-                                                favorites,
                                                 "templates",
                                                 values[0].templateId
                                             )
@@ -352,7 +348,6 @@ export function TemplateLibraryCard() {
                                         onClick={() =>
                                             markFavorite(
                                                 userDataController,
-                                                favorites,
                                                 "templates",
                                                 values[0].templateId
                                             )

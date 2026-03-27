@@ -1,8 +1,12 @@
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DEFAULT_DATASET } from "../data/constants";
 import { DataController } from "../DataController";
 import { API_URL } from "../../static/settings";
+import { GlobalLastEditedRefresh } from "../context/GlobalLastEditedContextProvider";
+import { LastEdited } from "../context/LastEditedContextProvider";
+import { UserDataController } from "../context/UserDataContextProvider";
+import { DataControllerContextType } from "../types/mapeditor";
 import {
     PktsAccordion,
     PktsInputRow,
@@ -42,6 +46,10 @@ export function DatasetCreatorForm(props: any) {
     };
 
     const navigate = useNavigate();
+    const refreshGlobalLastEdited = useContext(GlobalLastEditedRefresh);
+    const lastEdited = useContext(LastEdited) as any;
+    const { controller: userDataController } = useContext(UserDataController) as DataControllerContextType;
+
     // get some information from the DataController (set of options for 'select' elements, e.g.)
     const onSubmit = async (e: any) => {
         e.preventDefault();
@@ -67,7 +75,18 @@ export function DatasetCreatorForm(props: any) {
             null,
         );
         await DatasetPersistenceController.create();
-        navigate(`/dataset/${DatasetPersistenceController.instance.datasetId}`);
+        const newDatasetId = DatasetPersistenceController.instance.datasetId;
+
+        // Track the new dataset in lastEdited so it gets sidebar priority
+        const newDatasets = (lastEdited?.datasets ?? []).filter((id: string) => id !== newDatasetId);
+        newDatasets.push(newDatasetId);
+        if (newDatasets.length > 3) newDatasets.shift();
+        if (lastEdited) lastEdited.datasets = newDatasets;
+        userDataController.setProperty("lastEdited", lastEdited);
+        userDataController.update();
+
+        refreshGlobalLastEdited?.();
+        navigate(`/dataset/${newDatasetId}`);
     };
 
     return (

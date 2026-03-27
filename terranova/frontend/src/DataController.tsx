@@ -92,7 +92,10 @@ class DataController {
         });
         if (response.ok) {
             var output = await response.json();
-            this.instance = output.object;
+            // Some API endpoints wrap the result in {object: ...}; others return a
+            // plain object directly (e.g. userdata).  Only replace instance when
+            // output.object is present so that a flat response doesn't wipe state.
+            this.instance = output.object !== undefined ? output.object : output;
         } else {
             let msg = "Error " + response.status + " " + response.statusText;
             console.error(msg);

@@ -1,10 +1,17 @@
 from playwright.sync_api import expect
 import pytest
 import os
-import shutil
+import sys
 import subprocess
 import time
 import random
+import base64
+import requests
+
+# Ensure tests/frontend/ is on sys.path so test files can do `from urls import FRONTEND_BASE`.
+sys.path.insert(0, os.path.dirname(__file__))
+
+from urls import FRONTEND_BASE, API_BASE, FRONTEND_PORT, API_PORT  # noqa: E402
 
 
 # AUTH_BACKEND can be basic or keycloak, in which different tests would apply
@@ -35,13 +42,25 @@ def setup_server_processes(request):
     # path to the copy target for the JS settings file
     js_settings_target_path = os.path.join(frontend_docroot, "static", "settings.js")
 
-    # overwrite the ephemeral JS settings file
-    shutil.copyfile(js_settings_source_path, js_settings_target_path)
+    # Read the static settings.js template and substitute the port-dependent URLs,
+    # then write the result to the frontend docroot so the compiled app picks it up.
+    with open(js_settings_source_path) as f:
+        js_settings_content = f.read()
+    js_settings_content = js_settings_content.replace(
+        "http://localhost:8000", API_BASE
+    ).replace(
+        "http://localhost:5173", FRONTEND_BASE
+    )
+    with open(js_settings_target_path, "w") as f:
+        f.write(js_settings_content)
 
     frontend_server = "%s/utils/frontend_server.py" % parent_dir
     # spawn a simple http server from the frontend docroot, serving the pre-compiled frontend files
+    fe_env = os.environ.copy()
+    fe_env["TERRANOVA_TEST_FRONTEND_PORT"] = str(FRONTEND_PORT)
     js_proc = subprocess.Popen(
-        [venv_python_path, frontend_server], cwd=frontend_docroot, universal_newlines=True
+        [venv_python_path, frontend_server], cwd=frontend_docroot,
+        universal_newlines=True, env=fe_env
     )
 
     # create an environment for the API server
@@ -49,7 +68,9 @@ def setup_server_processes(request):
     api_env["TERRANOVA_CONF"] = test_config_path
     api_env["MOCKS"] = "tests.frontend.mock.mocks"
     api_proc = subprocess.Popen(
-        [venv_python_path, "-m", "uvicorn", "terranova.api:app"], env=api_env, cwd=app_root
+        [venv_python_path, "-m", "uvicorn", "terranova.api:app",
+         "--port", str(API_PORT)],
+        env=api_env, cwd=app_root
     )
 
     time.sleep(2)
@@ -67,7 +88,7 @@ def setup_server_processes(request):
 def login(setup_server_processes, page):
     """Fixture that automatically logs in when included in a test. Does not return anything."""
     if AUTH_BACKEND == "basic":
-        page.goto("http://localhost:5173/")
+        page.goto(f"{FRONTEND_BASE}/")
         page.locator('input[name="username"]').click()
         page.locator('input[name="username"]').fill("admin")
         page.locator('input[name="username"]').press("Tab")
@@ -84,11 +105,11 @@ def create_test_map(page, login):
     """
     Fixture that sets up an independent map to be used for testing. Automatically runs login fixture.
     Automatically navigates to the map editor for the created map,
-    but can be navigated to as such: `page.goto("http://localhost:5173/map/" + create_test_map)`.
+    but can be navigated to as such: page.goto(FRONTEND_BASE + "/map/" + create_test_map).
     Returns the map ID."""
     map_name = f"Generated Test Map: {random.randint(0, 1000)}"
     # Create new map
-    page.goto("http://localhost:5173/map/new")
+    page.goto(f"{FRONTEND_BASE}/map/new")
     # Fill out new map creation form
     page.get_by_role("textbox", name="Name*").click()
     page.get_by_role("textbox", name="Name*").fill(map_name)
@@ -103,11 +124,11 @@ def create_test_dataset(page, login):
     """
     Fixture that sets up an independent dataset to be used for testing. Automatically runs login fixture.
     Automatically navigates to the dataset editor for the created dataset,
-    but can be navigated to as such: `page.goto("http://localhost:5173/dataset/" + create_test_dataset)`.
+    but can be navigated to as such: page.goto(FRONTEND_BASE + "/dataset/" + create_test_dataset).
     Returns the dataset ID."""
     dataset_name = f"Generated Test Dataset: {random.randint(0, 1000)}"
     # Create new map
-    page.goto("http://localhost:5173/dataset/new")
+    page.goto(f"{FRONTEND_BASE}/dataset/new")
     # Fill out new map creation form
     page.get_by_role("textbox", name="Name*").click()
     page.get_by_role("textbox", name="Name*").fill(dataset_name)
@@ -122,15 +143,55 @@ def create_test_node(page, login):
     """
     Fixture that sets up an independent node template to be used for testing. Automatically runs login fixture.
     Automatically navigates to the node editor for the created node,
-    but can be navigated to as such: `page.goto("http://localhost:5173/template/" + create_test_node)`.
+    but can be navigated to as such: page.goto(FRONTEND_BASE + "/template/" + create_test_node).
     Returns the node template ID."""
     dataset_name = f"Generated Test Node: {random.randint(0, 1000)}"
-    # Create new map
-    page.goto("http://localhost:5173/template/new")
-    # Fill out new map creation form
-    page.get_by_role("textbox", name="Name*").click()
-    page.get_by_role("textbox", name="Name*").fill(dataset_name)
-    page.get_by_role("button", name="Create Template").click()
-    expect(page.get_by_role("main")).to_contain_text(dataset_name)
+    # Create new node template
+    page.goto(f"{FRONTEND_BASE}/template/new")
+    # Fill out node template creation form
+    page.get_by_role("textbox", name="Name").fill(dataset_name)
+    page.get_by_role("button", name="Create", exact=True).click()
+    # The template name is in an <input value>, not text content — use to_have_value.
+    expect(page.get_by_role("textbox", name="Name")).to_have_value(dataset_name, timeout=10000)
 
     return page.url.split("/")[-1]
+
+
+# Base64-encoded "admin:admin" credentials for direct API calls
+ADMIN_AUTH_HEADER = base64.b64encode(b"admin:admin").decode()
+
+
+@pytest.fixture
+def login_as_write_user(setup_server_processes, page):
+    """
+    Creates a user with read+write scopes (no publish, no admin), logs in as that user.
+    Cleans up the user after the test. Returns the username.
+    """
+    username = f"writeuser_{random.randint(0, 99999)}"
+    password = "testpassword123"
+    headers = {
+        "Authorization": f"Basic {ADMIN_AUTH_HEADER}",
+        "Content-Type": "application/json",
+    }
+
+    requests.post(
+        f"{API_BASE}/user",
+        headers=headers,
+        json={
+            "username": username,
+            "name": "Write Only User",
+            "scope": ["terranova:maps:read", "terranova:maps:write"],
+            "password": password,
+        },
+    )
+
+    page.goto(f"{FRONTEND_BASE}/")
+    page.locator('input[name="username"]').fill(username)
+    page.locator('input[name="password"]').fill(password)
+    page.get_by_role("button", name="Login").click()
+    expect(page.locator("#root")).to_contain_text("Terranova")
+
+    yield username
+
+    # Teardown: delete the created user
+    requests.delete(f"{API_BASE}/user/{username}/", headers=headers)

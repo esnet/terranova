@@ -22,6 +22,12 @@ function MapEditorRoute() {
     return <MapEditorPageComponent key={mapId} />;
 }
 
+// Same pattern for the dataset editor.
+function DatasetEditorRoute() {
+    const { datasetId } = useParams();
+    return <DatasetEditorPageComponent key={datasetId} />;
+}
+
 function App() {
     const router = createBrowserRouter([
         {
@@ -81,7 +87,7 @@ function App() {
                     path: "/dataset/:datasetId",
                     element: (
                         <Protected>
-                            <DatasetEditorPageComponent />
+                            <DatasetEditorRoute />
                         </Protected>
                     ),
                 },

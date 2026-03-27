@@ -39,6 +39,11 @@ export function Protected(props: { children: any }) {
         case "signoutRedirect":
             return <LoginPageComponent message="Logging you out..." />;
     }
+    if (auth?.isLoading) {
+        // auth state is still being resolved (e.g. session restore in basic auth).
+        // render nothing to avoid a flash of the login page.
+        return null;
+    }
     if (!auth?.isAuthenticated) {
         // user is not logged in. render the login page.
         return <LoginPageComponent />;

@@ -67,7 +67,7 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     HOST = "127.0.0.1"
-    PORT = 5173
+    PORT = int(os.environ.get("TERRANOVA_TEST_FRONTEND_PORT", "5173"))
     server = http.server.HTTPServer((HOST, PORT), RequestHandler)
     print("Serving HTTP frontend testing server on %s:%s" % (HOST, PORT))
     try:

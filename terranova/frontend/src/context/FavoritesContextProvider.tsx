@@ -59,11 +59,9 @@ export function FavoritesContextProvider(props: any) {
                 let response = await fetch(apiUrl, { headers: headers, method: "GET" });
                 if (response.ok) {
                     let output = await response.json();
-                    // @ts-ignore
-                    const ids = output.map((obj: any) => obj[idFields[datatype]]);
-                    favorites[datatype] = ids;
+                    favorites[datatype] = output;
                     setFavorites({ ...favorites });
-                    localStorage.setItem(cacheKey, JSON.stringify(ids));
+                    localStorage.setItem(cacheKey, JSON.stringify(output));
                 }
             }
         });

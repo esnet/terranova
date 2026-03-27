@@ -60,16 +60,14 @@ export function MapEditorPageComponent() {
                 setShowSaveAlert(false);
             }, TOOLTIP_TTL * 1000);
         });
-        // Remove instances of mapId from the array
-        let newMaps = lastEdited?.maps?.filter((e) => e !== mapId);
-        newMaps?.push(mapId); // Push at the end
-        if (newMaps?.length > 3) {
-            newMaps?.shift(); // removes the first element
+        // Update lastEdited using the userdata IDs (not the LastEdited full-objects context).
+        const currentLastEdited = userDataController.instance?.lastEdited ?? {};
+        let newMaps = ((currentLastEdited?.maps ?? []) as string[]).filter((e) => e !== mapId);
+        newMaps.push(mapId); // Push at the end (newest = highest index)
+        if (newMaps.length > 3) {
+            newMaps.shift(); // removes the oldest element
         }
-        if (lastEdited) {
-            lastEdited.maps = newMaps;
-        }
-        userDataController.setProperty(`lastEdited`, lastEdited);
+        userDataController.setProperty(`lastEdited`, { ...currentLastEdited, maps: newMaps });
         userDataController.update();
     };
 

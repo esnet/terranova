@@ -65,16 +65,17 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     }, []);
 
     const markFavorite = () => {
-        if (favorites?.datasets?.includes(datasetId)) {
-            const index = favorites?.datasets?.indexOf(datasetId);
-            favorites?.datasets?.splice(index, 1);
-            userDataController.setProperty(`favorites`, favorites);
-            userDataController.update();
+        // Use raw ID list from userdata for bookkeeping (favorites context stores full objects for display)
+        const rawFavorites = userDataController.instance?.favorites ?? {};
+        const currentList: string[] = rawFavorites.datasets ?? [];
+        if (currentList.includes(datasetId)) {
+            currentList.splice(currentList.indexOf(datasetId), 1);
         } else {
-            favorites?.datasets?.push(datasetId);
-            userDataController.setProperty(`favorites`, favorites);
-            userDataController.update();
+            currentList.push(datasetId);
         }
+        rawFavorites.datasets = currentList;
+        userDataController.setProperty(`favorites`, rawFavorites);
+        userDataController.update();
     };
 
     const prepRequest = (dataset: any) => {
@@ -228,16 +229,14 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
             }, TOOLTIP_TTL * 1000);
         });
 
-        // Remove instances of mapId from the array
-        let newDatasets = lastEdited?.datasets?.filter((e: any) => e !== datasetId);
-        newDatasets?.push(datasetId); // Push at the end
-        if (newDatasets?.length > 3) {
-            newDatasets?.shift(); // removes the first element
+        // Update lastEdited using the userdata IDs (not the LastEdited full-objects context).
+        const currentLastEdited = userDataController.instance?.lastEdited ?? {};
+        let newDatasets = ((currentLastEdited?.datasets ?? []) as string[]).filter((e) => e !== datasetId);
+        newDatasets.push(datasetId); // Push at the end (newest = highest index)
+        if (newDatasets.length > 3) {
+            newDatasets.shift(); // removes the oldest element
         }
-        if (lastEdited) {
-            lastEdited.datasets = newDatasets;
-        }
-        userDataController.setProperty(`lastEdited`, lastEdited);
+        userDataController.setProperty(`lastEdited`, { ...currentLastEdited, datasets: newDatasets });
         userDataController.update();
     };
 
@@ -247,7 +246,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                 {/*  Upper content area  */}
                 <div className="main-content-header m-2 compound">
                     <div className="flex flex-row">
-                        {favorites?.datasets?.includes(datasetId) ? (
+                        {userDataController.instance?.favorites?.datasets?.includes(datasetId) ? (
                             <div className="icon sm p-1 mr-2">
                                 <Icon
                                     name="lucide-star"

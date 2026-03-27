@@ -70,21 +70,22 @@ export function LastEditedContextProvider(props: any) {
 
                     // Re-order output based on original order of id's
                     let order = userDataController.instance?.lastEdited?.[datatype];
+                    // @ts-ignore
+                    const idField = idFields[datatype];
                     output.sort(function (a: any, b: any) {
-                        var A = a["mapId"],
-                            B = b["mapId"];
+                        var A = a[idField],
+                            B = b[idField];
+                        // Higher index = more recently added; show newest first.
                         if (order.indexOf(A) > order.indexOf(B)) {
-                            return 1;
-                        } else {
                             return -1;
+                        } else {
+                            return 1;
                         }
                     });
 
-                    // @ts-ignore
-                    const ids = output.map((obj: any) => obj[idFields[datatype]]);
-                    lastEdited[datatype] = ids;
+                    lastEdited[datatype] = output;
                     setLastEdited(JSON.parse(JSON.stringify(lastEdited)));
-                    localStorage.setItem(cacheKey, JSON.stringify(ids));
+                    localStorage.setItem(cacheKey, JSON.stringify(output));
                 }
             }
         });

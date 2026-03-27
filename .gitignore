@@ -11,6 +11,9 @@ build
 *.cache
 dist-test
 
+# sqlite dbs
+*.db
+
 .venv
 venv*
 credentials.json

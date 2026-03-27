@@ -3,10 +3,11 @@ Tests for the layout of Terranova, specifically concerning the NavBar and Sideba
 """
 
 from playwright.sync_api import expect
+from urls import FRONTEND_BASE
 
 
 def test_has_title(page):
-    page.goto("http://localhost:5173/")
+    page.goto(f"{FRONTEND_BASE}/")
     expect(page).to_have_title("Terranova")
 
 

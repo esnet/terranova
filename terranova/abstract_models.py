@@ -379,7 +379,9 @@ class SQLiteCacheDatasource(BaseDatasource):
         rows = query.all()
         rows = list(
             map(
-                lambda x: x[0] if (not x[0] or not x[0][0] in ["{", "["]) else json.loads(x[0]),
+                lambda x: x[0]
+                if (not x[0] or not isinstance(x[0], str) or x[0][0] not in ["{", "["])
+                else json.loads(x[0]),
                 rows,
             )
         )
@@ -480,6 +482,9 @@ def flatten_field(name, field, prefix=""):
             output.append(("%s_%s" % (name, modifier.name), signature, Query([])))
     if field_type == "integer":
         signature = List[int]
+        output.append((name, signature, Query([])))
+    if field_type == "number":
+        signature = List[float]
         output.append((name, signature, Query([])))
     return output
 

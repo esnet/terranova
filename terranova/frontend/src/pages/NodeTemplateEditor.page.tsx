@@ -59,16 +59,14 @@ export function NodeTemplateEditorPageComponent() {
             navigate(`/template/${TemplatePersistenceController.instance.templateId}`);
         } else {
             TemplatePersistenceController.update();
-            // on update, also set last edited
-            let newTemplates = lastEdited?.templates?.filter((e: any) => e !== templateId);
-            newTemplates?.push(templateId); // Push at the end
-            if (newTemplates?.length > 3) {
-                newTemplates?.shift(); // removes the first element
+            // Update lastEdited using the userdata IDs (not the LastEdited full-objects context).
+            const currentLastEdited = userDataController.instance?.lastEdited ?? {};
+            let newTemplates = ((currentLastEdited?.templates ?? []) as string[]).filter((e) => e !== templateId);
+            newTemplates.push(templateId); // Push at the end (newest = highest index)
+            if (newTemplates.length > 3) {
+                newTemplates.shift(); // removes the oldest element
             }
-            if (lastEdited) {
-                lastEdited.templates = newTemplates;
-            }
-            userDataController.setProperty(`lastEdited`, lastEdited);
+            userDataController.setProperty(`lastEdited`, { ...currentLastEdited, templates: newTemplates });
             userDataController.update();
         }
     }
