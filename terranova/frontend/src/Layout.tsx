@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { READ_SCOPE } from "../static/settings";
 import { NavBar } from "./components/NavBar";
-import { ReadOnlyWarning } from "./components/ReadOnlyWarning.component";
+import { ReadOnlyWarning } from "./components/ReadOnlyWarning";
 import { FavoritesContextProvider } from "./context/FavoritesContextProvider";
 import { GlobalLastEditedContextProvider } from "./context/GlobalLastEditedContextProvider";
 import { LastEditedContextProvider } from "./context/LastEditedContextProvider";
