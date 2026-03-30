@@ -1,14 +1,10 @@
 import React from "react";
 import { DataControllerContextType } from "../../types/mapeditor";
-import { ContentAccordion } from "../ContentAccordion.component";
 import { MapOverride } from "./MapOverride.component";
 import { DatasetListController } from "../../pages/MapEditor.page";
 import { MapType } from "../../data/constants";
 import { Accordion } from "../Accordion";
 
-/**
- * TODO this mess
- */
 export function MapOverridesPanel(props: any) {
     let [overrideFormData, setOverrideFormData] = React.useState<any[]>([]);
     let [datasetNameLookup, setDatasetNameLookup] = React.useState<MapType>({});
