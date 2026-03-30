@@ -10,17 +10,6 @@ import Card from "../components/Card";
 
 export const DatasetListDataController = createContext<DataControllerContextType | null>(null);
 
-/**
- * TODO: hmmmmm....
- * LAYOUT:
- *  - on small screen sizes, stack the card on top of the accordion
- * COMPONENTS:
- *  - utilize ESAccordion for create new
- *  - utilize ESInputSelect or ESInputTypeahead (experiment) for fork options
- *  - utilize Card component for description
- * LOGIC:
- *  - show "no datasets to fork" message when no other datasets exist
- */
 export function DatasetCreatorPageComponent() {
     // set up some state variables for the controller to work with
     const [datasetList, setDatasetList] = useState([]);

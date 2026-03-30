@@ -22,11 +22,6 @@ import {
     PktsInputText,
 } from "@esnet/packets-ui-react";
 
-/**
- * TODO: map publish functionality
- * TODO: get map output functionality
- * overall testing
- */
 export const MapEditorSidebar = (props: any) => {
     let showPublishButton = false;
     let auth = useAuth();

@@ -43,8 +43,6 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
 
         if (response.ok) {
             setStatus("success");
-            // TODO: determine if dismissing dialog is best UX
-            // props.dismiss();
         } else {
             setStatus("error");
             setError(`Error attempting to publish map. Please try again.`);

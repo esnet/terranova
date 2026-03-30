@@ -21,9 +21,6 @@ type Form = {
     forkDatasetVersion?: string;
 };
 
-/**
- * Dataset creator form used in the dataset creation page. Entirely surrounded in
- */
 export function DatasetCreatorForm(props: any) {
     // prefer a controlled state form over uncontrolled, because one of the inputs
     // (fork from version) is dependent on a previous value (fork from dataset)
