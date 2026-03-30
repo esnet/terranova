@@ -7,7 +7,8 @@ import { LastEdited } from "../context/LastEditedContextProvider";
 import { DataControllerType, DataControllerContextType } from "../types/mapeditor";
 import { TemplateEditorForm } from "../components/TemplateEditorForm";
 import { TemplatePreview } from "../components/TemplatePreview";
-import { API_URL } from "../../static/settings";
+import { API_URL, TOOLTIP_TTL } from "../../static/settings";
+import { PktsAlert } from "@esnet/packets-ui-react";
 
 export const TemplateDataController = createContext<DataControllerContextType | null>(null);
 
@@ -29,6 +30,8 @@ export function NodeTemplateEditorPageComponent() {
     const [controller, _setController] = useState<DataControllerType>(
         new DataController(null, template, setTemplate),
     );
+
+    const [showSaveAlert, setShowSaveAlert] = useState(false);
 
     useEffect(() => {
         if (!templateId) return;
@@ -58,22 +61,28 @@ export function NodeTemplateEditorPageComponent() {
             await TemplatePersistenceController.create();
             navigate(`/template/${TemplatePersistenceController.instance.templateId}`);
         } else {
-            TemplatePersistenceController.update();
-            // Update lastEdited using the userdata IDs (not the LastEdited full-objects context).
-            const currentLastEdited = userDataController.instance?.lastEdited ?? {};
-            let newTemplates = ((currentLastEdited?.templates ?? []) as string[]).filter((e) => e !== templateId);
-            newTemplates.push(templateId); // Push at the end (newest = highest index)
-            if (newTemplates.length > 3) {
-                newTemplates.shift(); // removes the oldest element
-            }
-            userDataController.setProperty(`lastEdited`, { ...currentLastEdited, templates: newTemplates });
-            userDataController.update();
+            TemplatePersistenceController.update().then(() => {
+                setShowSaveAlert(true);
+                setTimeout(() => {
+                    setShowSaveAlert(false);
+                }, TOOLTIP_TTL * 1000);
+
+                // Update lastEdited using the userdata IDs (not the LastEdited full-objects context).
+                const currentLastEdited = userDataController.instance?.lastEdited ?? {};
+                let newTemplates = ((currentLastEdited?.templates ?? []) as string[]).filter((e) => e !== templateId);
+                newTemplates.push(templateId); // Push at the end (newest = highest index)
+                if (newTemplates.length > 3) {
+                    newTemplates.shift(); // removes the oldest element
+                }
+                userDataController.setProperty(`lastEdited`, { ...currentLastEdited, templates: newTemplates });
+                userDataController.update();
+            });
         }
     }
 
     return (
         <TemplateDataController.Provider value={{ controller, instance: template }}>
-            <main className="w-full flex flex-col lg:flex-row gap-8 p-8 ">
+            <main className="w-full flex flex-col xl:flex-row gap-8 p-8">
                 <TemplateEditorForm
                     instance={template}
                     setInstance={setTemplate}
@@ -81,6 +90,13 @@ export function NodeTemplateEditorPageComponent() {
                 />
 
                 <TemplatePreview instance={template}></TemplatePreview>
+                {showSaveAlert && (
+                    <div className="fixed right-4 bottom-4">
+                        <PktsAlert variant="success" title="Node Template Saved">
+                            Updated {controller.instance.name}
+                        </PktsAlert>
+                    </div>
+                )}
             </main>
         </TemplateDataController.Provider>
     );

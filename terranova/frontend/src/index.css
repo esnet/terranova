@@ -104,9 +104,6 @@ input[type="text"]:disabled {
     @apply text-esnetblack-100;
 }
 
-textarea {
-    @apply px-2 py-2 bg-color-surface-input border-2 border-color-border-alt stroke-esnetblack-300 rounded focus:outline-color-outline focus:outline-offset-0 focus:outline;
-}
 
 .invalid, input:focus.invalid, textarea:focus.invalid {
     @apply border-red-500 outline-2 outline-red-500;
@@ -301,19 +298,6 @@ button.warning {
     @apply w-full text-left
 }
 
-/* -- SVG Preview for Template Editor -- */
-.template-preview { 
-    @apply mx-auto bg-white border;
-}
-:where(.template-preview) {
-    @apply w-64 h-64
-}
-.template-preview svg * { 
-    transform-box: fill-box;
-}
-.template-preview svg > g {
-    transform-origin: center;
-}
 
 /* ##### Specific Page/Layout Overrides ##### */
 

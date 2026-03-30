@@ -9,20 +9,9 @@ import time
 import random
 
 
-def test_create_map(page, login):
-    # unreliable way of clicking on the create map icon button
-    page.get_by_role("button").nth(2).click()
-
-    # perhaps it may be better to have a proper named button instead of an icon button
-    expect(page.get_by_role("button", name="Create New Map")).to_be_visible()
-
-    page.get_by_role("textbox", name="Name*").click()
-    page.get_by_role("textbox", name="Name*").fill("Create Map Test")
-    page.get_by_role("button", name="Create Map").click()
-
-    expect(page.get_by_role("main")).to_contain_text("Create Map Test")
-    # map id expected to be of length 7
-    expect(page).to_have_url(re.compile(r".*/map/\w{7}$"))
+def test_create_map(page, create_test_map):
+    """Tests that the create fixture works."""
+    pass
 
 
 def test_create_forked_map(page, login):
@@ -143,3 +132,16 @@ def test_output_map_svg(page, create_test_map, context):
 
 
 # TODO: add tests involving modifying map layers
+
+
+def test_map_library(page, create_test_map):
+    page.goto("localhost:5173/library/maps")
+    expect(page.get_by_text("Map Library")).to_be_visible()
+    expect(page.get_by_role("link", name="Generated Test Map:").first).to_be_visible()
+
+
+def test_map_library_filter(page, create_test_map):
+    page.goto("localhost:5173/library/maps")
+    expect(page.get_by_text("Map Library")).to_be_visible()
+    page.get_by_role("textbox", name="Filter by name...").fill("generate")
+    expect(page.get_by_role("link", name="Generated Test Map:").first).to_be_visible()

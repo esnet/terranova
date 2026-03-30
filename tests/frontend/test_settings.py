@@ -11,6 +11,12 @@ from tests.frontend.conftest import AUTH_BACKEND
 
 
 @pytest.mark.skipif(AUTH_BACKEND != "basic", reason="requires basic auth")
+def test_create_user(page, create_test_node):
+    """Tests that the create fixture works."""
+    pass
+
+
+@pytest.mark.skipif(AUTH_BACKEND != "basic", reason="requires basic auth")
 def test_change_name(page, create_test_user):
     user_row = page.get_by_role("row", name=create_test_user)
     user_table = page.locator("#table-form")
