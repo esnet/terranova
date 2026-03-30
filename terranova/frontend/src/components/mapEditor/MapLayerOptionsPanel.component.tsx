@@ -1,5 +1,4 @@
 import { useContext, useState, useEffect } from "react";
-import { Icon } from "../Icon.component";
 import {
     MapController,
     DatasetListController,

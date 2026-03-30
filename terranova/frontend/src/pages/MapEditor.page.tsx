@@ -14,7 +14,6 @@ import { LastEdited } from "../context/LastEditedContextProvider";
 import { MapEditorSidebar } from "../components/mapEditor/MapEditorSidebar.component";
 import { MapLayerOptionsPanel } from "../components/mapEditor/MapLayerOptionsPanel.component";
 import { MapOverridesPanel } from "../components/mapEditor/MapOverridesPanel.component";
-import { Icon } from "../components/Icon.component";
 import { DEFAULT_LAYER_CONFIGURATION, DEFAULT_INPUT_DEBOUNCE } from "../data/constants";
 import { API_URL, LAYER_LIMIT, TOOLTIP_TTL } from "../../static/settings";
 import "esnet-networkmap-panel";
