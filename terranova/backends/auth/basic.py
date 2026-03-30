@@ -3,10 +3,10 @@ from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry import trace
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, SecurityScopes
 
+import json
 from sqlalchemy import create_engine, Column, Integer, Text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import NullPool
-from sqlalchemy.dialects import sqlite
 
 from terranova.settings import (
     BASIC_AUTH_DB_FILENAME,
@@ -37,7 +37,7 @@ class UserTable(Base):
     username = Column(Text)
     name = Column(Text)
     password = Column(Text)
-    scope = Column(sqlite.JSON)
+    scope = Column(Text)  # stored as JSON string to avoid SQLAlchemy type-processor issues
 
 
 engine = create_engine(
@@ -45,84 +45,119 @@ engine = create_engine(
     connect_args={"check_same_thread": False},
     poolclass=NullPool,
 )
+# Session factory — create one session per operation to avoid thread-safety issues
+SessionFactory = sessionmaker(engine, expire_on_commit=False)
 SQLAlchemyInstrumentor().instrument(engine=engine)
 
 tracer = trace.get_tracer(__name__)
 
 
+def _decode_scope(raw):
+    """scope is stored as a JSON string; decode it back to a list."""
+    if raw is None:
+        return []
+    if isinstance(raw, list):
+        return raw
+    return json.loads(raw)
+
+
+def _decode_password(raw):
+    """password is stored as a UTF-8 string; return bytes for bcrypt."""
+    if isinstance(raw, bytes):
+        return raw
+    return raw.encode("utf-8")
+
+
 class BasicBackend:
     def __init__(self):
         UserTable.__table__.create(bind=engine, checkfirst=True)
-        self.session = sessionmaker(bind=engine)()
-        if not self.session.query(UserTable).filter_by(id=1).first():
-            self.create_user(
-                email="admin",
-                name="Administration User",
-                password="admin",
-                scope=[s for s in TOKEN_SCOPES.values()],
-            )
+        with SessionFactory() as session:
+            if not session.query(UserTable).filter_by(id=1).first():
+                self.create_user(
+                    email="admin",
+                    name="Administration User",
+                    password="admin",
+                    scope=[s for s in TOKEN_SCOPES.values()],
+                )
 
     def query(self, username=None, limit=10):
-        query = self.session.query(UserTable)
-        if username:
-            query = query.filter_by(username=username)
-        if limit:
-            query = query.limit(limit)
-        rows = query.all()
+        with SessionFactory() as session:
+            q = session.query(UserTable)
+            if username:
+                q = q.filter_by(username=username)
+            if limit:
+                q = q.limit(limit)
+            # expunge so objects are usable outside this session
+            rows = q.all()
+            for row in rows:
+                session.expunge(row)
         return rows
 
     def get_user(self, username, password):
-        db_user = self.session.query(UserTable).filter_by(username=username).first()
-        if db_user and bcrypt.checkpw(password.encode(), db_user.password):
+        with SessionFactory() as session:
+            db_user = session.query(UserTable).filter_by(username=username).first()
+            if db_user:
+                session.expunge(db_user)
+        if db_user and bcrypt.checkpw(password.encode(), _decode_password(db_user.password)):
             return User(
                 username=db_user.username,
                 email=db_user.username,
                 name=db_user.name,
-                scope=db_user.scope,
+                scope=_decode_scope(db_user.scope),
             )
-        else:
-            raise HTTPException(status_code=401, detail="Invalid user")
+        raise HTTPException(status_code=401, detail="Invalid user")
 
     def create_user(self, email, name, password, scope):
         salt = bcrypt.gensalt()
-        hashed_password = bcrypt.hashpw(password.encode(), salt)
-        new_user = UserTable(username=email, name=name, password=hashed_password, scope=scope)
-        self.session.add(new_user)
-        self.session.commit()
+        hashed_password = bcrypt.hashpw(password.encode(), salt).decode("utf-8")
+        new_user = UserTable(
+            username=email, name=name,
+            password=hashed_password,
+            scope=json.dumps(scope),
+        )
+        with SessionFactory() as session:
+            session.add(new_user)
+            session.commit()
+            session.expunge(new_user)
         return User(
             username=new_user.username,
             email=new_user.username,
             name=new_user.name,
-            scope=new_user.scope,
+            scope=_decode_scope(new_user.scope),
         )
 
     def delete_user(self, db_user):
-        self.session.delete(db_user)
-        self.session.commit()
+        scope = _decode_scope(db_user.scope)
+        with SessionFactory() as session:
+            merged = session.merge(db_user)
+            session.delete(merged)
+            session.commit()
         return User(
             username=db_user.username,
             email=db_user.username,
             name=db_user.name,
-            scope=db_user.scope,
+            scope=scope,
         )
 
     def update_user(self, db_user, email=None, name=None, password=None, scope=None):
-        if email:
-            db_user.username = email
-        if name:
-            db_user.name = name
-        if scope:
-            db_user.scope = scope
-        if password:
-            salt = bcrypt.gensalt()
-            hashed_password = bcrypt.hashpw(password.encode(), salt)
-            db_user.password = hashed_password
-        self.session.commit()
+        with SessionFactory() as session:
+            merged = session.merge(db_user)
+            if email:
+                merged.username = email
+            if name:
+                merged.name = name
+            if scope is not None:
+                merged.scope = json.dumps(scope)
+            if password:
+                salt = bcrypt.gensalt()
+                merged.password = bcrypt.hashpw(password.encode(), salt).decode("utf-8")
+            session.commit()
+            session.expunge(merged)
         return User(
-            username=db_user.username,
-            email=db_user.username,
-            name=db_user.name,
-            scope=db_user.scope,
+            username=merged.username,
+            email=merged.username,
+            name=merged.name,
+            scope=_decode_scope(merged.scope),
         )
 
 

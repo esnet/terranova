@@ -4,7 +4,6 @@ import { DEFAULT_DATASET } from "../data/constants";
 import { DataController } from "../DataController";
 import { API_URL } from "../../static/settings";
 import { GlobalLastEditedRefresh } from "../context/GlobalLastEditedContextProvider";
-import { LastEdited } from "../context/LastEditedContextProvider";
 import { UserDataController } from "../context/UserDataContextProvider";
 import { DataControllerContextType } from "../types/mapeditor";
 import {
@@ -47,7 +46,6 @@ export function DatasetCreatorForm(props: any) {
 
     const navigate = useNavigate();
     const refreshGlobalLastEdited = useContext(GlobalLastEditedRefresh);
-    const lastEdited = useContext(LastEdited) as any;
     const { controller: userDataController } = useContext(UserDataController) as DataControllerContextType;
 
     // get some information from the DataController (set of options for 'select' elements, e.g.)
@@ -77,12 +75,12 @@ export function DatasetCreatorForm(props: any) {
         await DatasetPersistenceController.create();
         const newDatasetId = DatasetPersistenceController.instance.datasetId;
 
-        // Track the new dataset in lastEdited so it gets sidebar priority
-        const newDatasets = (lastEdited?.datasets ?? []).filter((id: string) => id !== newDatasetId);
+        // Track the new dataset in lastEdited (use raw ID list from userdata, not the full-object context)
+        const currentLastEdited = userDataController.instance?.lastEdited ?? {};
+        const newDatasets = ((currentLastEdited?.datasets ?? []) as string[]).filter((id: string) => id !== newDatasetId);
         newDatasets.push(newDatasetId);
         if (newDatasets.length > 3) newDatasets.shift();
-        if (lastEdited) lastEdited.datasets = newDatasets;
-        userDataController.setProperty("lastEdited", lastEdited);
+        userDataController.setProperty("lastEdited", { ...currentLastEdited, datasets: newDatasets });
         userDataController.update();
 
         refreshGlobalLastEdited?.();

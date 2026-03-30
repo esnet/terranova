@@ -7,6 +7,16 @@ from tests/fixtures/sqlite_database.py via the autouse session fixture).
 from playwright.sync_api import expect
 
 
+def select_pkts_option(page, combobox_locator, option_name):
+    """
+    Helper for PktsInputSelect: click the combobox div to open the listbox,
+    then click the matching option. PktsInputSelect uses role=combobox + role=option,
+    not a native <select> element.
+    """
+    combobox_locator.click()
+    page.get_by_role("option", name=option_name).first.click()
+
+
 def test_preview_edge_graph(page, create_test_dataset):
     """
     Test that the Edge Graph preview mode renders without error.
@@ -28,8 +38,11 @@ def test_preview_geographic(page, create_test_dataset):
     An empty dataset will show a "loading" error from esnet-map-canvas, which is expected.
     The key assertion is that the canvas element itself is present in the DOM.
     """
-    # Switch preview mode to Geographic
-    page.select_option("#preview-mode", value="geographic")
+    # PktsInputSelect renders role=combobox (not a native <select>).
+    # The preview mode combobox shows "Edge Graph" by default (value="logical").
+    # Filter by that text to distinguish it from other comboboxes on the page.
+    preview_combobox = page.get_by_role("combobox").filter(has_text="Edge Graph")
+    select_pkts_option(page, preview_combobox, "Geographic")
 
     # The geographic map should render an esnet-map-canvas element in the DOM
     expect(page.locator("esnet-map-canvas").first).to_be_attached()
@@ -40,16 +53,15 @@ def test_preview_geographic(page, create_test_dataset):
 def test_preview_table(page, create_test_dataset):
     """
     Test that the Table View preview renders without a server error.
-    The test dataset is empty (no Google Sheets datasource), so the table
-    may show a loading or empty state, but should not show a server error.
+    The test dataset is empty (no datasource), so the table may show an empty
+    state, but should not show a server error.
     """
-    # Switch preview mode to Table View
-    page.select_option("#preview-mode", value="table-view")
+    # Switch from default "Edge Graph" to "Table View"
+    preview_combobox = page.get_by_role("combobox").filter(has_text="Edge Graph")
+    select_pkts_option(page, preview_combobox, "Table View")
 
     main = page.get_by_role("main")
-    # Wait for table view to load (async API call)
     expect(main).to_be_visible()
-    # No server-side error should appear
     expect(main).not_to_contain_text("500")
     expect(main).not_to_contain_text("Server Error")
 
@@ -57,19 +69,20 @@ def test_preview_table(page, create_test_dataset):
 def test_add_name_criterion(page, create_test_dataset):
     """
     Test adding a filter criterion on the 'name' field (a standard pre-defined column).
-    Verifies the hit count updates and the criterion UI is functional.
+    Verifies the criterion UI appears and the hit count is visible.
     """
-    # Click the '+' icon to add a new criterion
-    page.locator("#add-query-criterion").click()
+    # Wait for query endpoints to load — the "Add Query" button only appears after
+    # the datasources API call completes (queryEndpointsLoading becomes false)
+    add_query_btn = page.get_by_role("button", name="Add Query")
+    expect(add_query_btn).to_be_visible(timeout=10000)
+    add_query_btn.click()
 
-    # A criterion row should appear
-    # The criterion has a field selector, operator selector, and value input
-    criterion_row = page.locator(".compound-query-criterion").first
+    # Criterion rows render as div.flex.justify-left.items-center.gap-2
+    criterion_row = page.locator(".flex.justify-left.items-center").first
     expect(criterion_row).to_be_visible(timeout=5000)
 
-    # The hit count label (class text-pink-500) should appear in the criterion row
-    # Even without a value selected, it should show "... circuits"
-    hit_count = criterion_row.locator(".text-pink-500")
+    # Hit count renders in a span.mx-2: "0 values", "1 value", etc.
+    hit_count = criterion_row.locator("span.mx-2")
     expect(hit_count).to_be_visible()
 
 
@@ -78,29 +91,37 @@ def test_add_endpoint_metadata_criterion(page, create_test_dataset):
     Test adding a filter criterion on endpoint metadata (e.g., endpoints_location_name).
     This tests that arbitrary metadata columns from the data source can be filtered on.
     """
-    # Click the '+' icon to add a new criterion
-    page.locator("#add-query-criterion").click()
+    add_query_btn = page.get_by_role("button", name="Add Query")
+    expect(add_query_btn).to_be_visible(timeout=10000)
+    add_query_btn.click()
 
-    criterion_row = page.locator(".compound-query-criterion").first
+    criterion_row = page.locator(".flex.justify-left.items-center").first
     expect(criterion_row).to_be_visible(timeout=5000)
 
-    # Select a field that is endpoint metadata (look for any "endpoint" field)
-    field_select = criterion_row.locator("select").first
-    options = field_select.locator("option").all_text_contents()
-    endpoint_fields = [o for o in options if "endpoint" in o.lower() or "location" in o.lower()]
+    # Open the field combobox (first combobox in the criterion row)
+    field_combobox = criterion_row.get_by_role("combobox").first
+    field_combobox.click()
+    page.wait_for_timeout(500)
+
+    # Collect available options from the open listbox
+    options_locator = page.get_by_role("option")
+    endpoint_fields = [
+        options_locator.nth(i).inner_text()
+        for i in range(options_locator.count())
+        if "endpoint" in options_locator.nth(i).inner_text().lower()
+        or "location" in options_locator.nth(i).inner_text().lower()
+    ]
 
     if endpoint_fields:
         # Select the first endpoint-related field
-        field_select.select_option(label=endpoint_fields[0])
-        # Wait briefly for the hit count to update
+        page.get_by_role("option", name=endpoint_fields[0]).first.click()
         page.wait_for_timeout(2000)
-        # Hit count should appear
-        hit_count = criterion_row.locator(".text-pink-500")
+        hit_count = criterion_row.locator("span.mx-2")
         expect(hit_count).to_be_visible()
     else:
-        # If no endpoint fields are available, skip the field selection check
-        # but verify the criterion row is still functional
-        expect(criterion_row.locator(".text-pink-500")).to_be_visible()
+        # No endpoint fields available (no datasource selected) — close and verify row
+        page.keyboard.press("Escape")
+        expect(criterion_row.locator("span.mx-2")).to_be_visible()
 
 
 def test_latitude_longitude_filter_bug(page, create_test_dataset):
@@ -111,27 +132,33 @@ def test_latitude_longitude_filter_bug(page, create_test_dataset):
     Bug fix: added 'number' type handler in flatten_field and fixed get_unique_values
     to handle non-string values without crashing.
     """
-    # Click the '+' icon to add a new criterion
-    page.locator("#add-query-criterion").click()
+    add_query_btn = page.get_by_role("button", name="Add Query")
+    expect(add_query_btn).to_be_visible(timeout=10000)
+    add_query_btn.click()
 
-    criterion_row = page.locator(".compound-query-criterion").first
+    criterion_row = page.locator(".flex.justify-left.items-center").first
     expect(criterion_row).to_be_visible(timeout=5000)
 
-    # Look for latitude or longitude field in the selector
-    field_select = criterion_row.locator("select").first
-    options = field_select.locator("option").all_text_contents()
-    lat_lon_fields = [o for o in options if "latitude" in o.lower() or "longitude" in o.lower()]
+    # Open the field combobox
+    field_combobox = criterion_row.get_by_role("combobox").first
+    field_combobox.click()
+    page.wait_for_timeout(500)
+
+    options_locator = page.get_by_role("option")
+    lat_lon_fields = [
+        options_locator.nth(i).inner_text()
+        for i in range(options_locator.count())
+        if "latitude" in options_locator.nth(i).inner_text().lower()
+        or "longitude" in options_locator.nth(i).inner_text().lower()
+    ]
 
     if lat_lon_fields:
         # Select latitude field -- this used to cause a 500 error before the fix
-        field_select.select_option(label=lat_lon_fields[0])
-        # Wait for the async column-fetch to complete
+        page.get_by_role("option", name=lat_lon_fields[0]).first.click()
         page.wait_for_timeout(3000)
-        # No 500 error should appear -- the page should still be functional
         expect(page.get_by_role("main")).not_to_contain_text("Server Error")
         expect(page.get_by_role("main")).not_to_contain_text("500")
-        # The criterion row should still be visible (not crashed)
         expect(criterion_row).to_be_visible()
     else:
-        # Lat/lon fields not exposed as filterable -- test passes trivially
-        pass
+        # Lat/lon fields not exposed as filterable (no datasource selected) — passes trivially
+        page.keyboard.press("Escape")

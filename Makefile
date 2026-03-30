@@ -107,3 +107,15 @@ clean:
 	rm -rf $(VENV_DIR)
 	rm -rf $(FRONTEND_DIR)/node_modules
 	rm -rf terranova/client
+
+
+# ----- DOCUMENTATION TARGETS -----
+.PHONY: docs
+docs: venv
+	$(VENV_DIR)/bin/pip install -r requirements-docs.txt
+	$(VENV_DIR)/bin/mkdocs build
+
+.PHONY: serve-docs
+serve-docs: venv
+	$(VENV_DIR)/bin/pip install -r requirements-docs.txt
+	$(VENV_DIR)/bin/mkdocs serve

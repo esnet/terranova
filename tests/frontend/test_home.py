@@ -4,7 +4,7 @@ Tests for the home page and sidebar of Terranova.
 
 from playwright.sync_api import expect
 import random
-from urls import FRONTEND_BASE
+from urls import FRONTEND_BASE, API_BASE
 
 
 def test_view_libraries(page, login):
@@ -42,18 +42,27 @@ def test_favorites(page, create_test_dataset):
     under 'My Favorites' > 'My Datasets'. Verifies FavoritesContextProvider stores
     full objects and FavLinkList renders with correct dataType-aware fields.
     """
+    import base64
+    import requests as req
     dataset_id = create_test_dataset
     # The create_test_dataset fixture navigates to the dataset editor.
-    # Read the dataset name from the page header.
-    dataset_name = page.locator(".main-content-header").first.inner_text().strip()
+    # Read the dataset name from the topbar (rendered as bold span: "Editing: {name}")
+    dataset_name = page.locator(".bg-light-secondary span.font-bold").inner_text().strip()
 
-    # Clear localStorage so the favorites context fetches fresh data
+    # Mark as favorite via API — no favorite button exists in the dataset editor UI yet.
+    auth = base64.b64encode(b"admin:admin").decode()
+    headers = {"Authorization": f"Basic {auth}", "Content-Type": "application/json"}
+    r = req.get(f"{API_BASE}/userdata/", headers=headers)
+    userdata = r.json()
+    favorites = userdata.get("favorites", {})
+    datasets = favorites.get("datasets", [])
+    if dataset_id not in datasets:
+        datasets.append(dataset_id)
+    favorites["datasets"] = datasets
+    req.put(f"{API_BASE}/userdata/", headers=headers, json={"favorites": favorites})
+
+    # Clear localStorage cache and navigate home so favorites context fetches fresh data
     page.evaluate("localStorage.clear()")
-
-    # Click the star/favorite icon in the dataset editor header
-    page.locator(".icon.sm").first.click()
-
-    # Navigate to the home page
     page.goto(f"{FRONTEND_BASE}/")
 
     # The dataset name should appear under 'My Favorites' > 'My Datasets'

@@ -15,23 +15,9 @@ React context (including lastEdited), causing the sidebar to depopulate.
 
 from playwright.sync_api import expect
 import pytest
-import os
 import random
 from urls import FRONTEND_BASE
 
-
-@pytest.fixture(autouse=True, scope="module")
-def clean_test_db():
-    """
-    Remove the SQLite test DB before navigation tests run so that the sidebar
-    only contains maps created in this session. Without this, accumulated maps
-    from previous test sessions compete for the sidebar's 3-item display limit
-    and newly-created maps can be pushed out of view.
-    """
-    db_path = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "terranova-test.db")
-    db_path = os.path.normpath(db_path)
-    if os.path.exists(db_path):
-        os.remove(db_path)
 
 
 @pytest.fixture
@@ -153,8 +139,8 @@ def test_sidebar_navigation_between_dataset_editors(page, two_test_datasets):
     dataset_a_id, dataset_a_name = two_test_datasets[0]
     dataset_b_id, dataset_b_name = two_test_datasets[1]
 
-    # The dataset name is in <span id="dataset-display-name">.
-    display_name = page.locator("#dataset-display-name")
+    # Dataset name is in the topbar: <b>Editing: </b><span>name</span>
+    display_name = page.locator("b:has-text('Editing:') + span")
 
     # Fixture leaves us on dataset B. Navigate to dataset A via the sidebar.
     page.locator("#sidebar").get_by_role("link", name=dataset_a_name).click()

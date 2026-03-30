@@ -4,23 +4,39 @@ Tests for anything dataset related in Terranova.
 
 from playwright.sync_api import expect
 import re
+from urls import FRONTEND_BASE
 
 
 def test_create_forked_dataset(page, login):
-    page.get_by_role("main").get_by_role("link", name="Datasets").click()
-    page.get_by_role("button", name="Create New").click()
-    expect(page.get_by_role("heading", name="Terranova")).to_be_visible()
+    # Create the source dataset to fork from first (test is self-contained)
+    source_name = "Fork Source Dataset"
+    page.goto(f"{FRONTEND_BASE}/dataset/new")
+    page.wait_for_load_state("networkidle")
+    page.get_by_role("textbox", name="Name*").fill(source_name)
+    page.get_by_role("button", name="Create Dataset").click()
+    expect(page.get_by_role("main")).to_contain_text(source_name)
+
+    # Navigate to the dataset creator to test forking
+    page.goto(f"{FRONTEND_BASE}/dataset/new")
+    expect(page.get_by_role("main")).to_contain_text("Create New Dataset")
+
+    # Wait for dataset list to load before checking the fork switch.
+    # Without this, datasetList is empty and the fork options show "no datasets".
+    page.wait_for_load_state("networkidle")
 
     page.get_by_role("textbox", name="Name*").fill("Fork Dataset Test")
     page.get_by_role("checkbox", name="Fork Existing Dataset").check()
-    expect(page.get_by_role("group", name="Fork Existing Dataset Options")).to_be_visible()
+    expect(page.get_by_role("group", name="Fork Existing Dataset Options")).to_be_visible(timeout=10000)
 
     page.get_by_role("textbox", name="Dataset Name*").click()
-    page.get_by_role("option", name="Create Dataset Test").first.click()
-    expect(page.locator("form")).to_contain_text("Create Dataset Test")
+    expect(page.get_by_role("listbox", name="Typeahead Dropdown Options")).to_be_visible()
+    page.get_by_role("option", name=source_name).first.press("Enter")
+    expect(page.locator("form")).to_contain_text(source_name)
 
     page.get_by_role("textbox", name="Version*").click()
-    page.get_by_role("option", name="v1").click()
+    expect(page.get_by_role("listbox", name="Typeahead Dropdown Options")).to_be_visible()
+    page.get_by_role("option", name="v1").first.click()
+    expect(page.locator("form")).to_contain_text("v1")
 
     page.get_by_role("button", name="Create Dataset", exact=True).click()
 

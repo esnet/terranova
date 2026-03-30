@@ -4,7 +4,6 @@ import { DataController } from "../DataController";
 import { API_URL } from "../../static/settings";
 import { useNavigate } from "react-router-dom";
 import { GlobalLastEditedRefresh } from "../context/GlobalLastEditedContextProvider";
-import { LastEdited } from "../context/LastEditedContextProvider";
 import { UserDataController } from "../context/UserDataContextProvider";
 import { DataControllerContextType } from "../types/mapeditor";
 import {
@@ -44,7 +43,6 @@ export function MapCreatorForm(props: any) {
 
     const navigate = useNavigate();
     const refreshGlobalLastEdited = useContext(GlobalLastEditedRefresh);
-    const lastEdited = useContext(LastEdited) as any;
     const { controller: userDataController } = useContext(UserDataController) as DataControllerContextType;
 
     const onSubmit = async (e: any) => {
@@ -72,12 +70,12 @@ export function MapCreatorForm(props: any) {
         await MapPersistenceController.create();
         const newMapId = MapPersistenceController.instance.mapId;
 
-        // Track the new map in lastEdited so it gets sidebar priority
-        const newMaps = (lastEdited?.maps ?? []).filter((id: string) => id !== newMapId);
+        // Track the new map in lastEdited (use raw ID list from userdata, not the full-object context)
+        const currentLastEdited = userDataController.instance?.lastEdited ?? {};
+        const newMaps = ((currentLastEdited?.maps ?? []) as string[]).filter((id: string) => id !== newMapId);
         newMaps.push(newMapId);
         if (newMaps.length > 3) newMaps.shift();
-        if (lastEdited) lastEdited.maps = newMaps;
-        userDataController.setProperty("lastEdited", lastEdited);
+        userDataController.setProperty("lastEdited", { ...currentLastEdited, maps: newMaps });
         userDataController.update();
 
         refreshGlobalLastEdited?.();

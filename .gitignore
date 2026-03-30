@@ -19,3 +19,6 @@ venv*
 credentials.json
 # ignore auto generated API client typings (may change later)
 *client*
+
+# MkDocs build output
+site/

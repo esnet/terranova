@@ -133,7 +133,7 @@ export function HomePageComponent() {
                                 variant="secondary"
                                 className="h-fit"
                                 onClick={() => {
-                                    navigation("/templates/new");
+                                    navigation("/template/new");
                                 }}
                                 aria-label="Create new node template"
                             >

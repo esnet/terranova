@@ -112,10 +112,12 @@ def test_sidebar_datasets_count_and_order(page, login):
     sidebar = page.locator("#sidebar")
     expect(sidebar).to_be_visible()
 
+    # Wait for the sidebar to populate before asserting (data loads asynchronously)
+    expect(sidebar).to_contain_text(ds_names[-1], timeout=15000)
+
     # The sidebar shows at most 3 datasets (GlobalLastEdited is capped at 3)
-    dataset_links = sidebar.locator("ul").filter(
-        has=sidebar.locator('a[href*="/dataset/"]')
-    ).locator('a[href*="/dataset/"]')
+    # Exclude /dataset/new (the "Create New Layer" tool link)
+    dataset_links = sidebar.locator('a[href*="/dataset/"]:not([href*="/dataset/new"])')
 
     # Should show no more than 3
     link_count = dataset_links.count()
@@ -148,8 +150,11 @@ def test_sidebar_maps_count_and_order(page, login):
     page.goto(f"{FRONTEND_BASE}/")
     sidebar = page.locator("#sidebar")
 
-    # Sidebar should show at most 3 maps
-    map_links = sidebar.locator('a[href*="/map/"]')
+    # Wait for the sidebar to populate before asserting (data loads asynchronously)
+    expect(sidebar).to_contain_text(map_names[-1], timeout=15000)
+
+    # Sidebar should show at most 3 maps (exclude /map/new tool link)
+    map_links = sidebar.locator('a[href*="/map/"]:not([href*="/map/new"])')
     link_count = map_links.count()
     assert link_count <= 3, f"Expected at most 3 maps in sidebar, got {link_count}"
 

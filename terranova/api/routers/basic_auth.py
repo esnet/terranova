@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Security
 from fastapi_versioning import version
 from terranova.backends.auth import auth_check, User
 from terranova.settings import TOKEN_SCOPES
-from terranova.backends.auth.basic import backend
+from terranova.backends.auth.basic import backend, _decode_scope
 from terranova.models import UserCreate, UserUpdate, PasswordReset
 
 router = APIRouter(tags=["HTTP Basic Auth User Management"])
@@ -13,7 +13,7 @@ router = APIRouter(tags=["HTTP Basic Auth User Management"])
 def list_users(user: User = Security(auth_check, scopes=[TOKEN_SCOPES["admin"]]), limit=10):
     rows = backend.query(limit=limit)
     return [
-        User(username=row.username, email=row.username, name=row.name, scope=row.scope)
+        User(username=row.username, email=row.username, name=row.name, scope=_decode_scope(row.scope))
         for row in rows
     ]
 
