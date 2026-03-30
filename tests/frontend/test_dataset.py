@@ -6,6 +6,11 @@ from playwright.sync_api import expect
 import re
 
 
+def test_create_dataset(page, create_test_node):
+    """Tests that the create fixture works."""
+    pass
+
+
 def test_create_forked_dataset(page, login):
     page.get_by_role("main").get_by_role("link", name="Datasets").click()
     page.get_by_role("button", name="Create New").click()

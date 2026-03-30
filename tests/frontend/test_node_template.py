@@ -6,16 +6,20 @@ from playwright.sync_api import expect
 import re
 
 
-def test_create_node_template(page, login):
-    # unreliable way of clicking on the create dataset icon button
-    page.get_by_role("button").click()
+def test_create_node_template(page, create_test_node):
+    """Tests that the create fixture works."""
+    pass
 
-    page.get_by_role("textbox", name="Name").fill("Create Node Template Test")
-    page.get_by_role("textbox", name="SVG Code").fill(
-        '<rect x="-4" y="-4" width="8" height="8" /><text x="8" y="3" fill="#0088b5" stroke="none" style="font-size:12px;">test</text>'
-    )
-    page.get_by_role("button", name="Create", exact=True).click()
 
-    expect(page.get_by_role("main")).to_contain_text("Create Node Template Test")
-    # template id expected to be of length 7
-    expect(page).to_have_url(re.compile(r".*/template/\w{7}$"))
+def test_edit_node_template(page, create_test_node):
+    EDITED_NAME = "Update Node Template"
+    EDITED_SVG = "test"
+    page.get_by_role("textbox", name="Name").fill(EDITED_NAME)
+    page.get_by_role("textbox", name="SVG Code").fill(EDITED_SVG)
+    expect(page.get_by_role("button", name="Save Changes")).not_to_be_disabled()
+    page.get_by_role("button", name="Save Changes").click()
+    expect(page.get_by_role("main")).to_contain_text("Node Template Saved")
+    page.wait_for_timeout(1000)
+    page.reload()
+    expect(page.get_by_role("textbox", name="SVG Code")).to_have_value(EDITED_SVG)
+    expect(page.get_by_role("textbox", name="Name")).to_have_value(EDITED_NAME)

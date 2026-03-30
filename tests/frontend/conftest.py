@@ -88,7 +88,6 @@ def create_test_map(page, login):
     # Create new map
     page.goto("http://localhost:5173/map/new")
     # Fill out new map creation form
-    page.get_by_role("textbox", name="Name*").click()
     page.get_by_role("textbox", name="Name*").fill(map_name)
     page.get_by_role("button", name="Create Map").click()
     expect(page).to_have_url(re.compile(r".*/map/.*"))
@@ -108,7 +107,6 @@ def create_test_dataset(page, login):
     # Create new map
     page.goto("http://localhost:5173/dataset/new")
     # Fill out new map creation form
-    page.get_by_role("textbox", name="Name*").click()
     page.get_by_role("textbox", name="Name*").fill(dataset_name)
     page.get_by_role("button", name="Create Dataset").click()
     expect(page).to_have_url(re.compile(r".*/dataset/.*"))
@@ -124,15 +122,17 @@ def create_test_node(page, login):
     Automatically navigates to the node editor for the created node,
     but can be navigated to as such: `page.goto("http://localhost:5173/template/" + create_test_node)`.
     Returns the node template ID."""
-    dataset_name = f"Generated Test Node: {random.randint(0, 1000)}"
+    node_name = f"Generated Test Node: {random.randint(0, 1000)}"
+    node_value = '<rect x="-4" y="-4" width="8" height="8" /><text x="8" y="3" fill="#0088b5" stroke="none" style="font-size:12px;">test</text>'
     # Create new map
     page.goto("http://localhost:5173/template/new")
+    expect(page.get_by_role("main")).to_contain_text("Create Node Template")
     # Fill out new map creation form
-    page.get_by_role("textbox", name="Name*").click()
-    page.get_by_role("textbox", name="Name*").fill(dataset_name)
-    page.get_by_role("button", name="Create Template").click()
+    page.get_by_role("textbox", name="Name").fill(node_name)
+    page.get_by_role("textbox", name="SVG Code").fill(node_value)
+    page.get_by_role("button", name="Create", exact=True).click()
     expect(page).to_have_url(re.compile(r".*/template/.*"))
-    expect(page.get_by_role("main")).to_contain_text(dataset_name)
+    expect(page.get_by_role("textbox", name="Name")).to_have_value(node_name)
 
     return page.url.split("/")[-1]
 

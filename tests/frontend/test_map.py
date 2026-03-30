@@ -9,20 +9,9 @@ import time
 import random
 
 
-def test_create_map(page, login):
-    # unreliable way of clicking on the create map icon button
-    page.get_by_role("button").nth(2).click()
-
-    # perhaps it may be better to have a proper named button instead of an icon button
-    expect(page.get_by_role("button", name="Create New Map")).to_be_visible()
-
-    page.get_by_role("textbox", name="Name*").click()
-    page.get_by_role("textbox", name="Name*").fill("Create Map Test")
-    page.get_by_role("button", name="Create Map").click()
-
-    expect(page.get_by_role("main")).to_contain_text("Create Map Test")
-    # map id expected to be of length 7
-    expect(page).to_have_url(re.compile(r".*/map/\w{7}$"))
+def test_create_map(page, create_test_map):
+    """Tests that the create fixture works."""
+    pass
 
 
 def test_create_forked_map(page, login):
