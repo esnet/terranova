@@ -135,3 +135,16 @@ def test_output_map_svg(page, create_test_map, context):
 
 
 # TODO: add tests involving modifying map layers
+
+
+def test_map_library(page, create_test_map):
+    page.goto("localhost:5173/library/maps")
+    expect(page.get_by_text("Map Library")).to_be_visible()
+    expect(page.get_by_role("link", name="Generated Test Map:").first).to_be_visible()
+
+
+def test_map_library_filter(page, create_test_map):
+    page.goto("localhost:5173/library/maps")
+    expect(page.get_by_text("Map Library")).to_be_visible()
+    page.get_by_role("textbox", name="Filter by name...").fill("generate")
+    expect(page.get_by_role("link", name="Generated Test Map:").first).to_be_visible()

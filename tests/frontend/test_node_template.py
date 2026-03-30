@@ -23,3 +23,25 @@ def test_edit_node_template(page, create_test_node):
     page.reload()
     expect(page.get_by_role("textbox", name="SVG Code")).to_have_value(EDITED_SVG)
     expect(page.get_by_role("textbox", name="Name")).to_have_value(EDITED_NAME)
+
+
+def test_node_template_library(page, create_test_node):
+    # Expect to see the default nodes created
+    page.goto("localhost:5173/library/templates")
+    expect(page.get_by_text("Node Template Library")).to_be_visible()
+    expect(page.get_by_role("main")).to_contain_text("Geo: Simple - Circle")
+    expect(page.get_by_role("main")).to_contain_text("Geo: Simple - Square")
+    expect(page.get_by_role("main")).to_contain_text("Geo: Simple - Star")
+    expect(page.get_by_role("main")).to_contain_text("Geo: Labelled - Circle")
+    expect(page.get_by_role("main")).to_contain_text("Geo: Labelled - Square")
+    expect(page.get_by_role("main")).to_contain_text("Geo: Labelled - Star")
+
+
+def test_node_template_library_filter(page, create_test_node):
+    page.goto("localhost:5173/library/templates")
+    expect(page.get_by_text("Node Template Library")).to_be_visible()
+    main = page.get_by_role("main")
+    main.get_by_role("textbox", name="Filter by name...").fill("circle")
+    expect(main.get_by_text("Geo: Simple - Circle")).to_be_visible()
+    expect(main.get_by_text("Geo: Labelled - Circle")).to_be_visible()
+    expect(main.get_by_text("Geo: Labelled - Square")).not_to_be_visible()

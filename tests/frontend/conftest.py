@@ -90,7 +90,7 @@ def create_test_map(page, login):
     # Fill out new map creation form
     page.get_by_role("textbox", name="Name*").fill(map_name)
     page.get_by_role("button", name="Create Map").click()
-    expect(page).to_have_url(re.compile(r".*/map/.*"))
+    page.wait_for_url("**/map**")
     expect(page.get_by_role("main")).to_contain_text(map_name)
 
     return page.url.split("/")[-1]
@@ -109,7 +109,7 @@ def create_test_dataset(page, login):
     # Fill out new map creation form
     page.get_by_role("textbox", name="Name*").fill(dataset_name)
     page.get_by_role("button", name="Create Dataset").click()
-    expect(page).to_have_url(re.compile(r".*/dataset/.*"))
+    page.wait_for_url("**/dataset**")
     expect(page.get_by_role("main")).to_contain_text(dataset_name)
 
     return page.url.split("/")[-1]
@@ -131,7 +131,7 @@ def create_test_node(page, login):
     page.get_by_role("textbox", name="Name").fill(node_name)
     page.get_by_role("textbox", name="SVG Code").fill(node_value)
     page.get_by_role("button", name="Create", exact=True).click()
-    expect(page).to_have_url(re.compile(r".*/template/.*"))
+    page.wait_for_url("**/template**")
     expect(page.get_by_role("textbox", name="Name")).to_have_value(node_name)
 
     return page.url.split("/")[-1]
