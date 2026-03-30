@@ -82,7 +82,7 @@ export function GoogleSheetsSettings() {
                     </div>
 
                     <form id="sheets-datasources-form" onSubmit={submitForm}>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {accessTokens.map((accessToken) => (
                                 <AccessTokenCard
                                     key={accessToken.project_id}
