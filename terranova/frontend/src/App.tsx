@@ -7,7 +7,7 @@ import { HomePageComponent } from "./pages/Home.page";
 import { MapEditorPageComponent } from "./pages/MapEditor.page";
 import { NodeTemplateEditorPageComponent } from "./pages/NodeTemplateEditor.page";
 import { MapCreatorPageComponent } from "./pages/MapCreator.page";
-import { DatasetLibraryPageComponent } from "./pages/DatasetLibrary.page";
+import { LibraryPageComponent } from "./pages/Library.page";
 import { DatasetCreatorPageComponent } from "./pages/DatasetCreator.page";
 import { DatasetEditorPageComponent } from "./pages/DatasetEditor.page";
 import { LoginPageComponent } from "./pages/Login.page";
@@ -82,7 +82,7 @@ function App() {
                     path: "/library/:datatype",
                     element: (
                         <Protected>
-                            <DatasetLibraryPageComponent />
+                            <LibraryPageComponent />
                         </Protected>
                     ),
                 },
