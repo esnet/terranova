@@ -47,7 +47,8 @@ engine = create_engine(
 )
 # Session factory — create one session per operation to avoid thread-safety issues
 SessionFactory = sessionmaker(engine, expire_on_commit=False)
-SQLAlchemyInstrumentor().instrument(engine=engine)
+if not SQLAlchemyInstrumentor().is_instrumented_by_opentelemetry:
+    SQLAlchemyInstrumentor().instrument(engine=engine)
 
 tracer = trace.get_tracer(__name__)
 
