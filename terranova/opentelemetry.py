@@ -81,15 +81,18 @@ def init_telemetry(fastapi_app=None, stdout=False):
     #
     # Enable global instrumentation for logging and FastAPI framework
     #
-    LoggingInstrumentor().instrument(set_logging_format=True)
+    if not LoggingInstrumentor().is_instrumented_by_opentelemetry:
+        LoggingInstrumentor().instrument(set_logging_format=True)
 
     # It looks like this is being improved so that we can disable sanitization of queries
     # but for the time being there's no ability to control this
     # https://github.com/open-telemetry/semantic-conventions/issues/705
-    ElasticsearchInstrumentor().instrument()
+    if not ElasticsearchInstrumentor().is_instrumented_by_opentelemetry:
+        ElasticsearchInstrumentor().instrument()
 
     # Requests for esdb fetcher
-    RequestsInstrumentor().instrument()
+    if not RequestsInstrumentor().is_instrumented_by_opentelemetry:
+        RequestsInstrumentor().instrument()
 
     # https://github.com/open-telemetry/opentelemetry-python/issues/3477
     # FastAPIInstrumentor.instrument_app(fastapi_app, tracer_provider=tracer_provider)
