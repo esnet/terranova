@@ -116,8 +116,9 @@ def test_sidebar_datasets_count_and_order(page, login):
     expect(sidebar).to_contain_text(ds_names[-1], timeout=15000)
 
     # The sidebar shows at most 3 datasets (GlobalLastEdited is capped at 3)
-    # Exclude /dataset/new (the "Create New Layer" tool link)
-    dataset_links = sidebar.locator('a[href*="/dataset/"]:not([href*="/dataset/new"])')
+    # Exclude /dataset/new (the "Create New Layer" tool link); :visible filters
+    # out the ResponsiveLink duplicate rendered for the other screen size
+    dataset_links = sidebar.locator('a[href*="/dataset/"]:not([href*="/dataset/new"]):visible')
 
     # Should show no more than 3
     link_count = dataset_links.count()
@@ -153,8 +154,9 @@ def test_sidebar_maps_count_and_order(page, login):
     # Wait for the sidebar to populate before asserting (data loads asynchronously)
     expect(sidebar).to_contain_text(map_names[-1], timeout=15000)
 
-    # Sidebar should show at most 3 maps (exclude /map/new tool link)
-    map_links = sidebar.locator('a[href*="/map/"]:not([href*="/map/new"])')
+    # Sidebar should show at most 3 maps (exclude /map/new tool link; :visible
+    # filters out the ResponsiveLink duplicate rendered for the other screen size)
+    map_links = sidebar.locator('a[href*="/map/"]:not([href*="/map/new"]):visible')
     link_count = map_links.count()
     assert link_count <= 3, f"Expected at most 3 maps in sidebar, got {link_count}"
 
@@ -176,7 +178,7 @@ def test_sidebar_templates_count_and_order(page, login):
     # Wait for the templates section to load (it's gated on admin scope)
     # Admin user should see the Node Templates section.
     # Exclude the "Node SVG Builder" link which goes to /template/new.
-    templates_section = sidebar.locator('a[href*="/template/"]:not([href="/template/new"])')
+    templates_section = sidebar.locator('a[href*="/template/"]:not([href="/template/new"]):visible')
 
     # Should show at most 3 templates
     # (GlobalLastEdited fetches limit=3)
