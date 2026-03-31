@@ -634,8 +634,6 @@ button.warning {
         border-color: #666666;
         background-color: #FFFFFF;
         stroke: #565657;
-        padding: .5rem;
-        padding-top:0.5rem;
     }
     .tn-accordion button {
         text-decoration: none;

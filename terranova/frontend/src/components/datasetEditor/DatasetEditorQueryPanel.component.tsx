@@ -121,7 +121,6 @@ export const DatasetEditorQueryPanel = (props: DatasetEditorQueryPanelProps) => 
     return (
         <Accordion
             header="Query"
-            footer="&nbsp;"
             defaultVisibility={props.datasetVisible}
             onVisibilityChange={props.toggleDatasetVisible}
             showEye

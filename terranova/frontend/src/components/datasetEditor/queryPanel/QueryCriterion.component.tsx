@@ -149,6 +149,7 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
                     fetchResultCount();
                 }}
                 name="field"
+                className="w-64! min-w-64!"
             >
                 {props.filterableFields?.map &&
                     props.filterableFields?.map(
@@ -163,7 +164,7 @@ export const QueryCriterion = (props: QueryCriterionProps) => {
             </PktsInputSelect>
 
             <PktsInputSelect
-                className="w-48! min-w-48!"
+                className="w-40! min-w-40!"
                 placeholder="Operator"
                 value={props.criterion.operator}
                 onChange={(e) => {

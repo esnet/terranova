@@ -39,7 +39,7 @@ export function FocusTextArea(props: any) {
         <>
             <textarea
                 {...props}
-                className={props.className + " font-mono py-1 resize-none" + customClasses}
+                className={props.className + " font-mono p-1 resize-none" + customClasses}
                 rows={rows}
                 onBlur={doBlur}
                 onFocus={doFocus}
