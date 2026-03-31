@@ -15,9 +15,12 @@ def test_create_node_template(page, create_test_node):
 def test_edit_node_template(page, create_test_node):
     EDITED_NAME = "Update Node Template"
     EDITED_SVG = "test"
-    page.get_by_role("textbox", name="Name").fill(EDITED_NAME)
-    # triple_click selects all text in the textarea; keyboard.type replaces
-    # selection and fires key events so React's onChange updates state
+    # fill() bypasses React synthetic events on Pkts components; use
+    # click(click_count=3) + keyboard.type which fires key events and
+    # triggers onChange so the controller's instance is updated before save
+    name_input = page.get_by_role("textbox", name="Name")
+    name_input.click(click_count=3)
+    page.keyboard.type(EDITED_NAME)
     svg_textarea = page.get_by_role("textbox", name="SVG Code")
     svg_textarea.click(click_count=3)
     page.keyboard.type(EDITED_SVG)
