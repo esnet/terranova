@@ -228,6 +228,7 @@ export function MapEditorPageComponent() {
     }, [mapCanvas, mapCanvas.current]);
 
     const renderCount = useRef(0);
+    const hasHomed = useRef(false);
     // wrap this whole nightmare in a ref so we don't lose the
     // debounced function pointer on each render! :nausea:
     const debouncedMapFetch = useRef(
@@ -280,6 +281,10 @@ export function MapEditorPageComponent() {
                 mapCanvas.current.setOptions(output.configuration);
                 mapCanvas.current.setTopology(topology);
                 mapCanvas.current.setEditMode(editMode);
+                if (!hasHomed.current) {
+                    mapCanvas.current.homeMap();
+                    hasHomed.current = true;
+                }
             }
         }, 100),
     );

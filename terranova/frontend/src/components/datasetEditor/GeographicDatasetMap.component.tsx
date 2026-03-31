@@ -19,6 +19,7 @@ export function GeographicDatasetMap(props: GeographicDatasetMapProps) {
         if (props.mapRef.current) {
             props.mapRef.current.setTopology([props.topology]);
             props.mapRef.current.setOptions(configuration);
+            props.mapRef.current.homeMap();
         }
     }, [props.mapRef, props.mapRef.current, props.topology]);
     return <esnet-map-canvas height="398" ref={props.mapRef} />;
