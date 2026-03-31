@@ -15,15 +15,18 @@ def test_create_node_template(page, create_test_node):
 def test_edit_node_template(page, create_test_node):
     EDITED_NAME = "Update Node Template"
     EDITED_SVG = "test"
-    # fill() bypasses React synthetic events on Pkts components; use
-    # click(click_count=3) + keyboard.type which fires key events and
-    # triggers onChange so the controller's instance is updated before save
+    # click(click_count=3) selects all; keyboard.type fires key events so
+    # React's onChange updates state. Assert the new value is visible before
+    # saving — this ensures React has re-rendered (and persistTemplate now
+    # closes over the updated template state) before Save Changes is clicked.
     name_input = page.get_by_role("textbox", name="Name")
     name_input.click(click_count=3)
     page.keyboard.type(EDITED_NAME)
+    expect(name_input).to_have_value(EDITED_NAME)
     svg_textarea = page.get_by_role("textbox", name="SVG Code")
     svg_textarea.click(click_count=3)
     page.keyboard.type(EDITED_SVG)
+    expect(svg_textarea).to_have_value(EDITED_SVG)
     expect(page.get_by_role("button", name="Save Changes")).not_to_be_disabled()
     page.get_by_role("button", name="Save Changes").click()
     expect(page.get_by_role("main")).to_contain_text("Node Template Saved")
