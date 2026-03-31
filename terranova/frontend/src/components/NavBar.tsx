@@ -1,6 +1,7 @@
 import { PktsDropdown, PktsAvatar } from "@esnet/packets-ui-react";
 import { useState } from "react";
 import { useAuth } from "react-oidc-context";
+import { Link } from "react-router-dom";
 
 function ProfileMenu() {
     const auth = useAuth();
@@ -44,9 +45,9 @@ function ProfileMenu() {
 
 function Logo() {
     return (
-        <a className="cursor-pointer" href="/">
+        <Link className="cursor-pointer" to="/">
             <img src="/terranova-logo-simple.png" className="size-spacing-large" />
-        </a>
+        </Link>
     );
 }
 
@@ -58,13 +59,13 @@ function NavigationItems({ navigation }: NavigationProps) {
         <div className="flex gap-8 items-center">
             {navigation?.map((item) => (
                 <h6 key={item.name} className="pb-0">
-                    <a
-                        href={item.href}
+                    <Link
+                        to={item.href}
                         className="text-light-copyAlt dark:text-dark-copyAlt text-2xl no-underline"
                         aria-current={item.current ? "page" : undefined}
                     >
                         {item.name}
-                    </a>
+                    </Link>
                 </h6>
             ))}
         </div>

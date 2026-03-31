@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { FilterableMultiSelect } from "../../FilterableMultiSelect.component";
 import { setAuthHeaders } from "../../../DataController";
 import { INPUT_MODIFIER_OPTIONS } from "../../../data/constants";
 import { quickhash } from "../../../data/utils";

@@ -1,22 +1,13 @@
-import { useContext, useId, useState, useEffect } from "react";
+import { useContext, useState, useEffect } from "react";
 import { DatasetController } from "../../pages/DatasetEditor.page";
 import { QueryCriterion } from "./queryPanel/QueryCriterion.component";
-import { ContentAccordion } from "../ContentAccordion.component";
-import { Icon } from "../Icon.component";
 import { DEFAULT_INPUT_DEBOUNCE } from "../../data/constants";
 import { API_URL } from "../../../static/settings";
 import { quickhash } from "../../data/utils";
 import { setAuthHeaders } from "../../DataController";
 import { Accordion } from "../Accordion";
-import {
-    PktsButton,
-    PktsIconButton,
-    PktsInputOption,
-    PktsInputSearch,
-    PktsInputSelect,
-    PktsSpinner,
-} from "@esnet/packets-ui-react";
-import { Plus, PlusSquare } from "lucide-react";
+import { PktsButton, PktsInputOption, PktsInputSelect, PktsSpinner } from "@esnet/packets-ui-react";
+import { Plus } from "lucide-react";
 
 interface DatasetEditorQueryPanelProps {
     datasetVisible: boolean;

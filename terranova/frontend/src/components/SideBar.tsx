@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { LastEdited } from "../context/LastEditedContextProvider";
 import { GlobalLastEdited } from "../context/GlobalLastEditedContextProvider";
 import { PUBLISH_SCOPE, ADMIN_SCOPE } from "../../static/settings";
@@ -22,6 +22,7 @@ export function Sidebar() {
     // TODO: move this to some persistent state store
     const [open, setOpen] = useState(true);
     const toggleMenu = () => setOpen((prev) => !prev);
+    const closeMenu = () => setOpen(false);
 
     useEffect(() => {
         // context is null, skip for now (perhaps render a skeleton)
@@ -76,12 +77,12 @@ export function Sidebar() {
 
     return (
         <div
-            className={`fixed z-10 sm:relative h-full p-4 flex flex-col gap-2 sm:bg-light-surface_1 sm:shadow-lg ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto" : "w-16"}`}
+            className={`fixed sm:relative overflow-y-auto z-1000 h-full flex flex-col gap-2 sm:bg-light-surface_1 sm:shadow-lg ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto p-4" : "w-0 p-0 shadow-md"}`}
         >
-            <div className={"absolute right-3.5 top-3"}>
+            <div className={`bottom-3 fixed ${open ? "left-48" : "left-3.5"}`}>
                 <PktsIconButton
                     onClick={toggleMenu}
-                    variant="tertiary"
+                    variant="secondary"
                     square
                     aria-expanded={open}
                     aria-controls="sidebar"
@@ -100,14 +101,20 @@ export function Sidebar() {
                     </h5>
                     <ul>
                         <li>
-                            <Link to="/dataset/new">Create New Layer</Link>
+                            <ResponsiveLink closeSidebar={closeMenu} to="/dataset/new">
+                                Create New Layer
+                            </ResponsiveLink>
                         </li>
                         <li>
-                            <Link to="/map/new">Create New Map</Link>
+                            <ResponsiveLink closeSidebar={closeMenu} to="/map/new">
+                                Create New Map
+                            </ResponsiveLink>
                         </li>
                         {showTemplates && (
-                            <li>
-                                <Link to="/template/new">Node SVG Builder</Link>
+			    <li>
+                                <ResponsiveLink closeSidebar={closeMenu} to="/template/new">
+                                    Node SVG Builder
+                                </ResponsiveLink>
                             </li>
                         )}
                     </ul>
@@ -116,22 +123,36 @@ export function Sidebar() {
                     </h5>
                     <ul>
                         <h6>
-                            <Link to="/library/datasets">Datasets</Link>
+                            <ResponsiveLink closeSidebar={closeMenu} to="/library/datasets">
+                                Datasets
+                            </ResponsiveLink>
                         </h6>
                         <ul>
                             {datasets.map((dataset) => (
                                 <li key={dataset.datasetId}>
-                                    <Link to={`/dataset/${dataset.datasetId}`}>{dataset.name}</Link>
+                                    <ResponsiveLink
+                                        closeSidebar={closeMenu}
+                                        to={`/dataset/${dataset.datasetId}`}
+                                    >
+                                        {dataset.name}
+                                    </ResponsiveLink>
                                 </li>
                             ))}
                         </ul>
                         <h6>
-                            <Link to="/library/maps">Maps</Link>
+                            <ResponsiveLink closeSidebar={closeMenu} to="/library/maps">
+                                Maps
+                            </ResponsiveLink>
                         </h6>
                         <ul>
                             {maps.map((map) => (
                                 <li key={map.mapId}>
-                                    <Link to={`/map/${map.mapId}`}>{map.name}</Link>
+                                    <ResponsiveLink
+                                        closeSidebar={closeMenu}
+                                        to={`/map/${map.mapId}`}
+                                    >
+                                        {map.name}
+                                    </ResponsiveLink>
                                 </li>
                             ))}
                         </ul>
@@ -143,9 +164,12 @@ export function Sidebar() {
                                 <ul>
                                     {templates.map((template) => (
                                         <li key={template.templateId}>
-                                            <Link to={`/template/${template.templateId}`}>
+                                            <ResponsiveLink
+                                                closeSidebar={closeMenu}
+                                                to={`/template/${template.templateId}`}
+                                            >
                                                 {template.name}
-                                            </Link>
+                                            </ResponsiveLink>
                                         </li>
                                     ))}
                                 </ul>
@@ -164,7 +188,9 @@ export function Sidebar() {
                         </li>
                         {showSettings && (
                             <li>
-                                <Link to="/settings">Settings</Link>
+                                <ResponsiveLink closeSidebar={closeMenu} to="/settings">
+                                    Settings
+                                </ResponsiveLink>
                             </li>
                         )}
                     </ul>
@@ -173,3 +199,25 @@ export function Sidebar() {
         </div>
     );
 }
+
+// Extended functionality react-dom-router link function that also closes the sidebar on small screen sizes
+// This provides a better UX where the full-screened sidebar automatically closes on navigation
+interface Link {
+    to: string;
+    children: React.ReactNode;
+    closeSidebar?: () => void;
+}
+const ResponsiveLink = ({ to, closeSidebar, children }: Link) => {
+    return (
+        <>
+            {/* link to render on sm screen size */}
+            <Link to={to} className="inline sm:hidden" onClick={closeSidebar}>
+                {children}
+            </Link>
+            {/* link to render when larger than sm screen size */}
+            <Link to={to} className="hidden sm:inline">
+                {children}
+            </Link>
+        </>
+    );
+};

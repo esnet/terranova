@@ -1,6 +1,6 @@
-import { Icon } from "../Icon.component";
 import { OVERRIDE_TYPES, OVERRIDE_OPERATIONS } from "../../data/constants";
 import { FocusTextArea } from "./FocusTextArea.component";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 
 export function MapOverride(props: any) {
     return (
@@ -8,21 +8,17 @@ export function MapOverride(props: any) {
             <tr>
                 <td className="controls w-24">
                     <div className="flex flew-row w-24">
-                        <Icon
-                            name={props.override.visible ? "eye" : "eye-off"}
-                            className="btn icon bordered h-9 w-9 mr-2"
-                            onClick={props.toggleVisibility}
-                        />
-                        <Icon
-                            name="trash"
-                            className="btn icon bordered h-9 w-9"
-                            onClick={props.delete}
-                        />
+                        {props.override.visible ? (
+                            <Eye onClick={props.toggleVisibility} />
+                        ) : (
+                            <EyeOff onClick={props.toggleVisibility} />
+                        )}
+                        <Trash2 onClick={props.delete} />
                     </div>
                 </td>
                 <td className="operation pl-0">
                     <select
-                        className="w-full min-w-[4rem]"
+                        className="w-full min-w-16"
                         defaultValue={props.override.operation}
                         onChange={(e) => {
                             props.setOperation(e.target.value);

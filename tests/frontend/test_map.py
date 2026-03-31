@@ -125,8 +125,6 @@ def test_output_map_svg(page, create_test_map, context):
     dialog.get_by_role("option", name="Raw SVG Output").click()
     dialog.get_by_role("button", name="Copy to Clipboard").click()
 
-    # TODO: check what is even in clipboard
-
     with page.expect_download() as download_info:
         dialog.get_by_role("link", name="Download").click()
         download = download_info.value  # TODO: check download value
