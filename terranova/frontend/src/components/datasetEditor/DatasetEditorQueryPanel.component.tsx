@@ -174,7 +174,7 @@ export const DatasetEditorQueryPanel = (props: DatasetEditorQueryPanelProps) => 
                         className="w-fit"
                         onClick={addQueryCriterion}
                     >
-                        Add Query
+                        Add Criterion
                     </PktsButton>
                 </form>
             )}

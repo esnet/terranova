@@ -4,7 +4,7 @@ import { API_URL, ADMIN_SCOPE } from "../../static/settings";
 import Card from "../components/Card";
 import { Favorites } from "../context/FavoritesContextProvider";
 import { LastEdited } from "../context/LastEditedContextProvider";
-import { Copy, Database, History, Map, MapPin, Plus, Star } from "lucide-react";
+import { ClipboardCopy, Copy, Database, History, Map, MapPin, Plus, Star } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { PktsIconButton } from "@esnet/packets-ui-react";
 
@@ -194,7 +194,7 @@ function LinkTable({ links, dataType }: LinkTableProps) {
                                 variant="secondary"
                                 className="small-icon"
                             >
-                                <Copy />
+                                <ClipboardCopy />
                             </PktsIconButton>
                         )}
                     </li>

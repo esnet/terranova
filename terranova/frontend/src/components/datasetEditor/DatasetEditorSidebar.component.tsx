@@ -53,31 +53,39 @@ export const DatasetEditorSidebar = ({
 
     return (
         <div className="min-w-64 w-2/5 2xl:w-1/4 flex flex-col gap-2">
-            <div className="text-center">Current Version: {dataset.version}</div>
-            <PktsDivider />
+            <fieldset className="h-full mt-[-8px]">
+                <legend><strong>Dataset Options</strong></legend>
+                <div className="text-right">Current Version: {dataset.version}</div>
 
-            <PktsInputRow label="Preview Mode">
-                <PktsInputSelect
-                    name="preview-mode"
-                    onChange={handleOnModeChange}
-                    value={visualizationMode}
-                    className="w-full"
-                >
-                    {PREVIEW_MODE_OPTIONS.map(({ label, value }) => (
-                        <PktsInputOption value={value} key={`preview-mode-option-${value}`}>
-                            {label}
-                        </PktsInputOption>
-                    ))}
-                </PktsInputSelect>
-            </PktsInputRow>
+                <div className="mb-2">
+                    <PktsInputRow label="Preview Mode">
+                        <PktsInputSelect
+                            name="preview-mode"
+                            onChange={handleOnModeChange}
+                            value={visualizationMode}
+                            className="w-full"
+                        >
+                            {PREVIEW_MODE_OPTIONS.map(({ label, value }) => (
+                                <PktsInputOption value={value} key={`preview-mode-option-${value}`}>
+                                    {label}
+                                </PktsInputOption>
+                            ))}
+                        </PktsInputSelect>
+                    </PktsInputRow>
+                </div>
 
-            <PktsInputRow label="Static Dataset URL">
-                <InputCopy id="static-dataset-input" value={staticURL} />
-            </PktsInputRow>
+                <div className="mb-2">
+                    <PktsInputRow label="Static Dataset URL">
+                        <InputCopy id="static-dataset-input" value={staticURL} />
+                    </PktsInputRow>
+                </div>
 
-            <PktsInputRow label="Dynamic Dataset URL">
-                <InputCopy id="dynamic-dataset-input" value={dynamicURL} />
-            </PktsInputRow>
+                <div className="mb-2">
+                    <PktsInputRow label="Dynamic Dataset URL">
+                        <InputCopy id="dynamic-dataset-input" value={dynamicURL} />
+                    </PktsInputRow>
+                </div>
+            </fieldset>
         </div>
     );
 };
