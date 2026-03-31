@@ -93,13 +93,13 @@ def test_dataset_query(page, create_test_dataset):
 
 
 def test_dataset_library(page, create_test_dataset):
-    page.goto("localhost:5173/library/datasets")
+    page.goto(f"{FRONTEND_BASE}/library/datasets")
     expect(page.get_by_text("Dataset Library")).to_be_visible()
     expect(page.get_by_role("link", name="Generated Test Dataset:").first).to_be_visible()
 
 
 def test_dataset_library_filter(page, create_test_dataset):
-    page.goto("localhost:5173/library/datasets")
+    page.goto(f"{FRONTEND_BASE}/library/datasets")
     expect(page.get_by_text("Dataset Library")).to_be_visible()
     page.get_by_role("textbox", name="Filter by name...").fill("generate")
     expect(page.get_by_role("link", name="Generated Test Dataset:").first).to_be_visible()

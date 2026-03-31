@@ -181,8 +181,8 @@ def create_test_node(page, login):
     page.get_by_role("textbox", name="Name").fill(node_name)
     page.get_by_role("textbox", name="SVG Code").fill(node_value)
     page.get_by_role("button", name="Create", exact=True).click()
-    page.wait_for_url("**/template**")
-    expect(page.get_by_role("textbox", name="Name")).to_have_value(node_name)
+    expect(page).to_have_url(re.compile(r".*/template/\w{7}$"), timeout=10000)
+    expect(page.get_by_role("textbox", name="Name")).to_have_value(node_name, timeout=10000)
 
     return page.url.split("/")[-1]
 

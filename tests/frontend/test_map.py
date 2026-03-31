@@ -7,6 +7,7 @@ import pytest
 import re
 import time
 import random
+from urls import FRONTEND_BASE
 
 
 def test_create_map(page, create_test_map):
@@ -15,30 +16,35 @@ def test_create_map(page, create_test_map):
 
 
 def test_create_forked_map(page, login):
-    page.get_by_role("main").get_by_role("link", name="Maps").click()
-    # will need to be changed
-    page.get_by_role("button", name="Create New").click()
-    expect(page.get_by_role("heading", name="Terranova")).to_be_visible()
+    # Create the source map to fork from first (test is self-contained)
+    source_name = "Fork Source Map"
+    page.goto(f"{FRONTEND_BASE}/map/new")
+    page.wait_for_load_state("networkidle")
+    page.get_by_role("textbox", name="Name*").fill(source_name)
+    page.get_by_role("button", name="Create Map").click()
+    expect(page.get_by_role("main")).to_contain_text(source_name)
 
-    # fill out name
-    page.get_by_role("textbox", name="Name*").click()
+    # Navigate to the map creator to test forking
+    page.goto(f"{FRONTEND_BASE}/map/new")
+    expect(page.get_by_role("main")).to_contain_text("Create New Map")
+
+    # Wait for map list to load before checking the fork switch.
+    page.wait_for_load_state("networkidle")
+
     page.get_by_role("textbox", name="Name*").fill("Fork Map Test")
-    # check the fork option
     page.get_by_role("checkbox", name="Fork Existing Map").check()
+    expect(page.get_by_role("group", name="Fork Existing Map Options")).to_be_visible(timeout=10000)
 
-    # select the "Create Map Test" map to fork from
     page.get_by_role("textbox", name="Map Name*").click()
     expect(page.get_by_role("listbox", name="Typeahead Dropdown Options")).to_be_visible()
-    page.get_by_role("option", name="Create Map Test").first.press("Enter")
-    expect(page.locator("form")).to_contain_text("Create Map Test")
+    page.get_by_role("option", name=source_name).first.press("Enter")
+    expect(page.locator("form")).to_contain_text(source_name)
 
-    # select "v1" version to fork from
     page.get_by_role("textbox", name="Version*").click()
     expect(page.get_by_role("listbox", name="Typeahead Dropdown Options")).to_be_visible()
     page.get_by_role("option", name="v1").first.click()
     expect(page.locator("form")).to_contain_text("v1")
 
-    # click create
     page.get_by_role("button", name="Create Map", exact=True).click()
 
     expect(page.get_by_role("main")).to_contain_text("Fork Map Test")
@@ -135,13 +141,13 @@ def test_output_map_svg(page, create_test_map, context):
 
 
 def test_map_library(page, create_test_map):
-    page.goto("localhost:5173/library/maps")
+    page.goto(f"{FRONTEND_BASE}/library/maps")
     expect(page.get_by_text("Map Library")).to_be_visible()
     expect(page.get_by_role("link", name="Generated Test Map:").first).to_be_visible()
 
 
 def test_map_library_filter(page, create_test_map):
-    page.goto("localhost:5173/library/maps")
+    page.goto(f"{FRONTEND_BASE}/library/maps")
     expect(page.get_by_text("Map Library")).to_be_visible()
     page.get_by_role("textbox", name="Filter by name...").fill("generate")
     expect(page.get_by_role("link", name="Generated Test Map:").first).to_be_visible()
