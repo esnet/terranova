@@ -197,7 +197,9 @@ export function Sidebar() {
                         <ul className="list-none mb-4">
                             <li className="list-none">
                                 <a
-                                    href="https://esnet.atlassian.net/wiki/spaces/MAAG/pages/3186196481/Terranova+Documentation"
+                                    href="https://software.es.net/terranova"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="no-underline"
                                 >
                                     Documentation
