@@ -73,7 +73,7 @@ def test_dataset_query(page, create_test_dataset):
     expect(page.get_by_role("option", name="Terranova Network Topology Template")).to_be_visible()
     page.get_by_role("option", name="Terranova Network Topology Template").click()
     page.wait_for_timeout(500)
-    page.get_by_role("button", name="Add Query").click()
+    page.get_by_role("button", name="Add Criterion").click()
     page.wait_for_timeout(500)
     page.mouse.wheel(0, 400)
     # select name field

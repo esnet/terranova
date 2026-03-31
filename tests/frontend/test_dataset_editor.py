@@ -71,9 +71,9 @@ def test_add_name_criterion(page, create_test_dataset):
     Test adding a filter criterion on the 'name' field (a standard pre-defined column).
     Verifies the criterion UI appears and the hit count is visible.
     """
-    # Wait for query endpoints to load — the "Add Query" button only appears after
+    # Wait for query endpoints to load — the "Add Criterion" button only appears after
     # the datasources API call completes (queryEndpointsLoading becomes false)
-    add_query_btn = page.get_by_role("button", name="Add Query")
+    add_query_btn = page.get_by_role("button", name="Add Criterion")
     expect(add_query_btn).to_be_visible(timeout=10000)
     add_query_btn.click()
 
@@ -91,7 +91,7 @@ def test_add_endpoint_metadata_criterion(page, create_test_dataset):
     Test adding a filter criterion on endpoint metadata (e.g., endpoints_location_name).
     This tests that arbitrary metadata columns from the data source can be filtered on.
     """
-    add_query_btn = page.get_by_role("button", name="Add Query")
+    add_query_btn = page.get_by_role("button", name="Add Criterion")
     expect(add_query_btn).to_be_visible(timeout=10000)
     add_query_btn.click()
 
@@ -132,7 +132,7 @@ def test_latitude_longitude_filter_bug(page, create_test_dataset):
     Bug fix: added 'number' type handler in flatten_field and fixed get_unique_values
     to handle non-string values without crashing.
     """
-    add_query_btn = page.get_by_role("button", name="Add Query")
+    add_query_btn = page.get_by_role("button", name="Add Criterion")
     expect(add_query_btn).to_be_visible(timeout=10000)
     add_query_btn.click()
 
