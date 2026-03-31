@@ -23,12 +23,10 @@ public_routes = {
     },
     # datasource metadata routes
     "/datasources/": {"HEAD": {"status_code": 200}, "GET": {"status_code": 200}},
-    "/circuits/filterable_columns/": {"HEAD": {"status_code": 200}, "GET": {"status_code": 200}},
     "/sheets/{sheet_id}/filterable_columns/": {
         "HEAD": {"status_code": 200},
         "GET": {"status_code": 200},
     },
-    "/services/filterable_columns/": {"HEAD": {"status_code": 200}, "GET": {"status_code": 200}},
 }
 
 
@@ -54,8 +52,8 @@ class Formatter(dict):
 @pytest.mark.parametrize("method, path", enumerate_paths(app))
 @pytest.mark.anonymous
 def test_no_auth(client, mock_elastic_backend, method, path):
-    maps.elastic_backend = mock_elastic_backend
-    output.elastic_backend = mock_elastic_backend
+    maps.storage_backend = mock_elastic_backend
+    output.storage_backend = mock_elastic_backend
     route_defaults = public_routes.get(path, {}).get(method, {})
     # all routes expect a 401 response code by default unless otherwise configured
     expected_status_code = route_defaults.get("status_code", 401)
@@ -72,7 +70,7 @@ def test_no_auth(client, mock_elastic_backend, method, path):
 
 def test_expired_auth(client, expired_jwt):
     response = client.get(
-        "/types/circuit_type_name", headers={"Authorization": "Bearer %s" % expired_jwt}
+        "/dataset/", headers={"Authorization": "Bearer %s" % expired_jwt}
     )
     assert response.status_code == 401
 
@@ -97,6 +95,6 @@ def test_correct_permissions(client, readwrite_jwt, dataset_revision, noop_elast
 
 def test_bad_crypto_auth(client, bad_signature_jwt):
     response = client.get(
-        "/types/circuit_type_name", headers={"Authorization": "Bearer %s" % bad_signature_jwt}
+        "/dataset/", headers={"Authorization": "Bearer %s" % bad_signature_jwt}
     )
     assert response.status_code == 401

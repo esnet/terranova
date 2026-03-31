@@ -71,6 +71,7 @@ nav:
     - Quickstart: getting-started/quickstart.md
     - Installation: getting-started/installation.md
     - Configuration: getting-started/configuration.md
+    - Making Your First Map: getting-started/first-map.md
   - Concepts:
     - concepts/index.md
     - Architecture: concepts/architecture.md

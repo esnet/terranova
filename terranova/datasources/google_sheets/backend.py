@@ -47,7 +47,8 @@ engine = create_engine(
 )
 paths = {}
 
-SQLAlchemyInstrumentor().instrument(engine=engine)
+if not SQLAlchemyInstrumentor().is_instrumented_by_opentelemetry:
+    SQLAlchemyInstrumentor().instrument(engine=engine)
 
 tracer = trace.get_tracer(__name__)
 

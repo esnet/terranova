@@ -5,6 +5,7 @@ Choose the path that fits your situation:
 | I want to… | Go to… |
 |---|---|
 | Try Terranova immediately | [Quickstart](quickstart.md) |
+| Build my first map, step by step | [Making Your First Map](first-map.md) |
 | Set up a full development environment | [Installation](installation.md) |
 | Understand all configuration options | [Configuration](configuration.md) |
 

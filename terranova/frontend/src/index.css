@@ -1,8 +1,6 @@
 @import "tailwindcss";
+@import '@esnet/packets-ui-css/styles.css' layer(base);
 @config "../tailwind.config.js";
-@layer base {
-    @import '@esnet/packets-ui-css/styles.css';
-}
 
 
 @utility tn-text {
