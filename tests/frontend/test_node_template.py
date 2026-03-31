@@ -19,7 +19,7 @@ def test_edit_node_template(page, create_test_node):
     # triple_click selects all text in the textarea; keyboard.type replaces
     # selection and fires key events so React's onChange updates state
     svg_textarea = page.get_by_role("textbox", name="SVG Code")
-    svg_textarea.triple_click()
+    svg_textarea.click(click_count=3)
     page.keyboard.type(EDITED_SVG)
     expect(page.get_by_role("button", name="Save Changes")).not_to_be_disabled()
     page.get_by_role("button", name="Save Changes").click()
