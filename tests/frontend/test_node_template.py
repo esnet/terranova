@@ -16,11 +16,11 @@ def test_edit_node_template(page, create_test_node):
     EDITED_NAME = "Update Node Template"
     EDITED_SVG = "test"
     page.get_by_role("textbox", name="Name").fill(EDITED_NAME)
-    # Use triple_click + type for the SVG textarea so key events fire and React onChange triggers
+    # triple_click selects all text in the textarea; keyboard.type replaces
+    # selection and fires key events so React's onChange updates state
     svg_textarea = page.get_by_role("textbox", name="SVG Code")
-    svg_textarea.click()
-    svg_textarea.press("Control+a")
-    svg_textarea.press_sequentially(EDITED_SVG)
+    svg_textarea.triple_click()
+    page.keyboard.type(EDITED_SVG)
     expect(page.get_by_role("button", name="Save Changes")).not_to_be_disabled()
     page.get_by_role("button", name="Save Changes").click()
     expect(page.get_by_role("main")).to_contain_text("Node Template Saved")
