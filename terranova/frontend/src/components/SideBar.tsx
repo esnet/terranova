@@ -3,7 +3,17 @@ import { LastEdited } from "../context/LastEditedContextProvider";
 import { GlobalLastEdited } from "../context/GlobalLastEditedContextProvider";
 import { PUBLISH_SCOPE, ADMIN_SCOPE } from "../../static/settings";
 import { useAuth } from "../AuthService";
-import { ChevronLeft, FileText, FolderOpen, Menu, ToolCase } from "lucide-react";
+import {
+    ChevronLeft,
+    Database,
+    FileText,
+    FolderOpen,
+    Map,
+    MapPin,
+    Menu,
+    Settings,
+    ToolCase,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { PktsIconButton } from "@esnet/packets-ui-react";
 
@@ -21,8 +31,8 @@ export function Sidebar() {
 
     // TODO: move this to some persistent state store
     const [open, setOpen] = useState(true);
-    const toggleMenu = () => setOpen((prev) => !prev);
-    const closeMenu = () => setOpen(false);
+    const toggleSidebar = () => setOpen((prev) => !prev);
+    const closeSidebar = () => setOpen(false);
 
     useEffect(() => {
         // context is null, skip for now (perhaps render a skeleton)
@@ -77,11 +87,11 @@ export function Sidebar() {
 
     return (
         <div
-            className={`fixed sm:relative overflow-y-auto z-1000 h-full flex flex-col gap-2 sm:bg-light-surface_1 sm:shadow-lg ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto p-4" : "w-0 p-0 shadow-md"}`}
+            className={`fixed sm:relative z-1000 h-full flex flex-col gap-2 sm:bg-light-surface_1 sm:shadow-lg ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto p-4" : "w-0 p-0 shadow-md"}`}
         >
-            <div className={`bottom-3 fixed ${open ? "left-48" : "left-3.5"}`}>
+            <div className={`bottom-3 fixed ${open ? "right-4 sm:left-46" : "left-4"}`}>
                 <PktsIconButton
-                    onClick={toggleMenu}
+                    onClick={toggleSidebar}
                     variant="secondary"
                     square
                     aria-expanded={open}
@@ -92,108 +102,119 @@ export function Sidebar() {
                 </PktsIconButton>
             </div>
             {open && (
-                <nav
-                    id="sidebar"
-                    className="flex flex-col text-nowrap *:list-none"
-                >
-                    <h5 className="flex gap-1 items-center">
-                        <ToolCase /> Tools
-                    </h5>
-                    <ul>
-                        <li>
-                            <ResponsiveLink closeSidebar={closeMenu} to="/dataset/new">
-                                Create New Layer
-                            </ResponsiveLink>
-                        </li>
-                        <li>
-                            <ResponsiveLink closeSidebar={closeMenu} to="/map/new">
-                                Create New Map
-                            </ResponsiveLink>
-                        </li>
-                        {showTemplates && (
-			    <li>
-                                <ResponsiveLink closeSidebar={closeMenu} to="/template/new">
+                <nav id="sidebar" className="flex flex-col text-nowrap h-full overflow-hidden">
+                    <div className="grow overflow-y-auto min-h-0">
+                        <h5 className="flex gap-1 items-center">
+                            <ToolCase /> Tools
+                        </h5>
+                        <ul className="list-none mb-4">
+                            <li>
+                                <ResponsiveLink closeSidebar={closeSidebar} to="/dataset/new">
+                                    Create New Layer
+                                </ResponsiveLink>
+                            </li>
+                            <li>
+                                <ResponsiveLink closeSidebar={closeSidebar} to="/map/new">
+                                    Create New Map
+                                </ResponsiveLink>
+                            </li>
+                            <li>
+                                <ResponsiveLink closeSidebar={closeSidebar} to="/template/new">
                                     Node SVG Builder
                                 </ResponsiveLink>
                             </li>
-                        )}
-                    </ul>
-                    <h5 className="flex gap-1 items-center">
-                        <FolderOpen /> Libraries
-                    </h5>
-                    <ul>
-                        <h6>
-                            <ResponsiveLink closeSidebar={closeMenu} to="/library/datasets">
-                                Datasets
-                            </ResponsiveLink>
-                        </h6>
-                        <ul className="datasets">
-                            {datasets.map((dataset) => (
-                                <li key={dataset.datasetId}>
-                                    <ResponsiveLink
-                                        closeSidebar={closeMenu}
-                                        to={`/dataset/${dataset.datasetId}`}
-                                    >
-                                        {dataset.name}
-                                    </ResponsiveLink>
-                                </li>
-                            ))}
                         </ul>
-                        <h6>
-                            <ResponsiveLink closeSidebar={closeMenu} to="/library/maps">
-                                Maps
-                            </ResponsiveLink>
-                        </h6>
-                        <ul className="maps">
-                            {maps.map((map) => (
-                                <li key={map.mapId}>
-                                    <ResponsiveLink
-                                        closeSidebar={closeMenu}
-                                        to={`/map/${map.mapId}`}
-                                    >
-                                        {map.name}
-                                    </ResponsiveLink>
-                                </li>
-                            ))}
+                        <h5 className="flex gap-1 items-center">
+                            <FolderOpen /> Libraries
+                        </h5>
+                        <ul className="list-none mb-4">
+                            <h6>
+                                <ResponsiveLink closeSidebar={closeSidebar} to="/library/datasets">
+                                    Datasets
+                                </ResponsiveLink>
+                            </h6>
+                            <ul className="pl-0 list-none">
+                                {datasets.map((dataset) => (
+                                    <li key={dataset.datasetId}>
+                                        <ResponsiveLink
+                                            closeSidebar={closeSidebar}
+                                            to={`/dataset/${dataset.datasetId}`}
+                                        >
+                                            <Database size={16} />
+                                            {dataset.name}
+                                        </ResponsiveLink>
+                                    </li>
+                                ))}
+                            </ul>
+                            <h6>
+                                <ResponsiveLink closeSidebar={closeSidebar} to="/library/maps">
+                                    Maps
+                                </ResponsiveLink>
+                            </h6>
+                            <ul className="pl-0 list-none">
+                                {maps.map((map) => (
+                                    <li key={map.mapId}>
+                                        <ResponsiveLink
+                                            closeSidebar={closeSidebar}
+                                            to={`/map/${map.mapId}`}
+                                        >
+                                            <Map size={16} />
+                                            {map.name}
+                                        </ResponsiveLink>
+                                    </li>
+                                ))}
+                            </ul>
+                            {showTemplates && (
+                                <>
+                                    <h6>
+                                        <ResponsiveLink
+                                            closeSidebar={closeSidebar}
+                                            to="/library/templates"
+                                        >
+                                            Node Templates
+                                        </ResponsiveLink>
+                                    </h6>
+                                    <ul className="pl-0 list-none">
+                                        {templates.map((template) => (
+                                            <li key={template.templateId}>
+                                                <ResponsiveLink
+                                                    closeSidebar={closeSidebar}
+                                                    to={`/template/${template.templateId}`}
+                                                >
+                                                    <MapPin size={16} />
+                                                    {template.name}
+                                                </ResponsiveLink>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </>
+                            )}
                         </ul>
-                        {showTemplates && (
-                            <>
-                                <h6>
-                                    <Link to="/library/templates">Node Templates</Link>
-                                </h6>
-                                <ul className="templates">
-                                    {templates.map((template) => (
-                                        <li key={template.templateId}>
-                                            <ResponsiveLink
-                                                closeSidebar={closeMenu}
-                                                to={`/template/${template.templateId}`}
-                                            >
-                                                {template.name}
-                                            </ResponsiveLink>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </>
-                        )}
-                    </ul>
-                    <h5 className="flex gap-1 items-center">
-                        <FileText />
-                        Resources
-                    </h5>
-                    <ul>
-                        <li>
-                            <a href="https://esnet.atlassian.net/wiki/spaces/MAAG/pages/3186196481/Terranova+Documentation">
-                                Documentation
-                            </a>
-                        </li>
-                        {showSettings && (
-                            <li>
-                                <ResponsiveLink closeSidebar={closeMenu} to="/settings">
+                        <h5 className="flex gap-1 items-center">
+                            <FileText />
+                            Resources
+                        </h5>
+                        <ul className="list-none mb-4">
+                            <li className="list-none">
+                                <a
+                                    href="https://esnet.atlassian.net/wiki/spaces/MAAG/pages/3186196481/Terranova+Documentation"
+                                    className="no-underline"
+                                >
+                                    Documentation
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {showSettings && (
+                        <div className="shrink-0 pt-4 pb-16 sm:pb-0">
+                            <h5 className="w-fit">
+                                <ResponsiveLink closeSidebar={closeSidebar} to="/settings">
+                                    <Settings />
                                     Settings
                                 </ResponsiveLink>
-                            </li>
-                        )}
-                    </ul>
+                            </h5>
+                        </div>
+                    )}
                 </nav>
             )}
         </div>
@@ -211,11 +232,15 @@ const ResponsiveLink = ({ to, closeSidebar, children }: Link) => {
     return (
         <>
             {/* link to render on sm screen size */}
-            <Link to={to} className="inline sm:hidden" onClick={closeSidebar}>
+            <Link
+                to={to}
+                className="no-underline flex items-center gap-1 sm:hidden"
+                onClick={closeSidebar}
+            >
                 {children}
             </Link>
             {/* link to render when larger than sm screen size */}
-            <Link to={to} className="hidden sm:inline">
+            <Link to={to} className="no-underline hidden sm:flex items-center gap-1">
                 {children}
             </Link>
         </>
