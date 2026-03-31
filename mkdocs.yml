@@ -1,0 +1,114 @@
+site_name: Terranova
+site_url: https://software.es.net/terranova/
+site_description: A tool for building and editing network maps
+site_author: ESnet
+repo_url: https://github.com/esnet/terranova
+repo_name: esnet/terranova
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - tables
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - getting-started/index.md
+    - Quickstart: getting-started/quickstart.md
+    - Installation: getting-started/installation.md
+    - Configuration: getting-started/configuration.md
+  - Concepts:
+    - concepts/index.md
+    - Architecture: concepts/architecture.md
+    - Datasets: concepts/datasets.md
+    - Maps: concepts/maps.md
+    - Node Templates: concepts/templates.md
+    - Datasources: concepts/datasources.md
+    - Authentication: concepts/authentication.md
+  - User Guide:
+    - user-guide/index.md
+    - Creating a Dataset: user-guide/creating-a-dataset.md
+    - Forking a Dataset: user-guide/forking-a-dataset.md
+    - Creating a Map: user-guide/creating-a-map.md
+    - Forking a Map: user-guide/forking-a-map.md
+    - Dataset Editor: user-guide/dataset-editor.md
+    - Map Editor: user-guide/map-editor.md
+    - Node Template Editor: user-guide/node-template-editor.md
+    - Map Output: user-guide/map-output.md
+  - API Reference:
+    - api/index.md
+    - Maps: api/maps.md
+    - Datasets: api/datasets.md
+    - Templates: api/templates.md
+    - Output: api/output.md
+    - Datasources: api/datasources.md
+    - Authentication: api/authentication.md
+  - Deployment:
+    - deployment/index.md
+    - Docker: deployment/docker.md
+    - Storage Backends: deployment/storage-backends.md
+    - Google Sheets Setup: deployment/google-sheets-setup.md
+    - Keycloak OIDC: deployment/keycloak.md
+  - Contributing:
+    - contributing/index.md
+    - Development Setup: contributing/development-setup.md
+    - Build Notes: contributing/build-notes.md
+    - Testing: contributing/testing.md
+    - Code Style: contributing/code-style.md
+    - Project Structure: contributing/project-structure.md
+  - FAQ: faq.md
+  - Changelog: changelog.md
