@@ -47,7 +47,7 @@ td {
 
 /* ---- Tag-level Components ---- */
 select {
-    @apply py-1 px-2 bg-color-surface-input rounded border-2 border-color-border-alt stroke-esnetblack-300 font-sans focus:outline-color-outline focus:outline-1 focus:outline-offset-0 focus:outline;
+    @apply py-1 px-2 bg-color-surface-input border-1 border-color-border-alt stroke-esnetblack-300 font-sans focus:outline-color-outline focus:outline-1 focus:outline-offset-0 focus:outline;
 }
 @layer base {
     :where(select){
@@ -181,10 +181,10 @@ button.warning {
     @apply bg-transparent border-2 rounded-md
 }
 :where(.icon){
-    @apply border-transparent stroke-color-icon p-1 inline-block w-8 h-8;
+    @apply border-transparent p-1 inline-block w-8 h-8;
 }
 :where(.icon:hover){
-    @apply bg-esnetblack-900/20 stroke-color-icon-active;
+    @apply bg-esnetblack-900/20;
 }
 .icon.btn {
     @apply shadow-none;
@@ -193,7 +193,7 @@ button.warning {
     @apply px-1 border-transparent;
 }
 .icon.btn.bordered {
-    @apply border-teal-500;
+    border:2px solid;
 }
 :where(.icon.lg) {
     @apply w-10 h-10;
@@ -567,7 +567,7 @@ button.warning {
     }
 
     /* accordion header text */
-    .tn-accordion div button {
+    .tn-accordion > div > button {
         font-size:16px !important;
     }
     /* accordion footer */
@@ -577,5 +577,67 @@ button.warning {
     /* accordion div first-child padding override */
     .tn-accordion > div {
         padding:10px 14px !important;
+    }
+
+    .pkts-button {
+        font-weight:600 !important;
+    }
+
+    nav#sidebar a, .favorites a, h3 a {
+        text-decoration: none;
+    }
+    nav#sidebar li {
+        @apply list-none;
+    }
+    .favorites li {
+        @apply ml-2;
+    }
+    .recently li {
+        @apply ml-8;
+    }
+    nav#sidebar ul.datasets li,
+    .favorites ul.datasets li,
+    .recently ul.datasets li {
+        list-style-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyNjI2MjYiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1kYXRhYmFzZS1pY29uIGx1Y2lkZS1kYXRhYmFzZSI+PGVsbGlwc2UgY3g9IjEyIiBjeT0iNSIgcng9IjkiIHJ5PSIzIi8+PHBhdGggZD0iTTMgNVYxOUE5IDMgMCAwIDAgMjEgMTlWNSIvPjxwYXRoIGQ9Ik0zIDEyQTkgMyAwIDAgMCAyMSAxMiIvPjwvc3ZnPg==);
+    }
+    nav#sidebar ul.maps li,
+    .favorites ul.maps li,
+    .recently ul.maps li {
+        list-style-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyNjI2MjYiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1tYXAtaWNvbiBsdWNpZGUtbWFwIj48cGF0aCBkPSJNMTQuMTA2IDUuNTUzYTIgMiAwIDAgMCAxLjc4OCAwbDMuNjU5LTEuODNBMSAxIDAgMCAxIDIxIDQuNjE5djEyLjc2NGExIDEgMCAwIDEtLjU1My44OTRsLTQuNTUzIDIuMjc3YTIgMiAwIDAgMS0xLjc4OCAwbC00LjIxMi0yLjEwNmEyIDIgMCAwIDAtMS43ODggMGwtMy42NTkgMS44M0ExIDEgMCAwIDEgMyAxOS4zODFWNi42MThhMSAxIDAgMCAxIC41NTMtLjg5NGw0LjU1My0yLjI3N2EyIDIgMCAwIDEgMS43ODggMHoiLz48cGF0aCBkPSJNMTUgNS43NjR2MTUiLz48cGF0aCBkPSJNOSAzLjIzNnYxNSIvPjwvc3ZnPg==);
+    }
+    nav#sidebar ul.templates li,
+    .favorites ul.templates li,
+    .recently ul.templates li {
+        list-style-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyNjI2MjYiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1tYXAtcGluLWljb24gbHVjaWRlLW1hcC1waW4iPjxwYXRoIGQ9Ik0yMCAxMGMwIDQuOTkzLTUuNTM5IDEwLjE5My03LjM5OSAxMS43OTlhMSAxIDAgMCAxLTEuMjAyIDBDOS41MzkgMjAuMTkzIDQgMTQuOTkzIDQgMTBhOCA4IDAgMCAxIDE2IDAiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEwIiByPSIzIi8+PC9zdmc+);
+    }
+    .pkts-icon-button.small-icon {
+        padding: 2px 4px;
+        min-height: 26px;
+        border: 1px solid #333;
+        border-radius: 9px;
+        background: #FFFFFF80;
+    }
+    .pkts-icon-button.small-icon svg { 
+        width:16px; height:16px;
+    }
+    button.pkts-chip.pkts-append {
+        padding: 12px 4px 12px 8px;
+        min-height: 26px;
+        height: 26px;
+        gap:4px;
+    }
+    button.pkts-chip .delete-icon {
+        width:12px;
+    }
+    .tn-accordion textarea {
+        border-width: 1px;
+        border-color: #666666;
+        background-color: #FFFFFF;
+        stroke: #565657;
+        padding: .5rem;
+        padding-top:0.5rem;
+    }
+    .tn-accordion button {
+        text-decoration: none;
     }
 }

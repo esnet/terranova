@@ -94,7 +94,7 @@ export function Sidebar() {
             {open && (
                 <nav
                     id="sidebar"
-                    className="flex flex-col text-nowrap [&_h5,h6,ul,li]:mb-2 [&>ul]:mb-8 [&_h6>a,&>ul>li>a]:no-underline *:list-none"
+                    className="flex flex-col text-nowrap *:list-none"
                 >
                     <h5 className="flex gap-1 items-center">
                         <ToolCase /> Tools
@@ -127,7 +127,7 @@ export function Sidebar() {
                                 Datasets
                             </ResponsiveLink>
                         </h6>
-                        <ul>
+                        <ul className="datasets">
                             {datasets.map((dataset) => (
                                 <li key={dataset.datasetId}>
                                     <ResponsiveLink
@@ -144,7 +144,7 @@ export function Sidebar() {
                                 Maps
                             </ResponsiveLink>
                         </h6>
-                        <ul>
+                        <ul className="maps">
                             {maps.map((map) => (
                                 <li key={map.mapId}>
                                     <ResponsiveLink
@@ -161,7 +161,7 @@ export function Sidebar() {
                                 <h6>
                                     <Link to="/library/templates">Node Templates</Link>
                                 </h6>
-                                <ul>
+                                <ul className="templates">
                                     {templates.map((template) => (
                                         <li key={template.templateId}>
                                             <ResponsiveLink

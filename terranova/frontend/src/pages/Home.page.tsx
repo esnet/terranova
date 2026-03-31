@@ -50,8 +50,8 @@ export function HomePageComponent() {
     const showTemplates = auth?.user?.scope?.includes(ADMIN_SCOPE);
 
     return (
-        <main className="w-full h-full flex flex-col lg:flex-row-reverse gap-8 p-8">
-            <Card header="My Favorites" icon={<Star />} className="md:flex-1">
+        <main className="w-full h-full flex flex-col lg:flex-row-reverse gap-8 p-8 max-w-7xl mx-auto">
+            <Card header="My Favorites" icon={<Star />} className="md:flex-1 favorites">
                 <h4>My Datasets</h4>
                 <FavLinkList links={favDatasets} dataType="datasets" />
                 <h4>My Maps</h4>
@@ -65,16 +65,18 @@ export function HomePageComponent() {
             </Card>
             <div className="w-full h-fit lg:w-2/3 flex flex-col gap-8 pb-8">
                 <Card header="Recent Activity" icon={<History />}>
-                    <h4>Recent Maps</h4>
-                    <LinkTable links={topMaps} dataType="maps" />
-                    <h4>Recent Datasets</h4>
-                    <LinkTable links={topDatasets} dataType="datasets" />
-                    {showTemplates && (
-                        <>
-                            <h4>Recent Node Templates</h4>
-                            <LinkTable links={topTemplates} dataType="templates" />
-                        </>
-                    )}
+                    <div className="recently">
+                        <h4>Recent Maps</h4>
+                        <LinkTable links={topMaps} dataType="maps" />
+                        <h4>Recent Datasets</h4>
+                        <LinkTable links={topDatasets} dataType="datasets" />
+                        {showTemplates && (
+                            <>
+                                <h4>Recent Node Templates</h4>
+                                <LinkTable links={topTemplates} dataType="templates" />
+                            </>
+                        )}
+                    </div>
                 </Card>
                 <Card
                     header={<Link to="/library/datasets">Datasets</Link>}
@@ -172,7 +174,7 @@ function LinkTable({ links, dataType }: LinkTableProps) {
     }
 
     return (
-        <ul className="pl-2">
+        <ul className={dataType + " pl-2"}>
             {links.map((item, i) => {
                 const url = new URL(
                     `/${dataType}/${item[id]}/?version=latest`,
@@ -180,20 +182,21 @@ function LinkTable({ links, dataType }: LinkTableProps) {
                 );
                 const mapUrl = new URL(`/output/${dataType}/${item[id]}/?version=latest`, API_URL);
                 return (
-                    <li key={item[id]} className="list-none flex items-center gap-4 mb-2">
+                    <li key={item[id]} className="list-none items-center gap-2 mb-1">
+                        <a className="font-semibold mr-2 no-underline" href={url.href}>
+                            {item["name"]}
+                        </a>
                         {dataType === "maps" && (
                             <PktsIconButton
                                 onClick={() => {
                                     navigator.clipboard.writeText(mapUrl.href);
                                 }}
                                 variant="secondary"
+                                className="small-icon"
                             >
                                 <Copy />
                             </PktsIconButton>
                         )}
-                        <a className="font-semibold" href={url.href}>
-                            {item["name"]}
-                        </a>
                     </li>
                 );
             })}
@@ -218,10 +221,10 @@ function FavLinkList({ links, dataType }: FavLinkListProps) {
     }[dataType];
 
     if (links.length === 0) {
-        return <p>You have not marked any {dataType} as favorite.</p>;
+        return <p>You have not marked any {dataType} as a favorite.</p>;
     }
     return (
-        <ul>
+        <ul className={dataType}>
             {links.map((item) => (
                 <li key={item[idField]}>
                     <a href={`/${urlPrefix}/${item[idField]}`}>{item["name"]}</a>

@@ -9,11 +9,11 @@ export function MapOverride(props: any) {
                 <td className="controls w-24">
                     <div className="flex flew-row w-24">
                         {props.override.visible ? (
-                            <Eye onClick={props.toggleVisibility} />
+                            <Eye onClick={props.toggleVisibility} className="pkts-icon-button small-icon mr-2 py-1 h-8" />
                         ) : (
-                            <EyeOff onClick={props.toggleVisibility} />
+                            <EyeOff onClick={props.toggleVisibility} className="pkts-icon-button small-icon mr-2 py-1 h-8" />
                         )}
-                        <Trash2 onClick={props.delete} />
+                        <Trash2 onClick={props.delete} className="pkts-icon-button small-icon py-1 h-8" />
                     </div>
                 </td>
                 <td className="operation pl-0">
