@@ -15,7 +15,7 @@
         "@esnet/esnet-tokens": "file:esnet-esnet-tokens-1.1.1.tgz",
         "@esnet/packets-ui-css": "file:esnet-packets-ui-css-0.1.0.tgz",
         "@esnet/packets-ui-react": "file:esnet-packets-ui-react-0.9.0.tgz",
-        "esnet-networkmap-panel": "^3.0.0-beta5",
+        "esnet-networkmap-panel": "^3.1.0",
         "jwt-decode": "^3.1.2",
         "keycloak-js": "^22.0.0",
         "lodash": "^4.17.21",
