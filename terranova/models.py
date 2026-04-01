@@ -188,8 +188,30 @@ class DatasetRevision(BaseModel):
 
 
 class UserDataRevision(BaseModel):
-    favorites: Dict[str, List[str]]
-    lastEdited: Dict[str, List[str]]
+    favorites: Dict[str, List[Any]] = {"maps": [], "datasets": [], "templates": []}
+    lastEdited: Dict[str, List[Any]] = {"maps": [], "datasets": [], "templates": []}
+
+    @field_validator("favorites", "lastEdited", mode="before")
+    @classmethod
+    def normalize_id_lists(cls, v: Any) -> Any:
+        """Coerce full objects to their ID string so stale client caches can't cause a 422."""
+        if not isinstance(v, dict):
+            return v
+        _id_fields = ["mapId", "datasetId", "templateId"]
+        result = {}
+        for key, items in v.items():
+            normalized = []
+            for item in (items or []):
+                if isinstance(item, str):
+                    normalized.append(item)
+                elif isinstance(item, dict):
+                    for id_field in _id_fields:
+                        if id_field in item:
+                            normalized.append(item[id_field])
+                            break
+            seen: set = set()
+            result[key] = [x for x in normalized if not (x in seen or seen.add(x))]
+        return result
 
 
 class UserData(UserDataRevision):

@@ -105,14 +105,8 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
             <div className="flex flex-col mr-2 p-6">
                 <p>Please confirm that you'd like to publish this map.</p>
                 <p>
-                    This action will make{" "}
-                    <PktsCommaSeperatedList
-                        items={[
-                            "the current saved version of the map",
-                            "coordinates of all visible objects",
-                            "the results of dataset(s) used in the map",
-                        ]}
-                    />{" "}
+                    This action will make the current saved version of the map,
+                    coordinates of all visible objects, and the results of dataset(s) used in the map {" "}
                     <span className="text-red-500">
                         visible to the public internet with no password protection.
                     </span>

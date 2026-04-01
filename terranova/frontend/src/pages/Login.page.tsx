@@ -60,8 +60,8 @@ export function LoginPageComponent(props: any) {
     }, [auth, params, props.next]);
 
     return (
-        <div className="flex w-full h-full">
-            <div className="flex flex-col grow justify-center min-w-md xl:min-w-2xl px-24 bg-light-primary">
+        <div className="flex w-full h-full login">
+            <div className="flex flex-col grow justify-center min-w-md xl:min-w-xl px-24 xl:px-36 bg-light-primary">
                 <h2 className="text-dark-copy">Login</h2>
                 {message && (
                     <div className="bg-light-secondary text-white rounded-xl p-1 px-4 mb-4">

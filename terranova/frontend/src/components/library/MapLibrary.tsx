@@ -17,7 +17,7 @@ export function MapLibrary() {
     const [loading, setLoading] = useState(true);
 
     const favorites = useContext(Favorites);
-    const { controller: userDataController } = useContext(
+    const { controller: userDataController, instance: userdata } = useContext(
         UserDataController,
     ) as DataControllerContextType;
 
@@ -79,7 +79,7 @@ export function MapLibrary() {
                         <Card key={map.mapId} className="flex flex-col gap-2">
                             <div className="text-xl font-bold flex gap-2">
                                 <Star
-                                    className={`cursor-pointer stroke-light-primary ${favorites?.maps?.includes(map.mapId) ? "fill-light-primary" : ""}`}
+                                    className={`cursor-pointer stroke-light-primary ${userdata?.favorites?.maps?.includes(map.mapId) ? "fill-light-primary" : ""}`}
                                     onClick={() =>
                                         markFavorite(
                                             userDataController,

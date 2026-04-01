@@ -33,40 +33,67 @@ def test_new_buttons(page, login):
     page.get_by_role("link", name="Terranova").click()
 
     page.get_by_role("button", name="Create new node template").click()
-    expect(page.locator("main").first).to_contain_text("Node Template Builder")
+    expect(page.locator("main").first).to_contain_text("Create Node Template")
 
 
-def test_favorites(page, create_test_dataset):
+def _mark_favorite(api_base, auth_header, datatype, item_id):
+    """Helper: mark an item as favorite via the userdata API."""
+    import requests as req
+    headers = {"Authorization": f"Basic {auth_header}", "Content-Type": "application/json"}
+    r = req.get(f"{api_base}/userdata/", headers=headers)
+    userdata = r.json()
+    favorites = userdata.get("favorites", {"maps": [], "datasets": [], "templates": []})
+    last_edited = userdata.get("lastEdited", {"maps": [], "datasets": [], "templates": []})
+    current = favorites.get(datatype, [])
+    if item_id not in current:
+        current.append(item_id)
+    favorites[datatype] = current
+    req.put(f"{api_base}/userdata/", headers=headers, json={"favorites": favorites, "lastEdited": last_edited})
+
+
+def test_favorites(page, login):
     """
     Test that marking a dataset as favorite causes it to appear on the home page
     under 'My Favorites' > 'My Datasets'. Verifies FavoritesContextProvider stores
     full objects and FavLinkList renders with correct dataType-aware fields.
     """
     import base64
-    import requests as req
-    dataset_id = create_test_dataset
-    # The create_test_dataset fixture navigates to the dataset editor.
-    # Read the dataset name from the topbar (rendered as bold span: "Editing: {name}")
-    dataset_name = page.locator(".bg-light-secondary span.font-bold").inner_text().strip()
+    ds_name = f"Fav Test Dataset: {random.randint(0, 9999)}"
+    page.goto(f"{FRONTEND_BASE}/dataset/new")
+    page.get_by_role("textbox", name="Name*").fill(ds_name)
+    page.get_by_role("button", name="Create Dataset").click()
+    expect(page.get_by_role("main")).to_contain_text(ds_name)
+    dataset_id = page.url.split("/")[-1]
 
-    # Mark as favorite via API — no favorite button exists in the dataset editor UI yet.
     auth = base64.b64encode(b"admin:admin").decode()
-    headers = {"Authorization": f"Basic {auth}", "Content-Type": "application/json"}
-    r = req.get(f"{API_BASE}/userdata/", headers=headers)
-    userdata = r.json()
-    favorites = userdata.get("favorites", {})
-    datasets = favorites.get("datasets", [])
-    if dataset_id not in datasets:
-        datasets.append(dataset_id)
-    favorites["datasets"] = datasets
-    req.put(f"{API_BASE}/userdata/", headers=headers, json={"favorites": favorites})
+    _mark_favorite(API_BASE, auth, "datasets", dataset_id)
 
-    # Clear localStorage cache and navigate home so favorites context fetches fresh data
     page.evaluate("localStorage.clear()")
     page.goto(f"{FRONTEND_BASE}/")
+    expect(page.get_by_role("main")).to_contain_text(ds_name, timeout=10000)
 
-    # The dataset name should appear under 'My Favorites' > 'My Datasets'
-    expect(page.get_by_role("main")).to_contain_text(dataset_name, timeout=10000)
+
+def test_favorites_template(page, login):
+    """
+    Test that marking a node template as favorite causes it to appear on the home page
+    under 'My Favorites' > 'My Templates'.
+    """
+    import base64, re
+    template_name = f"Fav Test Template: {random.randint(0, 9999)}"
+    page.goto(f"{FRONTEND_BASE}/template/new")
+    expect(page.get_by_role("main")).to_contain_text("Create Node Template")
+    page.get_by_role("textbox", name="Name").fill(template_name)
+    page.get_by_role("textbox", name="SVG Code").fill('<circle r="5"/>')
+    page.get_by_role("button", name="Create", exact=True).click()
+    expect(page).to_have_url(re.compile(r".*/template/\w{7}$"), timeout=10000)
+    template_id = page.url.split("/")[-1]
+
+    auth = base64.b64encode(b"admin:admin").decode()
+    _mark_favorite(API_BASE, auth, "templates", template_id)
+
+    page.evaluate("localStorage.clear()")
+    page.goto(f"{FRONTEND_BASE}/")
+    expect(page.get_by_role("main")).to_contain_text(template_name, timeout=10000)
 
 
 def test_recent_maps(page, login):
@@ -145,3 +172,26 @@ def test_recent_datasets(page, login):
     ds_a_pos = main.inner_text().index(ds_a_name)
     ds_b_pos = main.inner_text().index(ds_b_name)
     assert ds_b_pos < ds_a_pos, "Most recently saved dataset should appear first"
+
+
+def test_recent_templates(page, login):
+    """
+    Test that creating a node template adds it to 'Recent Node Templates' on the home page.
+    Verifies that NodeTemplateEditor updates lastEdited on creation, and that
+    LastEditedContextProvider correctly fetches and surfaces the full template object.
+    """
+    import re
+    template_name = f"Home Recent Template: {random.randint(0, 9999)}"
+
+    page.goto(f"{FRONTEND_BASE}/template/new")
+    expect(page.get_by_role("main")).to_contain_text("Create Node Template")
+    page.get_by_role("textbox", name="Name").fill(template_name)
+    page.get_by_role("textbox", name="SVG Code").fill('<circle r="5"/>')
+    page.get_by_role("button", name="Create", exact=True).click()
+    expect(page).to_have_url(re.compile(r".*/template/\w{7}$"), timeout=10000)
+
+    page.evaluate("localStorage.clear()")
+    page.goto(f"{FRONTEND_BASE}/")
+
+    main = page.get_by_role("main")
+    expect(main).to_contain_text(template_name, timeout=10000)

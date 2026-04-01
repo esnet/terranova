@@ -33,6 +33,26 @@ export function UserDataContextProvider(props: any) {
                 let output = await controller.fetch();
                 if (output.status !== 200) {
                     controller.create();
+                } else {
+                    // Normalize favorites/lastEdited to plain string IDs in case the DB has
+                    // stale full-object entries from before the Pydantic validator was in place.
+                    const _idFields = ["mapId", "datasetId", "templateId"];
+                    const toId = (item: any): string | null => {
+                        if (typeof item === "string") return item;
+                        for (const f of _idFields) { if (item?.[f]) return item[f]; }
+                        return null;
+                    };
+                    const normalize = (dict: any) => {
+                        if (!dict || typeof dict !== "object") return dict;
+                        const out: any = {};
+                        for (const [k, v] of Object.entries(dict)) {
+                            out[k] = [...new Set((v as any[]).map(toId).filter(Boolean))];
+                        }
+                        return out;
+                    };
+                    controller.instance.favorites = normalize(controller.instance.favorites);
+                    controller.instance.lastEdited = normalize(controller.instance.lastEdited);
+                    controller.setInstance({ ...controller.instance });
                 }
             })();
         }

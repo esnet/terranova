@@ -35,7 +35,7 @@ export function NodeTemplateLibrary() {
     const [loading, setLoading] = useState(true);
 
     const favorites = useContext(Favorites);
-    const { controller: userDataController } = useContext(
+    const { controller: userDataController, instance: userdata } = useContext(
         UserDataController,
     ) as DataControllerContextType;
 
@@ -102,7 +102,7 @@ export function NodeTemplateLibrary() {
                             <div className="text-xl font-bold flex gap-2">
                                 <Star
                                     className={`cursor-pointer stroke-light-primary ${
-                                        favorites?.templates?.includes(template.templateId)
+                                        userdata?.favorites?.templates?.includes(template.templateId)
                                             ? "fill-light-primary"
                                             : ""
                                     }`}

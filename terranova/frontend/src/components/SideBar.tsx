@@ -60,25 +60,23 @@ export function Sidebar() {
                 templates: "templateId",
             }[dataType];
 
-            const editedIds = lastEdited[dataType] || [];
-            const globals = lastGlobal[dataType] || [];
+            // lastEdited already contains full objects for the user's recently edited items
+            const userItems = (lastEdited[dataType] || []) as any[];
+            const globals = (lastGlobal[dataType] || []) as any[];
 
-            const editedItems = globals
-                .filter((item: any) => editedIds.includes(item[dataId]))
-                .sort(sortOnUpdateDate);
+            const editedItems = [...userItems].sort(sortOnUpdateDate);
 
             // if we already have 3 or more, return early
             if (editedItems.length >= 3) {
                 return editedItems.slice(0, 3);
             }
 
-            // filter out globals we already have in editedItems, then sort them
+            // fill remaining slots with globally recent items the user hasn't already edited
             const existingIds = new Set(editedItems.map((item: any) => item[dataId]));
             const remainingGlobals = globals
                 .filter((item: any) => !existingIds.has(item[dataId]))
                 .sort(sortOnUpdateDate);
 
-            // combine both arrays and slice to max 3 items
             return [...editedItems, ...remainingGlobals].slice(0, 3);
         };
 

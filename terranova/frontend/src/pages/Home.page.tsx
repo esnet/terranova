@@ -176,27 +176,20 @@ function LinkTable({ links, dataType }: LinkTableProps) {
     return (
         <ul className={dataType + " pl-2"}>
             {links.map((item, i) => {
+                const singularDataTypes = {
+                    "maps": "map",
+                    "datasets": "dataset",
+                    "templates": "template",
+                }
                 const url = new URL(
-                    `/${dataType}/${item[id]}/?version=latest`,
+                    `/${singularDataTypes[dataType]}/${item[id]}/?version=latest`,
                     window.location.origin,
                 );
-                const mapUrl = new URL(`/output/${dataType}/${item[id]}/?version=latest`, API_URL);
                 return (
                     <li key={item[id]} className="list-none items-center gap-2 mb-1">
                         <a className="font-semibold mr-2 no-underline" href={url.href}>
                             {item["name"]}
                         </a>
-                        {dataType === "maps" && (
-                            <PktsIconButton
-                                onClick={() => {
-                                    navigator.clipboard.writeText(mapUrl.href);
-                                }}
-                                variant="secondary"
-                                className="small-icon"
-                            >
-                                <ClipboardCopy />
-                            </PktsIconButton>
-                        )}
                     </li>
                 );
             })}

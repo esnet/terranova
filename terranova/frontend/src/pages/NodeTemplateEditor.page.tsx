@@ -59,7 +59,14 @@ export function NodeTemplateEditorPageComponent() {
         );
         if (create) {
             await TemplatePersistenceController.create();
-            navigate(`/template/${TemplatePersistenceController.instance.templateId}`);
+            const newTemplateId = TemplatePersistenceController.instance.templateId;
+            const currentLastEdited = userDataController.instance?.lastEdited ?? {};
+            let newTemplates = ((currentLastEdited?.templates ?? []) as string[]).filter((e) => e !== newTemplateId);
+            newTemplates.push(newTemplateId);
+            if (newTemplates.length > 3) newTemplates.shift();
+            userDataController.setProperty(`lastEdited`, { ...currentLastEdited, templates: newTemplates });
+            userDataController.update();
+            navigate(`/template/${newTemplateId}`);
         } else {
             TemplatePersistenceController.update().then(() => {
                 setShowSaveAlert(true);

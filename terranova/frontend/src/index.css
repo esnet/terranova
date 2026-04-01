@@ -636,5 +636,5 @@ button.warning {
     .tn-accordion button {
         text-decoration: none;
     }
-    h3 { font-weight: 600; }
+    h2, h3 { font-weight: 600; }
 }
