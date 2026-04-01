@@ -1,1 +1,15 @@
 venv
+.git
+.github
+node_modules
+tests
+docs
+site
+*.db
+*.sqlite
+__pycache__
+.pytest_cache
+.mypy_cache
+*.egg-info
+terranova/frontend/node_modules
+terranova.egg-info

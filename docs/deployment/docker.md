@@ -1,100 +1,99 @@
 # Docker Deployment
 
-The recommended way to deploy Terranova is with Docker Compose, which starts the application and an Elasticsearch cluster together.
+Terranova is distributed as a pre-built Docker image on the GitHub Container Registry. No local build is required.
 
 ## Prerequisites
 
 - [Docker Engine](https://docs.docker.com/engine/install/) 20.10+
 - [Docker Compose](https://docs.docker.com/compose/install/) v2
 
-## Setup
+## Default setup (SQLite, single container)
 
-### 1. Configure the settings files
+The default configuration uses SQLite for storage — no external services needed.
 
-Copy the default configuration:
+```yaml title="compose.yaml"
+services:
+    terranova:
+        image: ghcr.io/esnet/terranova:latest
+        ports:
+            - 9999:80
+        volumes:
+            - terranova-data:/data
+        environment:
+            TERRANOVA_CORS_ORIGINS: "http://localhost:9999"
 
-```sh
-sudo cp -R etc/terranova /etc/
+volumes:
+    terranova-data:
 ```
 
-Edit `/etc/terranova/settings.yml` as needed. See [Configuration](../getting-started/configuration.md) for a full reference.
-
-Edit `/etc/terranova/settings.js` to set `API_URL` to the public URL of your deployment:
-
-```js
-export const API_URL = `http://your-server/api/v1/`;
-```
-
-### 2. Build and start
+Start with:
 
 ```sh
-docker compose build
 docker compose up -d
 ```
 
-This starts:
+Open `http://localhost:9999`. Log in with `admin` / `admin`.
 
-- **terranova** — the application on port `9999` (maps to Apache on port `80` inside the container)
-- **elasticsearch** — Elasticsearch on port `9200`
+All data (maps, datasets, templates, credentials) is persisted in the `terranova-data` named volume mounted at `/data`.
 
-### 3. Verify
+## Default credentials
 
-```sh
-# Check both containers are running
-docker compose ps
+| Username | Password | Role |
+|----------|----------|------|
+| `admin`  | `admin`  | Administrator |
 
-# Check the API is responding
-curl http://localhost:9999/api/v1/
+Change the admin password in **Settings → User Management** after first login.
+
+## Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `TERRANOVA_CORS_ORIGINS` | Comma-separated list of allowed CORS origins, e.g. `http://myserver.example.com:9999`. Required when the app is accessed from a different host or port than `localhost:9999`. |
+| `TERRANOVA_ENCRYPTION_KEY` | AES-256 encryption key for stored Google Sheets credentials. Auto-generated and persisted to `/data/.encryption_key` on first boot. Override to pre-set the key. |
+| `TERRANOVA_CSS_*` | CSS custom property overrides for theming. See [Theming](#runtime-theming) below. |
+
+## Runtime theming
+
+Override CSS variables at runtime without rebuilding the image by setting `TERRANOVA_CSS_*` environment variables.
+
+The variable names map to `--esnet-*` CSS custom properties:
+
+```yaml
+environment:
+    TERRANOVA_CSS_COLOR_CORE_BLUE_700: "#1a5fa8"
+    TERRANOVA_CSS_COLOR_BRAND_PRIMARY: "#ff6600"
 ```
 
-Open `http://localhost:9999` in your browser to access the Terranova UI.
+This writes a `:root {}` CSS override file served at `/static/custom-theme.css`. Only Packets UI component styles (`var(--esnet-*)`) respond to these overrides; Tailwind utility classes are compiled at build time and cannot be changed at runtime.
+
+## Using Elasticsearch
+
+For Elasticsearch-backed storage, use the override compose file:
+
+```sh
+docker compose -f compose.yaml -f compose.elasticsearch.yml up -d
+```
+
+The `compose.elasticsearch.yml` file adds an Elasticsearch service and configures the health check. Edit it to update credentials for your deployment.
+
+See [Storage Backends](storage-backends.md) for guidance on when each backend is appropriate.
+
+## Custom configuration
+
+To override the built-in `settings.yml`, bind-mount your own config file:
+
+```yaml
+volumes:
+    - ./my-settings.yml:/etc/terranova/settings.yml
+    - terranova-data:/data
+```
+
+See [Configuration](../getting-started/configuration.md) for a full reference.
 
 ## What's inside the container
 
-The Terranova Docker image (`python:3.11-alpine`) runs:
+The Terranova Docker image runs:
 
-- **Apache** — serves the built frontend static files from `/terranova/static/`
-- **Uvicorn** — serves the FastAPI backend API
-- **supervisord** — manages both processes
-
-The image bundles the pre-built frontend. To rebuild the frontend:
-
-```sh
-docker compose build --no-cache
-```
-
-## Volume mounts
-
-The `compose.yaml` mounts two paths from the host:
-
-| Host path | Container path | Purpose |
-|---|---|---|
-| `/etc/terranova/` | `/etc/terranova/` | Backend config (`settings.yml`, credentials) |
-| `/etc/terranova/settings.js` | `/terranova/static/settings.js` | Frontend config |
-
-!!! warning
-    The `settings.js` mount overwrites the default frontend config baked into the image. Always provide a configured `settings.js` before starting the container.
-
-## Elasticsearch configuration
-
-The bundled Elasticsearch service uses default settings suitable for a single-node development or small production deployment:
-
-- Memory: 750 MB heap, 4 GB container limit
-- Security: disabled (`xpack.security.enabled: false`)
-- Discovery: single-node
-
-For production, consider:
-
-- Enabling Elasticsearch security (TLS + authentication)
-- Increasing memory limits
-- Using a managed Elasticsearch service instead of a sidecar container
-
-## Using SQLite instead of Elasticsearch
-
-If you want to run Terranova without Elasticsearch, configure `storage.backend: sqlite` in `settings.yml` and start only the `terranova` service:
-
-```sh
-docker compose up terranova
-```
-
-See [Storage Backends](storage-backends.md) for guidance on when to use each backend.
+- **Apache** — serves the pre-built frontend and proxies `/api/v1/` to Uvicorn
+- **Uvicorn** — serves the FastAPI backend API on a Unix socket
+- **supervisord** — manages both processes and the data cache cycle

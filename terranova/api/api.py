@@ -59,18 +59,18 @@ for ds in datasources:
 if AUTH_BACKEND == "basic":
     app.include_router(basic_auth.router)
 
-if ENVIRONMENT == "dev":
-    # This seems like a really bad idea to leave in production, but it makes testing
-    # with the swagger UI a heck of a lot easier so I'm leaving it here to be commented
-    # in as needed for local dev.
-    # app = FastAPI(
-    # 		title="Terranova API",
-    #         swagger_ui_init_oauth={
-    #             "clientId": KEYCLOAK_CLIENT,
-    #             "clientSecret": KEYCLOAK_SECRET,
-    # 		})
-
-    # Fix CORS issues
+cors_env = os.environ.get("TERRANOVA_CORS_ORIGINS")
+if cors_env:
+    # Explicit comma-separated origins, e.g. "http://example.com,http://other.com"
+    origins = [o.strip() for o in cors_env.split(",")]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+elif ENVIRONMENT == "dev":
     origins = [
         "http://localhost",
         "http://localhost:5173",
@@ -79,7 +79,6 @@ if ENVIRONMENT == "dev":
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3001",
     ]
-
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -87,17 +86,8 @@ if ENVIRONMENT == "dev":
         allow_methods=["*"],
         allow_headers=["*"],
     )
-else:
-    # allow es.net origins
-    # as well as localhosts (for testing of CORS endpoints)
-    origin_regex = r"http(s?)://(.+\.es\.net|localhost:.*)"
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origin_regex=origin_regex,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# In production without TERRANOVA_CORS_ORIGINS: no CORS headers needed —
+# the frontend and API are served same-origin through Apache.
 
 # set up test mocks in test environment
 if ENVIRONMENT == "test":

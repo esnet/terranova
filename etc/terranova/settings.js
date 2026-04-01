@@ -21,4 +21,4 @@ export const LAYER_LIMIT = 3;
 export const TOOLTIP_TTL = 2;
 // should we load the google sheets JWT from ES ('dynamic') or from the filesystem ('static')?
 // the default is 'static'. It is much more secure.
-export const GOOGLE_SHEETS_CREDENTIAL_SOURCE = `static`;
+export const GOOGLE_SHEETS_CREDENTIAL_SOURCE = `dynamic`;

@@ -89,7 +89,7 @@ def configure():
             )
 
     GOOGLE_SHEETS_STATIC = GOOGLE_SHEETS.get("static")
-    settings.GOOGLE_SHEETS_TOKEN_FILES = GOOGLE_SHEETS_STATIC.get("token_files")
+    settings.GOOGLE_SHEETS_TOKEN_FILES = (GOOGLE_SHEETS_STATIC or {}).get("token_files")
 
     if settings.GOOGLE_SHEETS_CREDENTIAL_SOURCE == "static" and GOOGLE_SHEETS_STATIC is None:
         raise RuntimeError(
@@ -112,7 +112,7 @@ def configure():
 
     settings.GOOGLE_SHEETS_CREDENTIALS = []
 
-    for jwt_path in settings.GOOGLE_SHEETS_TOKEN_FILES:
+    for jwt_path in (settings.GOOGLE_SHEETS_TOKEN_FILES or []):
         try:
             with open(jwt_path, "r") as fh:
                 settings.GOOGLE_SHEETS_CREDENTIALS.append(json.load(fh))

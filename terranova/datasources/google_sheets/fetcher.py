@@ -141,7 +141,7 @@ def enumerate_credentials():
         return GOOGLE_SHEETS_CREDENTIALS
     else:
         backend = GoogleSheetsBackend()
-        return backend.list_credentials(sanitize=False)
+        return backend.list_credentials(sanitize=False).data
 
 
 def fetch():

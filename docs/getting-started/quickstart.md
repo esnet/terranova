@@ -1,55 +1,63 @@
 # Quickstart
 
-The fastest way to run Terranova is with Docker Compose. This starts the application and an Elasticsearch instance with a single command.
+The fastest way to run Terranova is with Docker. No cloning, no building — pull the pre-built image and go.
 
-## 1. Clone the repository
+## Prerequisites
 
-```sh
-git clone git@github.com:esnet/terranova.git
-cd terranova
+- [Docker Engine](https://docs.docker.com/engine/install/) 20.10+
+- [Docker Compose](https://docs.docker.com/compose/install/) v2
+
+## 1. Create a compose file
+
+Create a file named `compose.yaml` with the following content:
+
+```yaml
+services:
+    terranova:
+        image: ghcr.io/esnet/terranova:latest
+        ports:
+            - 9999:80
+        volumes:
+            - terranova-data:/data
+        environment:
+            TERRANOVA_CORS_ORIGINS: "http://localhost:9999"
+
+volumes:
+    terranova-data:
 ```
 
-## 2. Copy the default configuration
+## 2. Start the app
 
 ```sh
-sudo cp -R etc/terranova /etc/
-```
-
-This creates `/etc/terranova/` containing two files:
-
-- `settings.yml` — backend configuration (storage, datasources, auth)
-- `settings.js` — frontend configuration (API URL)
-
-## 3. Configure a storage backend
-
-The default `settings.yml` is configured for Elasticsearch (used by Docker Compose). If you want to use SQLite instead — which requires no additional services — see the [Storage Backends](../deployment/storage-backends.md) guide.
-
-For the Docker quickstart, no changes are needed. The `compose.yaml` starts an Elasticsearch container automatically.
-
-## 4. Build and start
-
-```sh
-docker compose build
 docker compose up
 ```
 
-This starts two containers:
+## 3. Open the app
 
-- **Elasticsearch** — data storage
-- **Terranova** — the application (API + frontend, served by Apache)
-
-## 5. Open the app
-
-Once both containers are running, open your browser to:
+Open your browser to:
 
 ```
-http://localhost:80
+http://localhost:9999
 ```
 
-Log in with the default credentials configured in your `settings.yml`. With basic auth (the default for new installs), the username and password are set in the `basic_auth` section of the config file.
+Log in with the default credentials:
+
+- **Username:** `admin`
+- **Password:** `admin`
+
+## 4. Connect your data
+
+Terranova displays topology data from Google Sheets. To connect a spreadsheet:
+
+1. Go to **Settings** in the top navigation
+2. Click **Add Google Sheets Datasource**
+3. Paste your Google service account JSON key
+
+!!! info "Getting a service account key"
+    See the [Google Sheets Setup](../deployment/google-sheets-setup.md) guide for instructions on creating a service account and generating a JSON key.
 
 ## Next steps
 
 - [Create your first dataset](../user-guide/creating-a-dataset.md)
 - [Create your first map](../user-guide/creating-a-map.md)
-- [Configure a Google Sheets datasource](../deployment/google-sheets-setup.md)
+- [Docker deployment reference](../deployment/docker.md)

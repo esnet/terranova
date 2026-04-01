@@ -16,7 +16,12 @@ RUN PIP_CONSTRAINT=/tmp/constraint.txt pip install -e /terranova/
 ADD config/supervisord.conf /etc/supervisord.conf
 ADD config/httpd.conf /etc/apache2/httpd.conf
 ADD config/settings.js /terranova/static/settings.js
+ADD etc/terranova/settings.yml /etc/terranova/settings.yml
+
+COPY config/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
 
-CMD /usr/bin/supervisord -c /etc/supervisord.conf
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

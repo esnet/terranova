@@ -13,4 +13,4 @@ export const PUBLISH_SCOPE = `terranova:maps:publish`;
 export const ADMIN_SCOPE = `terranova:admin`;
 export const AUTH_BACKEND = `basic`;
 export const AUTH_SESSION_STORAGE = true;
-export const GOOGLE_SHEETS_CREDENTIAL_SOURCE = `static`;
+export const GOOGLE_SHEETS_CREDENTIAL_SOURCE = `dynamic`;

@@ -12,6 +12,7 @@ export function GoogleSheetsSettings() {
     const [accessTokens, setAccessTokens] = React.useState<any[]>([]);
     const [confirmAddToken, setConfirmAddToken] = React.useState<boolean>(false);
     const [confirmDeleteToken, setConfirmDeleteToken] = React.useState<boolean>(false);
+    const [tokenToDelete, setTokenToDelete] = React.useState<any>(null);
     const [loading, setLoading] = React.useState(true);
 
     const dynamicConfiguration =
@@ -37,14 +38,26 @@ export function GoogleSheetsSettings() {
         fetchSheetsDatasources();
     }, []);
 
-    function confirmAddJWT() {
+    async function confirmAddJWT(jwtText: string) {
         setConfirmAddToken(false);
-        // TODO: Add actual API call here
+        const headers = setAuthHeaders({ "Content-Type": "application/json" });
+        await fetch(`${API_URL}/sheets/credentials/?jwt_credential=${encodeURIComponent(jwtText)}`, {
+            headers,
+            method: "POST",
+        });
+        fetchSheetsDatasources();
     }
 
-    function handleConfirmDelete() {
+    async function handleConfirmDelete() {
         setConfirmDeleteToken(false);
-        // TODO: Add actual API call here
+        if (!tokenToDelete) return;
+        const headers = setAuthHeaders({});
+        await fetch(`${API_URL}/sheets/credentials/${tokenToDelete.project_id}`, {
+            headers,
+            method: "DELETE",
+        });
+        setTokenToDelete(null);
+        fetchSheetsDatasources();
     }
 
     function submitForm(ev: React.FormEvent) {
@@ -63,6 +76,7 @@ export function GoogleSheetsSettings() {
                 visible={confirmDeleteToken}
                 setVisible={setConfirmDeleteToken}
                 onConfirm={handleConfirmDelete}
+                name={tokenToDelete?.project_id}
             />
 
             <Accordion header="Google Sheets Access Tokens">
@@ -89,7 +103,7 @@ export function GoogleSheetsSettings() {
                                     accessToken={accessToken}
                                     dynamicConfiguration={dynamicConfiguration}
                                     onReconfigure={() => setConfirmAddToken(true)}
-                                    onDelete={() => setConfirmDeleteToken(true)}
+                                    onDelete={() => { setTokenToDelete(accessToken); setConfirmDeleteToken(true); }}
                                 />
                             ))}
 

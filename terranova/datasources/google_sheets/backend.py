@@ -153,7 +153,8 @@ class GoogleSheetsBackend(SQLiteCacheDatasource):
 
         # generate 32 bytes data from our hash key as the AES key
         sha = SHA256.new()
-        sha.update(GOOGLE_SHEETS_ENCRYPTION_KEY)
+        key_bytes = GOOGLE_SHEETS_ENCRYPTION_KEY.encode() if isinstance(GOOGLE_SHEETS_ENCRYPTION_KEY, str) else GOOGLE_SHEETS_ENCRYPTION_KEY
+        sha.update(key_bytes)
         aes_key = sha.digest()
         hmac_key = get_random_bytes(16)
 
@@ -171,42 +172,49 @@ class GoogleSheetsBackend(SQLiteCacheDatasource):
             f.seek(0)
             encrypted_bytes = f.read()
 
-        doc = {"name": name, "jwt": base64.encode(encrypted_bytes)}
-        storage_backend.create(index=GOOGLE_SHEETS_WRITE_INDEX, id=name, doc=doc)
+        doc = {"name": name, "jwt": base64.b64encode(encrypted_bytes).decode()}
+        storage_backend.create(GOOGLE_SHEETS_WRITE_INDEX, id=name, doc=doc)
+
+    def decrypt_credential(self, cred):
+        """
+        decrypt_credential reverses the AES-256-CTR encryption applied by create_credential.
+        Stored format: base64(tag[32] + nonce[8] + ciphertext)
+        The HMAC key was ephemeral (not stored), so the tag is not verified here.
+        """
+        encrypted_bytes = base64.b64decode(cred["jwt"])
+        nonce = encrypted_bytes[32:40]
+        ciphertext = encrypted_bytes[40:]
+        key_bytes = GOOGLE_SHEETS_ENCRYPTION_KEY.encode() if isinstance(GOOGLE_SHEETS_ENCRYPTION_KEY, str) else GOOGLE_SHEETS_ENCRYPTION_KEY
+        sha = SHA256.new()
+        sha.update(key_bytes)
+        aes_key = sha.digest()
+        cipher = AES.new(aes_key, AES.MODE_CTR, nonce=nonce)
+        plaintext = cipher.decrypt(ciphertext)
+        return json.loads(plaintext)
 
     def list_credentials(self, sanitize=True):
         """
         list_credentials returns the list of DB-stored credentials. This is used when
         GOOGLE_SHEETS_CREDENTIAL_SOURCE is 'dynamic'
         """
-        query = {"bool": {"filter": "*"}}
-        rows = storage_backend.query(index=GOOGLE_SHEETS_READ_INDEX, query=query)
+        query = {"bool": {"filter": []}}
+        rows = storage_backend.query(GOOGLE_SHEETS_READ_INDEX, query)
         count = len(rows)
         data = []
         for cred in rows:
             cred = self.decrypt_credential(cred)
             if sanitize:
-                data.append(self.sanitize_credential(cred))
+                cred = self.sanitize_credential(cred)
+            data.append(cred)
         return models.QueryResult(count=count, data=data)
 
     def delete_credential(self, project_id):
         """
         delete_credential deletes the first credential matching the given project_id
         """
-        query = {
-            "bool": {
-                "filter": [
-                    {
-                        "query_string": {
-                            "query": "project_id: '%s'" % project_id,
-                            "analyze_wildcard": "true",
-                        }
-                    }
-                ]
-            }
-        }
-        rows = storage_backend.query(GOOGLE_SHEETS_READ_INDEX, query=query, limit=1)
-        storage_backend.delete_by_query(GOOGLE_SHEETS_READ_INDEX, query=query, max_docs=1)
+        query = {"bool": {"filter": [{"term": {"name": project_id}}]}}
+        rows = storage_backend.query(GOOGLE_SHEETS_READ_INDEX, query, limit=1)
+        storage_backend.delete_by_query(GOOGLE_SHEETS_READ_INDEX, query, max_docs=1)
         data = []
         for cred in rows:
             cred = self.decrypt_credential(cred)

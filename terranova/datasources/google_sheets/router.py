@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, Security, Request
 from terranova.settings import TOKEN_SCOPES, GOOGLE_SHEETS_CREDENTIAL_SOURCE
 from terranova.abstract_models import InputModifier, QueryFilter
@@ -83,8 +84,10 @@ if GOOGLE_SHEETS_CREDENTIAL_SOURCE == "dynamic":
         jwt_credential: str,
         user: User = Security(auth_check, scopes=[TOKEN_SCOPES["admin"]]),
     ):
-        response = backend.create_credential(jwt_credential)
-        return JSONResponse(response)
+        credential_data = json.loads(jwt_credential)
+        name = credential_data.get("project_id", "unknown")
+        response = backend.create_credential(name, jwt_credential)
+        return JSONResponse({"result": "created", "name": name})
 
     @router.get("/sheets/credentials/")
     @version(1)

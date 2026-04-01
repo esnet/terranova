@@ -1,0 +1,39 @@
+# Elasticsearch override — use with:
+#   docker compose -f compose.yaml -f compose.elasticsearch.yml up
+#
+# This adds an Elasticsearch service and configures Terranova to use it
+# as the storage backend. Update the credentials below to match your setup.
+services:
+    terranova:
+        environment:
+            TERRANOVA_CORS_ORIGINS: "http://localhost:9999"
+        depends_on:
+            elasticsearch:
+                condition: service_healthy
+
+    elasticsearch:
+        hostname: elastic
+        container_name: elasticsearch
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "curl -fs http://localhost:9200/_cluster/health?wait_for_status=green&timeout=5s || exit 1",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+        image: elasticsearch:8.17.0
+        ports:
+            - 9200:9200
+        environment:
+            discovery.type: "single-node"
+            ES_JAVA_OPTS: "-Xmx750m -Xms750m"
+            ELASTIC_USERNAME: elastic
+            ELASTIC_PASSWORD: changeme
+            xpack.security.enabled: false
+        deploy:
+            resources:
+                limits:
+                    memory: 4G

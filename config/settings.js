@@ -1,5 +1,5 @@
 // N.B.: This file should be overwritten with a docker mount point. (--mount type=bind,source=/path/to/your/settings.js,target=/terranova/static/settings.js)
-export const API_URL = `http://localhost/api/v1`;
+export const API_URL = `/api/v1`;
 export const OIDC_REDIRECT_URI = `http://localhost/`;
 export const OIDC_LOGOUT_REDIRECT_URI = `http://localhost/login?next=/&message=You+have+been+logged+out.`;
 export const OIDC_CLIENT_ID = `terranova-dev`;
@@ -13,4 +13,4 @@ export const PUBLISH_SCOPE = `terranova:maps:publish`;
 export const ADMIN_SCOPE = `terranova:admin`;
 export const AUTH_BACKEND = `basic`;
 export const AUTH_SESSION_STORAGE = true;
-export const GOOGLE_SHEETS_CREDENTIAL_SOURCE = `static`;
+export const GOOGLE_SHEETS_CREDENTIAL_SOURCE = `dynamic`;

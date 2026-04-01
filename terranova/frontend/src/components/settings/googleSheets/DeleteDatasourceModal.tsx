@@ -7,12 +7,14 @@ interface DeleteDatasourceModalProps {
     visible: boolean;
     setVisible: React.Dispatch<React.SetStateAction<boolean>>;
     onConfirm: () => void;
+    name?: string;
 }
 
 export function DeleteDatasourceModal({
     visible,
     setVisible,
     onConfirm,
+    name,
 }: DeleteDatasourceModalProps) {
     const footer = (
         <div className="flex justify-end gap-2 w-full">
@@ -38,7 +40,7 @@ export function DeleteDatasourceModal({
         >
             <h4>Delete Datasource</h4>
             <div className="mb-12">
-                Datasource 'Mocked Network Traffic' will be permanently deleted.
+                Datasource '{name}' will be permanently deleted.
             </div>
         </ModalDialog>
     );

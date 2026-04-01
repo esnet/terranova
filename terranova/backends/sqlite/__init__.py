@@ -53,6 +53,10 @@ class SQLiteBackend:
         """Create a document in the specified table"""
         cursor = self.conn.cursor()
 
+        cursor.execute(
+            f"CREATE TABLE IF NOT EXISTS {table} (id TEXT PRIMARY KEY, document TEXT NOT NULL)"
+        )
+
         # Convert doc to JSON for storage, handling datetime objects
         doc_json = json.dumps(doc, default=str)
 
@@ -94,6 +98,10 @@ class SQLiteBackend:
     ):
         """Query documents from the specified table"""
         cursor = self.conn.cursor()
+
+        cursor.execute(
+            f"CREATE TABLE IF NOT EXISTS {table} (id TEXT PRIMARY KEY, document TEXT NOT NULL)"
+        )
 
         # Fetch all documents from the table
         cursor.execute(f"SELECT document FROM {table}")

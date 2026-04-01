@@ -34,30 +34,45 @@ Terranova uses:
 4. Select **JSON** and click **Create**
 5. A JSON file is downloaded to your computer — keep this file secure
 
-## 4. Install the credential file
+## 4. Add the credential to Terranova
 
-Copy the downloaded JSON file to `/etc/terranova/private_jwt.json`:
+### Option A: Via the Settings UI (Docker default)
+
+If you are using the pre-built Docker image, credentials are managed through the Settings page:
+
+1. Open Terranova in your browser and log in as admin
+2. Go to **Settings** in the top navigation
+3. Click **Add Google Sheets Datasource**
+4. Open the downloaded JSON key file in a text editor, copy its entire contents, and paste them into the text area
+5. Click **Add JWT**
+
+The credential is encrypted with AES-256 and stored in the database.
+
+### Option B: Static file mount
+
+For scripted or air-gapped environments, you can provide the credential as a file instead.
+
+Copy the JSON file into the container (or mount it):
 
 ```sh
+# If running without Docker, copy to the host path:
 sudo cp ~/Downloads/your-service-account-key.json /etc/terranova/private_jwt.json
 sudo chmod 600 /etc/terranova/private_jwt.json
 ```
 
-## 5. Configure Terranova
-
-In `/etc/terranova/settings.yml`, add the `google_sheets` datasource:
+Then set `credential_type: static` in your `settings.yml` and list the file path:
 
 ```yaml
 datasources:
   google_sheets:
     credential_type: static
-    cache_file: /var/tmp/google_sheets.sqlite
+    cache_file: /data/google_sheets.sqlite
     static:
       token_files:
         - /etc/terranova/private_jwt.json
 ```
 
-## 6. Share spreadsheets with the service account
+## 5. Share spreadsheets with the service account
 
 For each spreadsheet you want to use as a datasource:
 
@@ -67,7 +82,7 @@ For each spreadsheet you want to use as a datasource:
 
 The service account can only read spreadsheets explicitly shared with it.
 
-## 7. Populate the cache
+## 6. Populate the cache
 
 After configuring the datasource, run a cache refresh to fetch the data:
 

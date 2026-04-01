@@ -1,0 +1,25 @@
+environment: dev
+
+storage:
+  backend: sqlite
+  sqlite_path: ./terranova.db
+
+datasources:
+  google_sheets:
+    credential_type: dynamic
+    cache_file: ./google_sheets.sqlite
+    # Local dev key only — Docker auto-generates a real key
+    encryption_key: "dev-local-key-not-for-production-use"
+    dynamic:
+      elastic_read_index: sheets_tokens
+      elastic_write_index: sheets_tokens
+
+auth:
+  backend: basic
+  read_scope: "terranova:maps:read"
+  write_scope: "terranova:maps:write"
+  publish_scope: "terranova:maps:publish"
+  admin_scope: "terranova:admin"
+
+basic_auth:
+  db_filename: /var/tmp/basic_auth.sqlite

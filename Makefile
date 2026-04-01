@@ -118,4 +118,4 @@ docs: venv
 .PHONY: serve-docs
 serve-docs: venv
 	$(VENV_DIR)/bin/pip install -r requirements-docs.txt
-	$(VENV_DIR)/bin/mkdocs serve
+	$(VENV_DIR)/bin/mkdocs serve -a 0.0.0.0:9876

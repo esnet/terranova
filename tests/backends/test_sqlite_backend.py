@@ -657,3 +657,27 @@ class TestSQLiteBackend:
 
         # Count should be the same
         assert count_after_first == count_after_second
+
+    def test_create_auto_creates_table(self, backend):
+        """Test that create() auto-creates a table that doesn't exist in create_indices()"""
+        # 'sheets_tokens' is not in the pre-created tables list
+        result = backend.create("sheets_tokens", "cred-1", {"name": "test", "jwt": "encrypted"})
+        assert result["result"] == "created"
+
+        # Verify it was stored
+        query = {"bool": {"filter": [{"term": {"name": "test"}}]}}
+        results = backend.query("sheets_tokens", query)
+        assert len(results) == 1
+        assert results[0]["name"] == "test"
+
+    def test_query_empty_for_missing_table(self, backend):
+        """Test that query() returns empty results for a table that has never been written to"""
+        query = {"bool": {"filter": []}}
+        results = backend.query("nonexistent_table", query)
+        assert results == []
+
+    def test_delete_by_query_missing_table(self, backend):
+        """Test that delete_by_query() handles non-existent tables without crashing"""
+        query = {"bool": {"filter": []}}
+        result = backend.delete_by_query("nonexistent_table_2", query)
+        assert result["deleted"] == 0
