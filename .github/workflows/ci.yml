@@ -25,8 +25,9 @@ jobs:
         run: |
           echo "cython<3" > /tmp/constraint.txt
           PIP_CONSTRAINT=/tmp/constraint.txt pip install -r requirements.txt
+          PIP_CONSTRAINT=/tmp/constraint.txt pip install -r requirements-dev.txt
           PIP_CONSTRAINT=/tmp/constraint.txt pip install -e .
 
       - name: Run API and backend tests
         run: |
-          TERRANOVA_CONF=./SAMPLE_CONFIG.yml pytest -v --ignore=tests/frontend/
+          TERRANOVA_CONF=./SAMPLE_CONFIG.yml python -m pytest -v --ignore=tests/frontend/
