@@ -60,7 +60,7 @@ function pathCrawl(path, klass, color, edgeWidth){
     }
 }
 
-export function sanitizeName(name){
+function sanitizeName(name){
   const separator = "S_S_E_E_P_P_A_A_R_R_A_A_T_T_O_O_R_R"
   var sanitized = name.replaceAll("--", separator) // deal with the edge name separator first
   sanitized = sanitized.replaceAll(/[ \-\/\\]+/g, "-"); // replace series of spaces, hyphens, / and \ characters with -
@@ -94,8 +94,8 @@ function renderEdges(g, data, ref, layerId) {
 
     var template = ref.mapCanvas.options.enableCustomEdgeTooltip ? ref.mapCanvas.options.customEdgeTooltip : defaultEdgeTooltip;
 
-    const forward = { from: d.nodeA, to: d.nodeZ, dataPoint: d.azDisplayValue, edge: d, meta: d.meta };
-    const reverse = { from: d.nodeZ, to: d.nodeA, dataPoint: d.zaDisplayValue, edge: d, meta: d.meta };
+    const forward = { from: d.nodeA, to: d.nodeZ, dataPoint: d.azDisplayValue };
+    const reverse = { from: d.nodeZ, to: d.nodeA, dataPoint: d.zaDisplayValue };
 
     let renderData = {
       forward: isAZ ? forward : reverse,
@@ -677,7 +677,7 @@ function renderNodes(g, data, ref, layerId) {
     .attr('transform', "scale(1.0, 1.0)")
     .html(function(d){
       var circle = `<circle r='${ref.mapCanvas.options.layers[layerId]["nodeWidth"]}' />`
-      return d.meta.svg ? renderTemplate(d.meta.svg, {...d, "self": d }) : circle;
+      return d.meta.svg || circle;
     })
     .attr('text', function (d) {
       return d.name;
@@ -954,7 +954,6 @@ export class EsMap {
         var elem = document.createElement("div");
         elem.setAttribute("id", "tooltip-hover");
         elem.setAttribute("class", "tight-form-func tooltip-hover");
-        // already sanitized by this point
         elem.innerHTML = data.text;
 
         mapCanvas.querySelector(elemId).appendChild(elem);
