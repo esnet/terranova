@@ -61,7 +61,11 @@ const TEMPLATE_REGEX = /\${[^{}]+}/g;
 
 //get the specified property or nested property of an object
 function resolveObjPath(path, obj, fallback = '') {
-    return path.split('.').reduce((res, key) => res[key] || fallback, obj);
+    let output = path.split('.').reduce((res, key) => res[key] || fallback, obj);
+    if(typeof(output) !== "string"){
+        output = JSON.stringify(output);
+    }
+    return output
 }
 
 export function render(template, variables, fallback) {
