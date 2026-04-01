@@ -10,15 +10,15 @@ from urls import FRONTEND_BASE
 
 def test_create_dataset_sidebar(page, login):
     """
-    Test that clicking 'Create New Layer' in the sidebar navigates to the dataset
+    Test that clicking 'Create New Dataset' in the sidebar navigates to the dataset
     creator and that after creation the new dataset appears in the sidebar.
     """
     page.goto(f"{FRONTEND_BASE}/")
     sidebar = page.locator("#sidebar")
     expect(sidebar).to_be_visible()
 
-    # Click 'Create New Layer' in the sidebar Tools section
-    sidebar.get_by_role("link", name="Create New Layer").click()
+    # Click 'Create New Dataset' in the sidebar Tools section
+    sidebar.get_by_role("link", name="Create New Dataset").click()
     expect(page).to_have_url(re.compile(r".*/dataset/new"))
     expect(page.get_by_role("main")).to_contain_text("Create New Dataset")
 
@@ -116,7 +116,7 @@ def test_sidebar_datasets_count_and_order(page, login):
     expect(sidebar).to_contain_text(ds_names[-1], timeout=15000)
 
     # The sidebar shows at most 3 datasets (GlobalLastEdited is capped at 3)
-    # Exclude /dataset/new (the "Create New Layer" tool link); :visible filters
+    # Exclude /dataset/new (the "Create New Dataset" tool link); :visible filters
     # out the ResponsiveLink duplicate rendered for the other screen size
     dataset_links = sidebar.locator('a[href*="/dataset/"]:not([href*="/dataset/new"]):visible')
 

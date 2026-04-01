@@ -235,7 +235,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                 />
 
                 {/* Dataset Viewer and Sidebar */}
-                <div className="flex flex-row gap-4 w-full h-[700] p-4 surface rounded-xl shadow-sm">
+                <div className="flex flex-row gap-4 w-full h-[432px] p-4 surface rounded-xl shadow-sm">
                     {getVisualization()}
                     <DatasetEditorSidebar
                         visualizationMode={visualizationMode}

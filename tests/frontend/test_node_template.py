@@ -12,16 +12,29 @@ def test_create_node_template(page, create_test_node):
     pass
 
 
+def _set_react_input(page, locator, value):
+    """
+    Force a value into a React-controlled <input> by using the native value
+    setter and then dispatching a bubbling 'input' event. This bypasses the
+    stale-closure issue where React's synthetic onChange fires but reads the
+    old .value because React hasn't flushed its internal fiber state yet.
+    """
+    locator.evaluate(
+        """(el, value) => {
+            const setter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value').set;
+            setter.call(el, value);
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+        }""",
+        value,
+    )
+
+
 def test_edit_node_template(page, create_test_node):
     EDITED_NAME = "Update Node Template"
     EDITED_SVG = "test"
-    # click(click_count=3) selects all; keyboard.type fires key events so
-    # React's onChange updates state. Assert the new value is visible before
-    # saving — this ensures React has re-rendered (and persistTemplate now
-    # closes over the updated template state) before Save Changes is clicked.
     name_input = page.get_by_role("textbox", name="Name")
-    name_input.click(click_count=3)
-    page.keyboard.type(EDITED_NAME)
+    _set_react_input(page, name_input, EDITED_NAME)
     expect(name_input).to_have_value(EDITED_NAME)
     svg_textarea = page.get_by_role("textbox", name="SVG Code")
     svg_textarea.click(click_count=3)

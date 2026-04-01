@@ -13,6 +13,8 @@ import {
     Menu,
     Settings,
     ToolCase,
+    CirclePlus,
+    Library,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PktsIconButton } from "@esnet/packets-ui-react";
@@ -110,27 +112,29 @@ export function Sidebar() {
                         <ul className="list-none mb-4">
                             <li>
                                 <ResponsiveLink closeSidebar={closeSidebar} to="/dataset/new">
-                                    Create New Layer
+                                    <CirclePlus size={16} /> Create New Dataset
                                 </ResponsiveLink>
                             </li>
                             <li>
                                 <ResponsiveLink closeSidebar={closeSidebar} to="/map/new">
-                                    Create New Map
+                                    <CirclePlus size={16} /> Create New Map
                                 </ResponsiveLink>
                             </li>
+                            {showTemplates && (
                             <li>
                                 <ResponsiveLink closeSidebar={closeSidebar} to="/template/new">
-                                    Node SVG Builder
+                                    <CirclePlus size={16} /> Node SVG Builder
                                 </ResponsiveLink>
                             </li>
+                            )}
                         </ul>
                         <h5 className="flex gap-1 items-center">
                             <FolderOpen /> Libraries
                         </h5>
                         <ul className="list-none mb-4">
-                            <h6>
+                            <h6 className='ml-[-1rem]'>
                                 <ResponsiveLink closeSidebar={closeSidebar} to="/library/datasets">
-                                    Datasets
+                                    <Library size={16} className='mb-1' /> Datasets
                                 </ResponsiveLink>
                             </h6>
                             <ul className="pl-0 list-none">
@@ -146,9 +150,9 @@ export function Sidebar() {
                                     </li>
                                 ))}
                             </ul>
-                            <h6>
+                            <h6 className='ml-[-1rem]'>
                                 <ResponsiveLink closeSidebar={closeSidebar} to="/library/maps">
-                                    Maps
+                                    <Library size={16} className='mb-1' /> Maps
                                 </ResponsiveLink>
                             </h6>
                             <ul className="pl-0 list-none">
@@ -166,12 +170,12 @@ export function Sidebar() {
                             </ul>
                             {showTemplates && (
                                 <>
-                                    <h6>
+                                    <h6 className='ml-[-1rem]'>
                                         <ResponsiveLink
                                             closeSidebar={closeSidebar}
                                             to="/library/templates"
                                         >
-                                            Node Templates
+                                            <Library size={16} className='mb-1' /> Node Templates
                                         </ResponsiveLink>
                                     </h6>
                                     <ul className="pl-0 list-none">

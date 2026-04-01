@@ -70,7 +70,7 @@ def test_no_auth(client, mock_elastic_backend, method, path):
 
 def test_expired_auth(client, expired_jwt):
     response = client.get(
-        "/dataset/", headers={"Authorization": "Bearer %s" % expired_jwt}
+        "/datasets/", headers={"Authorization": "Bearer %s" % expired_jwt}
     )
     assert response.status_code == 401
 
@@ -87,7 +87,7 @@ def test_incorrect_permissions(client, readonly_jwt, dataset_revision):
 def test_correct_permissions(client, readwrite_jwt, dataset_revision, noop_elastic):
     response = client.post(
         "/dataset/",
-        data=json.dumps(dataset_revision.dict()),
+        json=dataset_revision.dict(),
         headers={"Authorization": "Bearer %s" % readwrite_jwt},
     )
     assert response.status_code == 200
@@ -95,6 +95,6 @@ def test_correct_permissions(client, readwrite_jwt, dataset_revision, noop_elast
 
 def test_bad_crypto_auth(client, bad_signature_jwt):
     response = client.get(
-        "/dataset/", headers={"Authorization": "Bearer %s" % bad_signature_jwt}
+        "/datasets/", headers={"Authorization": "Bearer %s" % bad_signature_jwt}
     )
     assert response.status_code == 401
