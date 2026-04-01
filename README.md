@@ -5,6 +5,8 @@
 
 An app for building and editing network topology maps.
 
+**Full documentation: [software.es.net/terranova](https://software.es.net/terranova)**
+
 - [Getting Started](#getting-started)
 - [Development](#development)
 
@@ -46,7 +48,7 @@ Terranova displays topology data from Google Sheets. After logging in:
 2. Click **Add Google Sheets Datasource**
 3. Paste your Google service account JSON key
 
-See the [Google Sheets Setup guide](https://esnet.github.io/terranova/deployment/google-sheets-setup/) for instructions on creating a service account.
+See the [Google Sheets Setup guide](https://software.es.net/terranova/deployment/google-sheets-setup/) for instructions on creating a service account.
 
 ## Development
 
