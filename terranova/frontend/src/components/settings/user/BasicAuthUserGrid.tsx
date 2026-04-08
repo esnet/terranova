@@ -387,6 +387,7 @@ export function BasicAuthUserGrid() {
                                 </div>
                             ) : (
                                 <PktsButton
+                                    className="w-fit! px-6"
                                     disabled={loading}
                                     onClick={setPassword(user, idx)}
                                     variant="secondary"
@@ -490,10 +491,8 @@ export function BasicAuthUserGrid() {
                 user={confirmDelete?.user}
             />
 
-            <fieldset className="w-full min-w-0">
-                <legend className="text-lg pb-4">
-                    Settings for user accounts for HTTP Basic Auth.
-                </legend>
+            <fieldset className="w-full min-w-0 flex flex-col items-end">
+                <legend className="text-lg">Settings for user accounts for HTTP Basic Auth.</legend>
 
                 <div className="grid grid-cols-1 w-full">
                     <form id="table-form" className="w-full min-w-0 overflow-x-auto pb-2">
@@ -540,7 +539,7 @@ export function BasicAuthUserGrid() {
                 <PktsButton
                     disabled={loading}
                     variant="primary"
-                    className="mt-4"
+                    className="mt-4 w-fit! pr-6"
                     prepend={<Plus />}
                     onClick={addUser}
                 >

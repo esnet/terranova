@@ -1,5 +1,5 @@
 import React from "react";
-import { BadgePlus, Plus, Trash2 } from "lucide-react";
+import { BadgePlus, Edit, Plus, Trash2 } from "lucide-react";
 import { PktsButton, PktsInputRow, PktsInputText } from "@esnet/packets-ui-react";
 import Card from "../../Card";
 import { InputCopy } from "../../../components/InputCopy";
@@ -39,12 +39,22 @@ export function AccessTokenCard({
                 </PktsInputRow>
 
                 {dynamicConfiguration && (
-                    <div className="flex gap-4">
-                        <PktsButton variant="primary" prepend={<Plus />} onClick={onReconfigure}>
-                            Reconfigure JWT
-                        </PktsButton>
-                        <PktsButton variant="destructive" prepend={<Trash2 />} onClick={onDelete}>
+                    <div className="flex justify-end gap-4">
+                        <PktsButton
+                            className="w-fit!"
+                            variant="destructive"
+                            prepend={<Trash2 />}
+                            onClick={onDelete}
+                        >
                             Delete
+                        </PktsButton>
+                        <PktsButton
+                            className="w-fit!"
+                            variant="primary"
+                            prepend={<Edit />}
+                            onClick={onReconfigure}
+                        >
+                            Reconfigure JWT
                         </PktsButton>
                     </div>
                 )}
