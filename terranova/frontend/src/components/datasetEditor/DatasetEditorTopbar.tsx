@@ -1,5 +1,5 @@
 import { PktsInputText, PktsButton, PktsIconButton } from "@esnet/packets-ui-react";
-import { Database, Pencil, Save, Trash } from "lucide-react";
+import { Database, Pencil, Save, Trash, History } from "lucide-react";
 import React, { useState } from "react";
 
 interface IDatasetEditorTopbarProps {
@@ -8,6 +8,8 @@ interface IDatasetEditorTopbarProps {
     onUpdateName: (newName: string) => void;
     onDiscard: () => void;
     onSave: () => void;
+    onToggleHistory?: () => void;
+    historyOpen?: boolean;
 }
 
 export const DatasetEditorTopbar = ({
@@ -16,6 +18,8 @@ export const DatasetEditorTopbar = ({
     onUpdateName,
     onDiscard,
     onSave,
+    onToggleHistory,
+    historyOpen,
 }: IDatasetEditorTopbarProps) => {
     const [editingName, setEditingName] = useState(false);
 
@@ -54,7 +58,17 @@ export const DatasetEditorTopbar = ({
                     )}
                 </div>
 
-                <div className="hidden lg:flex w-96 gap-2">
+                <div className="hidden lg:flex w-fit gap-2 items-center">
+                    {onToggleHistory && (
+                        <PktsButton
+                            variant={historyOpen ? "secondary" : "tertiary"}
+                            disabled={loading}
+                            onClick={onToggleHistory}
+                            className="flex items-center gap-1"
+                        >
+                            <History size={14} /> History
+                        </PktsButton>
+                    )}
                     <PktsButton
                         variant="destructive"
                         disabled={loading}
@@ -67,6 +81,15 @@ export const DatasetEditorTopbar = ({
                     </PktsButton>
                 </div>
                 <div className="flex lg:hidden gap-2">
+                    {onToggleHistory && (
+                        <PktsIconButton
+                            variant={historyOpen ? "secondary" : "tertiary"}
+                            disabled={loading}
+                            onClick={onToggleHistory}
+                        >
+                            <History />
+                        </PktsIconButton>
+                    )}
                     <PktsIconButton
                         variant="destructive"
                         disabled={loading}

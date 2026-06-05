@@ -1,4 +1,4 @@
-import { Map, Pencil, Save, Trash } from "lucide-react";
+import { Map, Pencil, Save, Trash, History } from "lucide-react";
 import React, { useContext, useState } from "react";
 import { DataControllerContextType } from "../../types/mapeditor";
 import { MapController } from "../../pages/MapEditor.page";
@@ -7,9 +7,11 @@ import { PktsInputText, PktsButton, PktsIconButton } from "@esnet/packets-ui-rea
 type MapEditorTopbarProps = {
     saveMapConfig: () => void;
     loading: boolean;
+    onToggleHistory?: () => void;
+    historyOpen?: boolean;
 };
 
-const MapEditorTopbar = ({ loading, saveMapConfig }: MapEditorTopbarProps) => {
+const MapEditorTopbar = ({ loading, saveMapConfig, onToggleHistory, historyOpen }: MapEditorTopbarProps) => {
     const { controller: mapController, instance: mapInstance } = useContext(
         MapController,
     ) as DataControllerContextType;
@@ -51,7 +53,17 @@ const MapEditorTopbar = ({ loading, saveMapConfig }: MapEditorTopbarProps) => {
                     )}
                 </div>
 
-                <div className="hidden lg:flex w-96 gap-2">
+                <div className="hidden lg:flex w-fit gap-2 items-center">
+                    {onToggleHistory && (
+                        <PktsButton
+                            variant={historyOpen ? "secondary" : "tertiary"}
+                            disabled={loading}
+                            onClick={onToggleHistory}
+                            className="flex items-center gap-1"
+                        >
+                            <History size={14} /> History
+                        </PktsButton>
+                    )}
                     <PktsButton
                         variant="destructive"
                         disabled={loading}
@@ -70,6 +82,15 @@ const MapEditorTopbar = ({ loading, saveMapConfig }: MapEditorTopbarProps) => {
                     </PktsButton>
                 </div>
                 <div className="flex lg:hidden gap-2">
+                    {onToggleHistory && (
+                        <PktsIconButton
+                            variant={historyOpen ? "secondary" : "tertiary"}
+                            disabled={loading}
+                            onClick={onToggleHistory}
+                        >
+                            <History />
+                        </PktsIconButton>
+                    )}
                     <PktsIconButton
                         variant="destructive"
                         disabled={loading}

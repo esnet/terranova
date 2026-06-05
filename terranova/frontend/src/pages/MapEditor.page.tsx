@@ -23,6 +23,8 @@ import MapEditorTopbar from "../components/mapEditor/MapEditorTopbar";
 import Card from "../components/Card";
 import { Plus } from "lucide-react";
 import { PktsAlert } from "@esnet/packets-ui-react";
+import { VersionHistoryPanel } from "../components/checkpoints/VersionHistoryPanel";
+import { DeltaOverlay } from "../components/checkpoints/DeltaOverlay";
 
 export const MapController = createContext<DataControllerContextType | null>(null);
 export const DatasetListController = createContext<DataControllerContextType | null>(null);
@@ -96,6 +98,20 @@ export function MapEditorPageComponent() {
     const [selectedDatasets, setSelectedDatasets] = useState([]);
     //let [overrides, setOverrides] = useState<any>({});
     let [refreshToggle, setRefreshToggle] = useState(false);
+
+    // Version history panel + delta overlay state
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const [activeDelta, setActiveDelta] = useState<any>(null);
+    const [activeVersionInfo, setActiveVersionInfo] = useState<{from: number; to: number} | null>(null);
+
+    // Support ?dataset=&version= deep-links from notifications
+    const initialDatasetParam = new URLSearchParams(window.location.search).get("dataset");
+    const initialVersionParam = new URLSearchParams(window.location.search).get("version");
+    useEffect(() => {
+        if (initialVersionParam && initialDatasetParam) {
+            setHistoryOpen(true);
+        }
+    }, []);
 
     const setOverrides = (overrides) => {
         mapController.setProperty("overrides", overrides);
@@ -313,19 +329,47 @@ export function MapEditorPageComponent() {
                         value={{ controller: templateListController, instance: templateList }}
                     >
                         {/* Topbar */}
-                        <MapEditorTopbar saveMapConfig={saveMapConfig} loading={loading} />
+                        <MapEditorTopbar
+                            saveMapConfig={saveMapConfig}
+                            loading={loading}
+                            onToggleHistory={selectedDatasets[0] ? () => setHistoryOpen((o) => !o) : undefined}
+                            historyOpen={historyOpen}
+                        />
 
                         {/* Map Container + Sidebar */}
                         <div className="flex flex-row gap-4 w-full p-4 surface rounded-xl shadow-sm">
                             <div
                                 id="mapContainer"
                                 key={refreshToggle}
-                                className="grow h-full border"
+                                className="grow h-full border relative"
                             >
                                 <esnet-map-canvas height="560" ref={mapCanvas} />
+                                {activeDelta && activeVersionInfo && (
+                                    <DeltaOverlay
+                                        delta={activeDelta}
+                                        fromVersion={activeVersionInfo.from}
+                                        toVersion={activeVersionInfo.to}
+                                        onDismiss={() => { setActiveDelta(null); setActiveVersionInfo(null); }}
+                                    />
+                                )}
                             </div>
                             <MapEditorSidebar mapCanvasRef={mapCanvas} />
                         </div>
+
+                        {/* Version history slide-in panel */}
+                        {historyOpen && selectedDatasets[0] && (
+                            <VersionHistoryPanel
+                                datasetId={selectedDatasets[0]}
+                                currentVersion={map?.version ?? 1}
+                                onClose={() => setHistoryOpen(false)}
+                                onSelectVersion={(version, delta) => {
+                                    if (delta) {
+                                        setActiveDelta(delta);
+                                        setActiveVersionInfo({ from: version - 1, to: version });
+                                    }
+                                }}
+                            />
+                        )}
 
                         {/* Layer Options Panel */}
                         <div className="gap-8 pb-4 flex flex-col 3xl:flex-row">
