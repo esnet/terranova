@@ -29,3 +29,5 @@ sqlalchemy
 starlette
 uvicorn
 PyYAML
+apscheduler
+httpx

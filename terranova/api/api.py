@@ -1,5 +1,6 @@
 import os
 import sys
+from contextlib import asynccontextmanager
 from terranova.backends.storage import backend
 from terranova.settings import STORAGE_BACKEND
 
@@ -39,15 +40,22 @@ from terranova.backends.datasources import datasources
 from terranova.settings import ENVIRONMENT, AUTH_BACKEND
 import terranova.opentelemetry
 from terranova.request import RequestContextMiddleware
+from terranova.checkpoint.scheduler import init_scheduler, shutdown_scheduler
 
-# Elasticsearch requires index creation before use
-if STORAGE_BACKEND == "elasticsearch":
-    backend.create_indices()
 
-# Seed default node templates if none exist (safe to run on every startup)
-backend.initialize_templates()
+@asynccontextmanager
+async def lifespan(app):
+    # Startup
+    if STORAGE_BACKEND == "elasticsearch":
+        backend.create_indices()
+    backend.initialize_templates()
+    init_scheduler(backend)
+    yield
+    # Shutdown
+    shutdown_scheduler()
 
-app = FastAPI(title="Terranova API")
+
+app = FastAPI(title="Terranova API", lifespan=lifespan)
 app.add_middleware(RequestContextMiddleware)
 
 # attach our sub routers onto the fastapi app
