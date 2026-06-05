@@ -21,6 +21,10 @@ from terranova.models import (
     UserDataRevision,
     # VersionEnum,
     TerranovaVersion,
+    CheckpointSchedule,
+    CheckpointScheduleRevision,
+    NotificationConfig,
+    NotificationConfigRevision,
 )
 from datetime import datetime
 from typing import List, Any
@@ -391,6 +395,130 @@ class ElasticSearchBackend:
         )
         output = {"result": response.get("result"), "object": new_template}
         return output
+
+    def delete_dataset_version(self, dataset_id: str, version: int):
+        """Delete a specific version of a dataset."""
+        if not ELASTIC_INDICES["dataset"]["write"]:
+            return {"deleted": 0}
+        self.es.delete_by_query(
+            index=ELASTIC_INDICES["dataset"]["write"],
+            body={
+                "query": {
+                    "bool": {
+                        "filter": [
+                            {"term": {"datasetId": dataset_id}},
+                            {"term": {"version": version}},
+                        ]
+                    }
+                }
+            },
+        )
+        return {"deleted": 1}
+
+    # Checkpoint Schedules
+    def get_checkpoint_schedules(
+        self, schedule_id: str = None, dataset_id: str = None
+    ) -> list:
+        if not ELASTIC_INDICES["checkpoint_schedule"]["read"]:
+            return []
+        filter_spec = []
+        if schedule_id is not None:
+            filter_spec.append({"term": {"scheduleId": schedule_id}})
+        if dataset_id is not None:
+            filter_spec.append({"term": {"datasetId": dataset_id}})
+        query = {"bool": {"filter": filter_spec}}
+        return self.query(ELASTIC_INDICES["checkpoint_schedule"]["read"], query)
+
+    def create_checkpoint_schedule(self, revision: CheckpointScheduleRevision, user) -> dict:
+        schedule_id = self.generate_id()
+        doc = CheckpointSchedule(
+            scheduleId=schedule_id,
+            datasetId=revision.datasetId,
+            name=revision.name,
+            intervalMinutes=revision.intervalMinutes,
+            enabled=revision.enabled,
+            retention=revision.retention,
+            createdBy=user.username,
+            createdOn=datetime.now(),
+        ).model_dump()
+        self.create(ELASTIC_INDICES["checkpoint_schedule"]["write"], id=schedule_id, doc=doc)
+        return doc
+
+    def update_checkpoint_schedule(
+        self, schedule_id: str, revision: CheckpointScheduleRevision, user
+    ) -> dict:
+        existing = self.get_checkpoint_schedules(schedule_id=schedule_id)
+        if not existing:
+            raise TerranovaNotFoundException(f"No checkpoint schedule with id {schedule_id}")
+        updated = {**existing[0],
+                   "name": revision.name,
+                   "datasetId": revision.datasetId,
+                   "intervalMinutes": revision.intervalMinutes,
+                   "enabled": revision.enabled,
+                   "retention": revision.retention.model_dump()}
+        self.update(ELASTIC_INDICES["checkpoint_schedule"]["write"], id=schedule_id, doc=updated)
+        return updated
+
+    def delete_checkpoint_schedule(self, schedule_id: str):
+        self.es.delete(index=ELASTIC_INDICES["checkpoint_schedule"]["write"], id=schedule_id)
+        return {"deleted": 1}
+
+    def update_checkpoint_schedule_status(
+        self, schedule_id: str, last_run_on, last_run_status: str, last_error: str | None = None
+    ):
+        existing = self.get_checkpoint_schedules(schedule_id=schedule_id)
+        if not existing:
+            raise TerranovaNotFoundException(f"No checkpoint schedule with id {schedule_id}")
+        updated = {**existing[0],
+                   "lastRunOn": last_run_on.isoformat() if last_run_on else None,
+                   "lastRunStatus": last_run_status,
+                   "lastError": last_error}
+        self.update(ELASTIC_INDICES["checkpoint_schedule"]["write"], id=schedule_id, doc=updated)
+        return updated
+
+    # Notification Configs
+    def get_notification_configs(
+        self, config_id: str = None, schedule_id: str = None
+    ) -> list:
+        if not ELASTIC_INDICES["notification_config"]["read"]:
+            return []
+        filter_spec = []
+        if config_id is not None:
+            filter_spec.append({"term": {"configId": config_id}})
+        if schedule_id is not None:
+            filter_spec.append({"term": {"scheduleId": schedule_id}})
+        query = {"bool": {"filter": filter_spec}}
+        return self.query(ELASTIC_INDICES["notification_config"]["read"], query)
+
+    def create_notification_config(self, revision: NotificationConfigRevision, user) -> dict:
+        config_id = self.generate_id()
+        doc = NotificationConfig(
+            configId=config_id,
+            scheduleId=revision.scheduleId,
+            emailRecipients=revision.emailRecipients,
+            slackWebhookUrl=revision.slackWebhookUrl,
+            createdBy=user.username,
+            createdOn=datetime.now(),
+        ).model_dump()
+        self.create(ELASTIC_INDICES["notification_config"]["write"], id=config_id, doc=doc)
+        return doc
+
+    def update_notification_config(
+        self, config_id: str, revision: NotificationConfigRevision, user
+    ) -> dict:
+        existing = self.get_notification_configs(config_id=config_id)
+        if not existing:
+            raise TerranovaNotFoundException(f"No notification config with id {config_id}")
+        updated = {**existing[0],
+                   "scheduleId": revision.scheduleId,
+                   "emailRecipients": revision.emailRecipients,
+                   "slackWebhookUrl": revision.slackWebhookUrl}
+        self.update(ELASTIC_INDICES["notification_config"]["write"], id=config_id, doc=updated)
+        return updated
+
+    def delete_notification_config(self, config_id: str):
+        self.es.delete(index=ELASTIC_INDICES["notification_config"]["write"], id=config_id)
+        return {"deleted": 1}
 
     def is_connected(self):
         return self.es.ping()

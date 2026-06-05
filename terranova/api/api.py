@@ -28,6 +28,7 @@ from terranova.api.routers import (
     output,
     basic_auth,
     datasources as datasources_router,
+    checkpoints,
 )
 
 # for error reporting into traces
@@ -50,7 +51,7 @@ app = FastAPI(title="Terranova API")
 app.add_middleware(RequestContextMiddleware)
 
 # attach our sub routers onto the fastapi app
-for lib in [maps, datasources_router, datasets, templates, output, userdata]:
+for lib in [maps, datasources_router, datasets, templates, output, userdata, checkpoints]:
     app.include_router(lib.router)
 
 for ds in datasources:

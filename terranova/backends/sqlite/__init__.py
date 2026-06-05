@@ -21,6 +21,10 @@ from terranova.models import (
     UserData,
     UserDataRevision,
     TerranovaVersion,
+    CheckpointSchedule,
+    CheckpointScheduleRevision,
+    NotificationConfig,
+    NotificationConfigRevision,
 )
 from datetime import datetime
 from typing import List, Any, Dict
@@ -496,12 +500,139 @@ class SQLiteBackend:
             "is_connected": self.is_connected(),
         }
 
+    def delete_dataset_version(self, dataset_id: str, version: int):
+        """Delete a specific version of a dataset by its datasetId and version number."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT id, document FROM dataset WHERE document LIKE ?",
+            (f'%"datasetId": "{dataset_id}"%',)
+        )
+        rows = cursor.fetchall()
+        deleted = 0
+        for row_id, doc_json in rows:
+            doc = json.loads(doc_json)
+            if doc.get("datasetId") == dataset_id and doc.get("version") == version:
+                cursor.execute("DELETE FROM dataset WHERE id = ?", (row_id,))
+                deleted += 1
+        self.conn.commit()
+        return {"deleted": deleted}
+
+    # Checkpoint Schedules
+    def get_checkpoint_schedules(
+        self, schedule_id: str = None, dataset_id: str = None
+    ) -> List[dict]:
+        filter_spec = []
+        if schedule_id is not None:
+            filter_spec.append({"term": {"scheduleId": schedule_id}})
+        if dataset_id is not None:
+            filter_spec.append({"term": {"datasetId": dataset_id}})
+        query = {"bool": {"filter": filter_spec}}
+        return self.query("checkpoint_schedule", query)
+
+    def create_checkpoint_schedule(
+        self, revision: CheckpointScheduleRevision, user
+    ) -> dict:
+        schedule_id = self.generate_id()
+        doc = CheckpointSchedule(
+            scheduleId=schedule_id,
+            datasetId=revision.datasetId,
+            name=revision.name,
+            intervalMinutes=revision.intervalMinutes,
+            enabled=revision.enabled,
+            retention=revision.retention,
+            createdBy=user.username,
+            createdOn=datetime.now(),
+        ).model_dump()
+        self.create("checkpoint_schedule", id=schedule_id, doc=doc)
+        return doc
+
+    def update_checkpoint_schedule(
+        self, schedule_id: str, revision: CheckpointScheduleRevision, user
+    ) -> dict:
+        existing = self.get_checkpoint_schedules(schedule_id=schedule_id)
+        if not existing:
+            raise TerranovaNotFoundException(f"No checkpoint schedule with id {schedule_id}")
+        current = existing[0]
+        updated = {**current,
+                   "name": revision.name,
+                   "datasetId": revision.datasetId,
+                   "intervalMinutes": revision.intervalMinutes,
+                   "enabled": revision.enabled,
+                   "retention": revision.retention.model_dump()}
+        self.update("checkpoint_schedule", id=schedule_id, doc=updated)
+        return updated
+
+    def delete_checkpoint_schedule(self, schedule_id: str):
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM checkpoint_schedule WHERE id = ?", (schedule_id,))
+        self.conn.commit()
+        return {"deleted": cursor.rowcount}
+
+    def update_checkpoint_schedule_status(
+        self, schedule_id: str, last_run_on, last_run_status: str, last_error: str | None = None
+    ):
+        existing = self.get_checkpoint_schedules(schedule_id=schedule_id)
+        if not existing:
+            raise TerranovaNotFoundException(f"No checkpoint schedule with id {schedule_id}")
+        updated = {**existing[0],
+                   "lastRunOn": last_run_on.isoformat() if last_run_on else None,
+                   "lastRunStatus": last_run_status,
+                   "lastError": last_error}
+        self.update("checkpoint_schedule", id=schedule_id, doc=updated)
+        return updated
+
+    # Notification Configs
+    def get_notification_configs(
+        self, config_id: str = None, schedule_id: str = None
+    ) -> List[dict]:
+        filter_spec = []
+        if config_id is not None:
+            filter_spec.append({"term": {"configId": config_id}})
+        if schedule_id is not None:
+            filter_spec.append({"term": {"scheduleId": schedule_id}})
+        query = {"bool": {"filter": filter_spec}}
+        return self.query("notification_config", query)
+
+    def create_notification_config(
+        self, revision: NotificationConfigRevision, user
+    ) -> dict:
+        config_id = self.generate_id()
+        doc = NotificationConfig(
+            configId=config_id,
+            scheduleId=revision.scheduleId,
+            emailRecipients=revision.emailRecipients,
+            slackWebhookUrl=revision.slackWebhookUrl,
+            createdBy=user.username,
+            createdOn=datetime.now(),
+        ).model_dump()
+        self.create("notification_config", id=config_id, doc=doc)
+        return doc
+
+    def update_notification_config(
+        self, config_id: str, revision: NotificationConfigRevision, user
+    ) -> dict:
+        existing = self.get_notification_configs(config_id=config_id)
+        if not existing:
+            raise TerranovaNotFoundException(f"No notification config with id {config_id}")
+        updated = {**existing[0],
+                   "scheduleId": revision.scheduleId,
+                   "emailRecipients": revision.emailRecipients,
+                   "slackWebhookUrl": revision.slackWebhookUrl}
+        self.update("notification_config", id=config_id, doc=updated)
+        return updated
+
+    def delete_notification_config(self, config_id: str):
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM notification_config WHERE id = ?", (config_id,))
+        self.conn.commit()
+        return {"deleted": cursor.rowcount}
+
     def create_indices(self):
         """Create database tables (equivalent to Elasticsearch indices)"""
         cursor = self.conn.cursor()
 
-        # Create tables for each entity type
-        tables = ["map", "dataset", "template", "userdata"]
+        tables = ["map", "dataset", "template", "userdata",
+                  "checkpoint_schedule", "notification_config"]
 
         for table in tables:
             cursor.execute(f"""
