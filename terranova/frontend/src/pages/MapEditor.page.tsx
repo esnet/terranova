@@ -23,7 +23,6 @@ import MapEditorTopbar from "../components/mapEditor/MapEditorTopbar";
 import Card from "../components/Card";
 import { Plus } from "lucide-react";
 import { PktsAlert } from "@esnet/packets-ui-react";
-import { VersionHistoryPanel } from "../components/checkpoints/VersionHistoryPanel";
 import { DeltaOverlay } from "../components/checkpoints/DeltaOverlay";
 
 export const MapController = createContext<DataControllerContextType | null>(null);
@@ -99,19 +98,40 @@ export function MapEditorPageComponent() {
     //let [overrides, setOverrides] = useState<any>({});
     let [refreshToggle, setRefreshToggle] = useState(false);
 
-    // Version history panel + delta overlay state
-    const [historyOpen, setHistoryOpen] = useState(false);
+    // Delta overlay state — populated when a specific version is selected in a layer panel
     const [activeDelta, setActiveDelta] = useState<any>(null);
     const [activeVersionInfo, setActiveVersionInfo] = useState<{from: number; to: number} | null>(null);
 
-    // Support ?dataset=&version= deep-links from notifications
-    const initialDatasetParam = new URLSearchParams(window.location.search).get("dataset");
-    const initialVersionParam = new URLSearchParams(window.location.search).get("version");
-    useEffect(() => {
-        if (initialVersionParam && initialDatasetParam) {
-            setHistoryOpen(true);
+    // Handle version selection from a layer panel — fetch delta and show overlay
+    const handleVersionSelect = async (datasetId: string, versionNum: number | null) => {
+        if (!datasetId || !versionNum) {
+            setActiveDelta(null);
+            setActiveVersionInfo(null);
+            return;
         }
-    }, []);
+        // Compare selected version to the previous one
+        const prevVersion = versionNum - 1;
+        if (prevVersion < 1) {
+            setActiveDelta(null);
+            setActiveVersionInfo(null);
+            return;
+        }
+        try {
+            const { setAuthHeaders } = await import("../DataController");
+            const headers = setAuthHeaders({ "Content-Type": "application/json" });
+            const res = await fetch(
+                `${API_URL}/dataset/id/${datasetId}/diff/${prevVersion}/${versionNum}/`,
+                { headers }
+            );
+            if (res.ok) {
+                const data = await res.json();
+                setActiveDelta(data.delta);
+                setActiveVersionInfo({ from: prevVersion, to: versionNum });
+            }
+        } catch {
+            // silently ignore diff fetch errors
+        }
+    };
 
     const setOverrides = (overrides) => {
         mapController.setProperty("overrides", overrides);
@@ -332,8 +352,6 @@ export function MapEditorPageComponent() {
                         <MapEditorTopbar
                             saveMapConfig={saveMapConfig}
                             loading={loading}
-                            onToggleHistory={selectedDatasets[0] ? () => setHistoryOpen((o) => !o) : undefined}
-                            historyOpen={historyOpen}
                         />
 
                         {/* Map Container + Sidebar */}
@@ -356,20 +374,6 @@ export function MapEditorPageComponent() {
                             <MapEditorSidebar mapCanvasRef={mapCanvas} />
                         </div>
 
-                        {/* Version history slide-in panel */}
-                        {historyOpen && selectedDatasets[0] && (
-                            <VersionHistoryPanel
-                                datasetId={selectedDatasets[0]}
-                                currentVersion={map?.version ?? 1}
-                                onClose={() => setHistoryOpen(false)}
-                                onSelectVersion={(version, delta) => {
-                                    if (delta) {
-                                        setActiveDelta(delta);
-                                        setActiveVersionInfo({ from: version - 1, to: version });
-                                    }
-                                }}
-                            />
-                        )}
 
                         {/* Layer Options Panel */}
                         <div className="gap-8 pb-4 flex flex-col 3xl:flex-row">
@@ -384,6 +388,7 @@ export function MapEditorPageComponent() {
                                         setSelectedDatasets={setSelectedDatasets}
                                         toggleLayer={toggleLayer(id)}
                                         deleteLayer={deleteLayer(id)}
+                                        onVersionSelect={handleVersionSelect}
                                     />
                                 ))}
 

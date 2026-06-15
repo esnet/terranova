@@ -4,6 +4,7 @@ import {
     DatasetListController,
     TemplateListController,
 } from "../../pages/MapEditor.page";
+import { DatasetVersionTimeline } from "./DatasetVersionTimeline";
 import { DataControllerContextType } from "../../types/mapeditor";
 import { InputRange } from "../InputRange";
 import { signals } from "esnet-networkmap-panel";
@@ -41,6 +42,18 @@ export function MapLayerOptionsPanel(props: any) {
     let [liveOrStatic, setLiveOrStatic] = useState<string | undefined>("live");
     let [version, setVersion] = useState<string | null>("latest");
     let [template, setTemplate] = useState(undefined);
+
+    // Compound version string for the timeline — "live", "snapshot-latest", or "static-N"
+    const timelineVersion = `${liveOrStatic}-${version}`;
+    const handleVersionChange = (newLiveOrStatic: string, newVersion: string) => {
+        setLiveOrStatic(newLiveOrStatic);
+        setVersion(newVersion);
+        // Bubble delta info up if a specific historic version was selected
+        if (props.onVersionSelect) {
+            const versionNum = newLiveOrStatic === "static" ? parseInt(newVersion) : null;
+            props.onVersionSelect(selectedDataset, versionNum);
+        }
+    };
     let [layerName, _setLayerName] = useState(thisLayer.name);
 
     const setLayerName = (newName: string) => {
@@ -227,22 +240,19 @@ export function MapLayerOptionsPanel(props: any) {
                             })}
                         </PktsInputSelect>
                     </PktsInputRow>
-                    <PktsInputRow
-                        label="Dataset Version"
-                        tooltip='Using the "Dynamic" version will always keep your map up to date with the database, whereas "Static" versions represent a specific point in time. For some maps, stability is more important.'
-                    >
-                        <PktsInputSelect
-                            name="version"
-                            value={`${liveOrStatic}-${version}`}
-                            onChange={(e) => {
-                                let [s, v] = e.target.value.split("-");
-                                setLiveOrStatic(s);
-                                setVersion(v);
-                            }}
-                        >
-                            {renderVersionSelections()}
-                        </PktsInputSelect>
-                    </PktsInputRow>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-700">
+                            Dataset Version
+                        </label>
+                        <p className="text-xs text-gray-500 mb-1">
+                            Live always reflects current data. Saved versions are point-in-time snapshots; auto-saved versions are marked with a chip.
+                        </p>
+                        <DatasetVersionTimeline
+                            datasetId={selectedDataset}
+                            selectedVersion={timelineVersion}
+                            onChange={handleVersionChange}
+                        />
+                    </div>
                     <PktsInputRow label="Layer Name">
                         <PktsInputText
                             placeholder="Layer Name"
