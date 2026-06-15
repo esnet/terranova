@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Cpu, User, Radio, Clock } from "lucide-react";
+import { Cpu, User, Info } from "lucide-react";
 import { setAuthHeaders } from "../../DataController";
 import { API_URL } from "../../../static/settings";
 
@@ -68,153 +68,114 @@ export function DatasetVersionTimeline({
 
     if (!datasetId) return null;
 
-    return (
-        <div className="flex flex-col gap-0" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace" }}>
+    // Row base classes — matches PktsInputRow label sizing, surface color
+    const rowBase = "flex items-center gap-2 px-2 py-1.5 rounded text-sm w-full text-left transition-colors cursor-pointer border border-transparent";
+    const rowActive = "bg-light-secondary text-white";
+    const rowIdle = "bg-color-layer-2 hover:bg-color-layer-3 text-color-text border-color-border-alt";
 
-            {/* Section header */}
-            <div className="flex items-center gap-2 mb-2">
-                <Clock size={11} className="text-gray-400" />
-                <span className="text-[10px] font-semibold tracking-widest uppercase text-gray-400">
-                    Data Source
+    return (
+        <div className="flex flex-col gap-0.5">
+            {/* Label row with info tooltip */}
+            <div className="flex items-center gap-1 mb-1">
+                <span className="text-sm text-color-text font-medium">Dataset Version</span>
+                <span className="relative group">
+                    <Info size={13} className="text-color-text-alt cursor-help" />
+                    <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug">
+                        Live always reflects current data. Saved versions are point-in-time snapshots; auto-saved versions are marked <span className="font-semibold">AUTO</span>.
+                    </span>
                 </span>
             </div>
 
-            {/* Live row */}
+            {/* Live */}
             <button
+                className={`${rowBase} ${isLive ? rowActive : rowIdle}`}
                 onClick={() => onChange("live", "latest")}
-                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-all duration-150 text-left w-full
-                    ${isLive
-                        ? "bg-emerald-500 shadow-sm"
-                        : "hover:bg-gray-100 bg-gray-50 border border-gray-200"
-                    }`}
             >
-                {/* Pulse indicator for live */}
-                <span className="relative flex shrink-0">
-                    <span className={`w-2 h-2 rounded-full ${isLive ? "bg-white" : "bg-emerald-400"}`} />
-                    {isLive && (
-                        <span className="absolute inset-0 rounded-full bg-white animate-ping opacity-75" />
-                    )}
+                <span className="relative flex items-center shrink-0">
+                    <span className={`w-2 h-2 rounded-full ${isLive ? "bg-white" : "bg-color-text-success"}`} />
+                    {isLive && <span className="absolute inset-0 rounded-full bg-white animate-ping opacity-60" />}
                 </span>
-                <span className={`text-[11px] font-bold tracking-wide ${isLive ? "text-white" : "text-gray-700"}`}>
-                    LIVE
-                </span>
-                <span className={`ml-auto text-[10px] tracking-wide ${isLive ? "text-emerald-100" : "text-gray-400"}`}>
-                    dynamic
-                </span>
+                <span className="font-medium">Live</span>
+                <span className={`ml-auto text-xs ${isLive ? "opacity-60" : "text-color-text-alt"}`}>dynamic</span>
             </button>
 
-            {/* Latest snapshot row */}
+            {/* Latest snapshot */}
             <button
+                className={`${rowBase} ${isSnapshot ? rowActive : rowIdle}`}
                 onClick={() => onChange("snapshot", "latest")}
-                className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg mb-2 transition-all duration-150 text-left w-full
-                    ${isSnapshot
-                        ? "bg-blue-500 shadow-sm"
-                        : "hover:bg-gray-100 bg-gray-50 border border-gray-200"
-                    }`}
             >
-                <span className={`w-2 h-2 rounded-full shrink-0 ${isSnapshot ? "bg-white" : "bg-blue-400"}`} />
-                <span className={`text-[11px] font-bold tracking-wide ${isSnapshot ? "text-white" : "text-gray-700"}`}>
-                    LATEST SNAPSHOT
-                </span>
-                <span className={`ml-auto text-[10px] tracking-wide ${isSnapshot ? "text-blue-100" : "text-gray-400"}`}>
-                    most recent
-                </span>
+                <span className={`w-2 h-2 rounded-full shrink-0 ${isSnapshot ? "bg-white" : "bg-esnetblue-200"}`} />
+                <span className="font-medium">Latest Snapshot</span>
+                <span className={`ml-auto text-xs ${isSnapshot ? "opacity-60" : "text-color-text-alt"}`}>most recent</span>
             </button>
 
-            {/* Divider + version list header */}
-            {versions.length > 0 && (
-                <div className="flex items-center gap-2 mb-1.5">
-                    <div className="h-px bg-gray-200 flex-1" />
-                    <span className="text-[9px] tracking-widest uppercase text-gray-400 font-semibold">
-                        Version History
-                    </span>
-                    <div className="h-px bg-gray-200 flex-1" />
+            {/* Divider */}
+            {(loading || versions.length > 0) && (
+                <div className="flex items-center gap-1.5 my-1">
+                    <div className="h-px bg-color-border-alt flex-1" />
+                    <span className="text-[10px] uppercase tracking-widest text-color-text-alt font-semibold">History</span>
+                    <div className="h-px bg-color-border-alt flex-1" />
                 </div>
             )}
 
-            {/* Version entries with timeline connector */}
-            {loading && (
-                <div className="px-3 py-3 text-[11px] text-gray-400 tracking-wide">
-                    Loading…
-                </div>
-            )}
+            {/* Scrollable version list — caps at ~6 rows */}
+            <div className="flex flex-col gap-0.5 overflow-y-auto" style={{ maxHeight: "11rem" }}>
+                {loading && (
+                    <span className="px-2 py-1.5 text-sm text-color-text-alt italic">Loading…</span>
+                )}
+                {!loading && versions.map((v, idx) => {
+                    const isSelected = selectedVersionNum === v.version;
+                    const isCheckpoint = !!v.checkpoint;
+                    return (
+                        <button
+                            key={v.version}
+                            onClick={() => onChange("static", String(v.version))}
+                            className={`${rowBase} ${isSelected ? rowActive : rowIdle}`}
+                            title={absTime(v.lastUpdatedOn)}
+                        >
+                            {/* Timeline dot */}
+                            <span className={`flex items-center justify-center w-4 h-4 rounded-full border shrink-0
+                                ${isSelected
+                                    ? "border-white/40 bg-white/10"
+                                    : isCheckpoint
+                                        ? "border-mauve-500 bg-mauve-50"
+                                        : "border-color-border-alt bg-color-layer-1"
+                                }`}>
+                                {isCheckpoint
+                                    ? <Cpu size={8} className={isSelected ? "text-white/80" : "text-mauve-600"} />
+                                    : <User size={8} className="text-color-text-alt" />
+                                }
+                            </span>
 
-            {!loading && (
-                <div className="relative flex flex-col">
-                    {/* Vertical connector line */}
-                    {versions.length > 1 && (
-                        <div
-                            className="absolute left-[19px] top-4 bottom-4 w-px bg-gray-200"
-                            style={{ zIndex: 0 }}
-                        />
-                    )}
+                            {/* Version number */}
+                            <span className={`font-mono text-xs font-bold tabular-nums shrink-0 ${isSelected ? "text-white" : "text-color-text"}`}>
+                                v{v.version}
+                            </span>
 
-                    {versions.map((v, idx) => {
-                        const isSelected = selectedVersionNum === v.version;
-                        const isCheckpoint = !!v.checkpoint;
-                        const isFirst = idx === 0;
-
-                        return (
-                            <button
-                                key={v.version}
-                                onClick={() => onChange("static", String(v.version))}
-                                className={`relative flex items-start gap-3 px-3 py-2 mb-0.5 rounded-lg transition-all duration-150 text-left w-full group
-                                    ${isSelected
-                                        ? "bg-gray-800 shadow-sm"
-                                        : "hover:bg-gray-50"
-                                    }`}
-                                style={{ zIndex: 1 }}
-                            >
-                                {/* Timeline dot */}
-                                <span
-                                    className={`relative flex items-center justify-center w-5 h-5 rounded-full shrink-0 mt-0.5
-                                        border-2 transition-colors
-                                        ${isSelected
-                                            ? "bg-gray-800 border-gray-500"
-                                            : isCheckpoint
-                                                ? "bg-white border-violet-400"
-                                                : "bg-white border-gray-300 group-hover:border-gray-400"
-                                        }`}
-                                >
-                                    {isCheckpoint
-                                        ? <Cpu size={9} className={isSelected ? "text-violet-400" : "text-violet-500"} />
-                                        : <User size={9} className={isSelected ? "text-gray-400" : "text-gray-400"} />
-                                    }
+                            {/* Badges */}
+                            {idx === 0 && !isSelected && (
+                                <span className="text-[9px] px-1 rounded bg-color-layer-3 text-color-text-alt font-semibold tracking-wide uppercase shrink-0">
+                                    latest
                                 </span>
-
-                                <span className="flex flex-col min-w-0 flex-1">
-                                    <span className="flex items-center gap-2">
-                                        <span className={`text-[11px] font-bold tabular-nums ${isSelected ? "text-white" : "text-gray-700"}`}>
-                                            v{v.version}
-                                        </span>
-                                        {isFirst && !isSelected && (
-                                            <span className="text-[9px] px-1 py-0.5 rounded bg-gray-100 text-gray-500 font-semibold tracking-wide">
-                                                LATEST
-                                            </span>
-                                        )}
-                                        {isCheckpoint && (
-                                            <span className={`text-[9px] px-1 py-0.5 rounded font-semibold tracking-wide
-                                                ${isSelected ? "bg-violet-900/40 text-violet-300" : "bg-violet-50 text-violet-600"}`}>
-                                                AUTO
-                                            </span>
-                                        )}
-                                    </span>
-                                    <span className={`text-[10px] tabular-nums truncate ${isSelected ? "text-gray-400" : "text-gray-400"}`}
-                                        title={absTime(v.lastUpdatedOn)}>
-                                        {relativeTime(v.lastUpdatedOn)} · {v.lastUpdatedBy}
-                                    </span>
+                            )}
+                            {isCheckpoint && (
+                                <span className={`text-[9px] px-1 rounded font-semibold tracking-wide uppercase shrink-0
+                                    ${isSelected ? "bg-white/15 text-white/80" : "bg-mauve-100 text-mauve-700"}`}>
+                                    auto
                                 </span>
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
+                            )}
 
-            {!loading && versions.length === 0 && (
-                <div className="px-3 py-3 text-[11px] text-gray-400 tracking-wide italic">
-                    No saved versions yet.
-                </div>
-            )}
+                            {/* Timestamp */}
+                            <span className={`ml-auto text-xs shrink-0 ${isSelected ? "text-white/60" : "text-color-text-alt"}`}>
+                                {relativeTime(v.lastUpdatedOn)}
+                            </span>
+                        </button>
+                    );
+                })}
+                {!loading && versions.length === 0 && (
+                    <span className="px-2 py-1.5 text-sm text-color-text-alt italic">No saved versions.</span>
+                )}
+            </div>
         </div>
     );
 }

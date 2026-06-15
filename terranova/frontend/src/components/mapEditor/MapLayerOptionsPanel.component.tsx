@@ -241,12 +241,6 @@ export function MapLayerOptionsPanel(props: any) {
                         </PktsInputSelect>
                     </PktsInputRow>
                     <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-gray-700">
-                            Dataset Version
-                        </label>
-                        <p className="text-xs text-gray-500 mb-1">
-                            Live always reflects current data. Saved versions are point-in-time snapshots; auto-saved versions are marked with a chip.
-                        </p>
                         <DatasetVersionTimeline
                             datasetId={selectedDataset}
                             selectedVersion={timelineVersion}
