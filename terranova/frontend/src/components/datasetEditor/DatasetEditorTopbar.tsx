@@ -61,7 +61,7 @@ export const DatasetEditorTopbar = ({
                 <div className="hidden lg:flex w-fit gap-2 items-center">
                     {onToggleHistory && (
                         <PktsButton
-                            variant={historyOpen ? "secondary" : "tertiary"}
+                            variant="secondary"
                             disabled={loading}
                             onClick={onToggleHistory}
                             className="flex items-center gap-1"
@@ -83,7 +83,7 @@ export const DatasetEditorTopbar = ({
                 <div className="flex lg:hidden gap-2">
                     {onToggleHistory && (
                         <PktsIconButton
-                            variant={historyOpen ? "secondary" : "tertiary"}
+                            variant="secondary"
                             disabled={loading}
                             onClick={onToggleHistory}
                         >

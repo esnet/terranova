@@ -56,7 +56,7 @@ const MapEditorTopbar = ({ loading, saveMapConfig, onToggleHistory, historyOpen 
                 <div className="hidden lg:flex w-fit gap-2 items-center">
                     {onToggleHistory && (
                         <PktsButton
-                            variant={historyOpen ? "secondary" : "tertiary"}
+                            variant="secondary"
                             disabled={loading}
                             onClick={onToggleHistory}
                             className="flex items-center gap-1"
@@ -84,7 +84,7 @@ const MapEditorTopbar = ({ loading, saveMapConfig, onToggleHistory, historyOpen 
                 <div className="flex lg:hidden gap-2">
                     {onToggleHistory && (
                         <PktsIconButton
-                            variant={historyOpen ? "secondary" : "tertiary"}
+                            variant="secondary"
                             disabled={loading}
                             onClick={onToggleHistory}
                         >
