@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Cpu, User, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { setAuthHeaders } from "../../DataController";
 import { API_URL } from "../../../static/settings";
+import { PktsInputRow, PktsInputSelect, PktsInputOption } from "@esnet/packets-ui-react";
 
 interface VersionEntry {
     datasetId: string;
@@ -9,32 +10,53 @@ interface VersionEntry {
     lastUpdatedBy: string;
     lastUpdatedOn: string;
     checkpoint: boolean | null;
-    name: string;
 }
 
 interface DatasetVersionTimelineProps {
     datasetId: string | undefined;
-    selectedVersion: string;
+    selectedVersion: string;  // "live-latest", "snapshot-latest", or "static-N"
     onChange: (liveOrStatic: string, version: string) => void;
 }
 
-function relativeTime(iso: string): string {
-    const diff = Date.now() - new Date(iso).getTime();
-    const m = Math.floor(diff / 60000);
-    const h = Math.floor(m / 60);
-    const d = Math.floor(h / 24);
-    if (m < 1) return "just now";
-    if (m < 60) return `${m}m ago`;
-    if (h < 24) return `${h}h ago`;
-    if (d < 7) return `${d}d ago`;
-    return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+function fmtDate(iso: string): string {
+    return new Date(iso).toLocaleDateString(undefined, {
+        year: "numeric", month: "2-digit", day: "2-digit",
+    });
 }
 
-function absTime(iso: string): string {
-    return new Date(iso).toLocaleString(undefined, {
-        month: "short", day: "numeric",
-        hour: "2-digit", minute: "2-digit",
-    });
+// Two-button toggle matching the widget aesthetic
+function ToggleRow({
+    leftLabel, leftSub,
+    rightLabel, rightSub,
+    leftActive,
+    onLeft, onRight,
+}: {
+    leftLabel: string; leftSub: string;
+    rightLabel: string; rightSub: string;
+    leftActive: boolean;
+    onLeft: () => void; onRight: () => void;
+}) {
+    const activeClass = "bg-light-secondary text-white";
+    const idleClass = "bg-color-layer-2 hover:bg-color-layer-3 text-color-text border border-color-border-alt";
+
+    return (
+        <div className="flex rounded overflow-hidden w-full text-sm">
+            <button
+                onClick={onLeft}
+                className={`flex-1 flex items-center justify-between px-3 py-1.5 transition-colors ${leftActive ? activeClass : idleClass} rounded-l`}
+            >
+                <span className="font-medium">{leftLabel}</span>
+                <span className={`text-xs ${leftActive ? "opacity-60" : "text-color-text-alt"}`}>{leftSub}</span>
+            </button>
+            <button
+                onClick={onRight}
+                className={`flex-1 flex items-center justify-between px-3 py-1.5 transition-colors ${!leftActive ? activeClass : idleClass} rounded-r border-l-0`}
+            >
+                <span className="font-medium">{rightLabel}</span>
+                <span className={`text-xs ${!leftActive ? "opacity-60" : "text-color-text-alt"}`}>{rightSub}</span>
+            </button>
+        </div>
+    );
 }
 
 export function DatasetVersionTimeline({
@@ -62,120 +84,68 @@ export function DatasetVersionTimeline({
 
     const isLive = selectedVersion === "live" || selectedVersion === "live-latest";
     const isSnapshot = selectedVersion === "snapshot-latest";
-    const selectedVersionNum = !isLive && !isSnapshot
+    const isHistoric = !isLive && !isSnapshot;
+    const selectedVersionNum = isHistoric
         ? parseInt(selectedVersion.replace("static-", ""))
         : null;
 
     if (!datasetId) return null;
 
-    // Row base classes — matches PktsInputRow label sizing, surface color
-    const rowBase = "flex items-center gap-2 px-2 py-1.5 rounded text-sm w-full text-left transition-colors cursor-pointer border border-transparent";
-    const rowActive = "bg-light-secondary text-white";
-    const rowIdle = "bg-color-layer-2 hover:bg-color-layer-3 text-color-text border-color-border-alt";
+    // Determine the value for the select: use selected version num if historic, else the most recent
+    const selectValue = isHistoric && selectedVersionNum
+        ? String(selectedVersionNum)
+        : versions[0] ? String(versions[0].version) : "";
+
+    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        onChange("static", e.target.value);
+    };
 
     return (
-        <div className="flex flex-col gap-0.5">
-            {/* Label row with info tooltip */}
-            <div className="flex items-center gap-1 mb-1">
+        <div className="flex flex-col gap-2">
+            {/* Label with info tooltip */}
+            <div className="flex items-center gap-1">
                 <span className="text-sm text-color-text font-medium">Dataset Version</span>
                 <span className="relative group">
-                    <Info size={13} className="text-color-text-alt cursor-help" />
+                    <Info size={12} className="text-color-text-alt cursor-help" />
                     <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug">
-                        Live always reflects current data. Saved versions are point-in-time snapshots; auto-saved versions are marked <span className="font-semibold">AUTO</span>.
+                        Live always reflects current data. Latest Snapshot uses the most recently saved version.
+                        Historical lets you pick any past version and shows what changed.
                     </span>
                 </span>
             </div>
 
-            {/* Live */}
-            <button
-                className={`${rowBase} ${isLive ? rowActive : rowIdle}`}
-                onClick={() => onChange("live", "latest")}
-            >
-                <span className="relative flex items-center shrink-0">
-                    <span className={`w-2 h-2 rounded-full ${isLive ? "bg-white" : "bg-color-text-success"}`} />
-                    {isLive && <span className="absolute inset-0 rounded-full bg-white animate-ping opacity-60" />}
-                </span>
-                <span className="font-medium">Live</span>
-                <span className={`ml-auto text-xs ${isLive ? "opacity-60" : "text-color-text-alt"}`}>dynamic</span>
-            </button>
+            {/* Live / Latest Snapshot toggle */}
+            <ToggleRow
+                leftLabel="Live"
+                leftSub="dynamic"
+                rightLabel="Latest Snapshot"
+                rightSub="most recent"
+                leftActive={isLive || (!isSnapshot && !isHistoric)}
+                onLeft={() => onChange("live", "latest")}
+                onRight={() => onChange("snapshot", "latest")}
+            />
 
-            {/* Latest snapshot */}
-            <button
-                className={`${rowBase} ${isSnapshot ? rowActive : rowIdle}`}
-                onClick={() => onChange("snapshot", "latest")}
-            >
-                <span className={`w-2 h-2 rounded-full shrink-0 ${isSnapshot ? "bg-white" : "bg-esnetblue-200"}`} />
-                <span className="font-medium">Latest Snapshot</span>
-                <span className={`ml-auto text-xs ${isSnapshot ? "opacity-60" : "text-color-text-alt"}`}>most recent</span>
-            </button>
-
-            {/* Divider */}
-            {(loading || versions.length > 0) && (
-                <div className="flex items-center gap-1.5 my-1">
-                    <div className="h-px bg-color-border-alt flex-1" />
-                    <span className="text-[10px] uppercase tracking-widest text-color-text-alt font-semibold">History</span>
-                    <div className="h-px bg-color-border-alt flex-1" />
-                </div>
-            )}
-
-            {/* Scrollable version list — caps at ~6 rows */}
-            <div className="flex flex-col gap-0.5 overflow-y-auto" style={{ maxHeight: "11rem" }}>
-                {loading && (
-                    <span className="px-2 py-1.5 text-sm text-color-text-alt italic">Loading…</span>
-                )}
-                {!loading && versions.map((v, idx) => {
-                    const isSelected = selectedVersionNum === v.version;
-                    const isCheckpoint = !!v.checkpoint;
-                    return (
-                        <button
-                            key={v.version}
-                            onClick={() => onChange("static", String(v.version))}
-                            className={`${rowBase} ${isSelected ? rowActive : rowIdle}`}
-                            title={absTime(v.lastUpdatedOn)}
-                        >
-                            {/* Timeline dot */}
-                            <span className={`flex items-center justify-center w-4 h-4 rounded-full border shrink-0
-                                ${isSelected
-                                    ? "border-white/40 bg-white/10"
-                                    : isCheckpoint
-                                        ? "border-mauve-500 bg-mauve-50"
-                                        : "border-color-border-alt bg-color-layer-1"
-                                }`}>
-                                {isCheckpoint
-                                    ? <Cpu size={8} className={isSelected ? "text-white/80" : "text-mauve-600"} />
-                                    : <User size={8} className="text-color-text-alt" />
-                                }
-                            </span>
-
-                            {/* Version number */}
-                            <span className={`font-mono text-xs font-bold tabular-nums shrink-0 ${isSelected ? "text-white" : "text-color-text"}`}>
-                                v{v.version}
-                            </span>
-
-                            {/* Badges */}
-                            {idx === 0 && !isSelected && (
-                                <span className="text-[9px] px-1 rounded bg-color-layer-3 text-color-text-alt font-semibold tracking-wide uppercase shrink-0">
-                                    latest
-                                </span>
-                            )}
-                            {isCheckpoint && (
-                                <span className={`text-[9px] px-1 rounded font-semibold tracking-wide uppercase shrink-0
-                                    ${isSelected ? "bg-white/15 text-white/80" : "bg-mauve-100 text-mauve-700"}`}>
-                                    auto
-                                </span>
-                            )}
-
-                            {/* Timestamp */}
-                            <span className={`ml-auto text-xs shrink-0 ${isSelected ? "text-white/60" : "text-color-text-alt"}`}>
-                                {relativeTime(v.lastUpdatedOn)}
-                            </span>
-                        </button>
-                    );
-                })}
-                {!loading && versions.length === 0 && (
-                    <span className="px-2 py-1.5 text-sm text-color-text-alt italic">No saved versions.</span>
-                )}
-            </div>
+            {/* Historical Version dropdown */}
+            <PktsInputRow label="Historical Version">
+                <PktsInputSelect
+                    name="historical-version"
+                    value={isHistoric ? selectValue : ""}
+                    onChange={handleSelectChange}
+                    disabled={loading || versions.length === 0}
+                >
+                    {/* Placeholder when not in historic mode */}
+                    {!isHistoric && (
+                        <PktsInputOption value="" key="placeholder">
+                            — select a version —
+                        </PktsInputOption>
+                    )}
+                    {versions.map((v) => (
+                        <PktsInputOption key={String(v.version)} value={String(v.version)}>
+                            {`v${v.version}${v.checkpoint ? " · auto" : ""}  ${fmtDate(v.lastUpdatedOn)}`}
+                        </PktsInputOption>
+                    ))}
+                </PktsInputSelect>
+            </PktsInputRow>
         </div>
     );
 }
