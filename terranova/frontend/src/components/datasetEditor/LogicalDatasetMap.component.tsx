@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useRef, useEffect } from "react";
 import "esnet-networkmap-panel";
-import { DEFAULT_LOGICAL_MAP, DEFAULT_LAYER_CONFIGURATION } from "../../data/constants";
+import { DEFAULT_DATASET_LOGICAL_MAP, DEFAULT_LAYER_CONFIGURATION, DIFF_LAYER_CONFIGS } from "../../data/constants";
 
 interface LogicalDatasetMapProps {
     datasetVisible: boolean;
@@ -10,10 +10,13 @@ interface LogicalDatasetMapProps {
 }
 
 export function LogicalDatasetMap(props: LogicalDatasetMapProps) {
-    let configuration = JSON.parse(JSON.stringify(DEFAULT_LOGICAL_MAP.configuration));
-    let layerConfiguration = JSON.parse(JSON.stringify(DEFAULT_LAYER_CONFIGURATION));
-    layerConfiguration.visible = props.datasetVisible;
-    configuration.layers.push(layerConfiguration);
+    let configuration = JSON.parse(JSON.stringify(DEFAULT_DATASET_LOGICAL_MAP.configuration));
+    DIFF_LAYER_CONFIGS.forEach(({ color }) => {
+        const layer = JSON.parse(JSON.stringify(DEFAULT_LAYER_CONFIGURATION));
+        layer.color = color;
+        layer.visible = props.datasetVisible;
+        configuration.layers.push(layer);
+    });
 
     useEffect(() => {
         if (props.mapRef.current) {

@@ -171,6 +171,34 @@ export const DEFAULT_LOGICAL_MAP = {
     },
 };
 
+// Dataset editor variants — 4 pre-wired layers so diff mode (added/removed/modified)
+// can set topology for each layer without calling setOptions at runtime.
+// Layer 0: base (unchanged), Layer 1: added (#22c55e), Layer 2: removed (#ef4444), Layer 3: modified (#f59e0b)
+const DIFF_LAYER_CONFIGS = [
+    { color: "#AAAAFF" },  // base — default colour, overridden per dataset editor config
+    { color: "#22c55e" },  // added
+    { color: "#ef4444" },  // removed
+    { color: "#f59e0b" },  // modified
+];
+
+export const DEFAULT_DATASET_MAP = {
+    ...DEFAULT_MAP,
+    configuration: {
+        ...DEFAULT_MAP.configuration,
+        layers: [],  // populated by GeographicDatasetMap from DIFF_LAYER_CONFIGS
+    },
+};
+
+export const DEFAULT_DATASET_LOGICAL_MAP = {
+    ...DEFAULT_LOGICAL_MAP,
+    configuration: {
+        ...DEFAULT_LOGICAL_MAP.configuration,
+        layers: [],  // populated by LogicalDatasetMap from DIFF_LAYER_CONFIGS
+    },
+};
+
+export { DIFF_LAYER_CONFIGS };
+
 export const DEFAULT_LAYER_CONFIGURATION = {
     name: "",
     visible: true,
