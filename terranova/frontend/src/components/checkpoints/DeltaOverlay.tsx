@@ -16,8 +16,10 @@ export interface DeltaLayers {
 
 interface DeltaOverlayProps {
     delta: Delta;
-    fromVersion: number;
-    toVersion: number;
+    fromVersion?: number;  // kept for map mode
+    toVersion?: number;    // kept for map mode
+    fromSnapshotId?: string;  // for dataset mode
+    toSnapshotId?: string;    // for dataset mode
     onDismiss: () => void;
     // "map" = text summary only; "dataset" = show layer toggles
     mode?: "map" | "dataset";
@@ -69,11 +71,16 @@ export function DeltaOverlay({
     delta,
     fromVersion,
     toVersion,
+    fromSnapshotId,
+    toSnapshotId,
     onDismiss,
     mode = "map",
     layers,
     onToggleLayer,
 }: DeltaOverlayProps) {
+    const headerLabel = fromSnapshotId
+        ? `${fromSnapshotId.slice(0, 6)}… → ${toSnapshotId?.slice(0, 6)}…`
+        : `v${fromVersion} → v${toVersion}`;
     const addedCount    = delta.nodes.added.length    + delta.edges.added.length;
     const removedCount  = delta.nodes.removed.length  + delta.edges.removed.length;
     const modifiedCount = delta.nodes.modified.length + delta.edges.modified.length;
@@ -94,7 +101,7 @@ export function DeltaOverlay({
                 {/* Header */}
                 <div className="flex items-center justify-between gap-4 px-3 py-2 bg-light-secondary text-white">
                     <span className="text-xs font-semibold tracking-wide">
-                        v{fromVersion} → v{toVersion}
+                        {headerLabel}
                     </span>
                     <button onClick={onDismiss} className="hover:opacity-70 transition-opacity shrink-0" aria-label="Dismiss diff">
                         <X size={13} />

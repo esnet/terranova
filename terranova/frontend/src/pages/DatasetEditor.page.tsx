@@ -15,26 +15,120 @@ import { API_URL, TOOLTIP_TTL } from "../../static/settings";
 import { DataControllerContextType } from "../types/mapeditor";
 import { DatasetEditorTopbar } from "../components/datasetEditor/DatasetEditorTopbar";
 import { PktsAlert } from "@esnet/packets-ui-react";
-import { VersionHistoryPanel } from "../components/checkpoints/VersionHistoryPanel";
 import { DeltaOverlay, DeltaLayers } from "../components/checkpoints/DeltaOverlay";
+import { DatasetDiffPicker } from "../components/checkpoints/DatasetDiffPicker";
 
 interface IDatasetEditorPageProps {}
 
 export const DatasetController = createContext<DataControllerContextType | null>(null);
 
 export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
-    const datasetNameRefInput = useRef<HTMLInputElement>(null);
+    const { datasetId } = useParams();
+    const q = new URLSearchParams(window.location.search);
+    const link = `${API_URL}/dataset/id/${datasetId}/`;
 
-    const exitDiffMode = (closeHistory = false, refetch = true) => {
+    // Deep-link support: ?diffFrom=<snapshotId>&diffTo=<snapshotId>
+    const initialDiffFrom = q.get("diffFrom") || undefined;
+    const initialDiffTo   = q.get("diffTo")   || undefined;
+
+    let { controller: userDataController } = useContext(UserDataController) as DataControllerContextType;
+
+    const [visualizationMode, setVisualizationMode] = useState("logical");
+    const [shouldHome, setShouldHome] = useState(false);
+    const [dataset, setDataset] = useState<any | undefined>(null);
+    const [controller] = useState<DataController>(new DataController(link, dataset, setDataset)) as any;
+    const [editingName, setEditingName] = useState(false);
+    let [topologyData, setTopologyData] = useState(DEFAULT_LAYER_TOPOLOGY);
+    let [tableData, setTableData] = useState<any[]>(DEFAULT_CIRCUIT_TABLE_DATA);
+    let [datasetVisible, setDatasetVisible] = useState(true);
+    let [showSaveAlert, setShowSaveAlert] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    // Diff picker popover
+    const [pickerOpen, setPickerOpen] = useState(!!initialDiffFrom);
+    let mapRef = useRef<any>();
+
+    // Diff state
+    const [activeDelta, setActiveDelta] = useState(null);
+    const [activeSnapshotInfo, setActiveSnapshotInfo] = useState<{from: string; to: string} | null>(null);
+    const [deltaLayers, setDeltaLayers] = useState<DeltaLayers>({ added: true, removed: true, modified: true });
+    const diffDataRef = useRef(null);
+
+    const DIFF_COLORS = { added: "#22c55e", removed: "#ef4444", modified: "#f59e0b" };
+
+    const _applyDiffTopology = (diffData, layers) => {
+        if (!mapRef.current) return;
+        const topology = [
+            diffData.base,
+            layers.added    ? diffData.added    : { ...diffData.added,    nodes: [], edges: [] },
+            layers.removed  ? diffData.removed  : { ...diffData.removed,  nodes: [], edges: [] },
+            layers.modified ? diffData.modified : { ...diffData.modified, nodes: [], edges: [] },
+        ];
+        requestAnimationFrame(() => {
+            if (!mapRef.current) return;
+            mapRef.current.setTopology(topology);
+        });
+    };
+
+    const exitDiffMode = (closePicker = false, refetch = true) => {
         setActiveDelta(null);
-        setActiveVersionInfo(null);
+        setActiveSnapshotInfo(null);
         diffDataRef.current = null;
-        if (closeHistory) setHistoryOpen(false);
+        if (closePicker) setPickerOpen(false);
         if (refetch) {
             if (visualizationMode === "geographic") fetchGeographicTopologyData();
             else if (visualizationMode === "logical") fetchEdgeGraphTopologyData();
             else if (visualizationMode === "table-view") fetchRawCircuitData();
         }
+    };
+
+    const toggleDeltaLayer = (layer) => {
+        setDeltaLayers(prev => {
+            const next = { ...prev, [layer]: !prev[layer] };
+            if (diffDataRef.current) _applyDiffTopology(diffDataRef.current, next);
+            return next;
+        });
+    };
+
+    const handleCompare = async (fromSnapshotId: string, toSnapshotId: string, diffData: any, delta: any) => {
+        // Stamp diff colors directly onto topology objects
+        const stamp = (topo, color) => {
+            topo.nodes.forEach(n => { n.color = color; });
+            topo.edges.forEach(e => { e.azColor = color; e.zaColor = color; });
+        };
+        stamp(diffData.added,    DIFF_COLORS.added);
+        stamp(diffData.removed,  DIFF_COLORS.removed);
+        stamp(diffData.modified, DIFF_COLORS.modified);
+
+        diffDataRef.current = diffData;
+        const layers = { added: true, removed: true, modified: true };
+        setDeltaLayers(layers);
+        setActiveDelta(delta);
+        setActiveSnapshotInfo({ from: fromSnapshotId, to: toSnapshotId });
+
+        if (visualizationMode === "geographic" || visualizationMode === "logical") {
+            _applyDiffTopology(diffData, layers);
+        } else if (visualizationMode === "table-view") {
+            // Load the "to" snapshot results for table display
+            const headers = setAuthHeaders({ "Content-Type": "application/json" });
+            const res = await fetch(`${API_URL}/snapshot/id/${toSnapshotId}/`, { headers });
+            if (res.ok) {
+                const snap = await res.json();
+                if (Array.isArray(snap.results)) setTableData(snap.results);
+            }
+        }
+    };
+
+    const handleAcknowledge = (snapshotId: string) => {
+        // Refresh dataset to pick up new acknowledgedCheckpointId
+        controller.fetch();
+        exitDiffMode(false, true);
+    };
+
+    const handleAccept = (snapshotId: string) => {
+        // Refresh dataset (new currentSnapshotId was created server-side)
+        controller.fetch();
+        exitDiffMode(true, true);
     };
 
     const onModeChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -43,165 +137,17 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
         setVisualizationMode(e.target.value);
     };
 
-    const { datasetId } = useParams();
-    const q = new URLSearchParams(window.location.search);
-    const link = `${API_URL}/dataset/id/${datasetId}/`;
-
-    let lastEdited = useContext(LastEdited);
-    let { controller: userDataController } = useContext(
-        UserDataController,
-    ) as DataControllerContextType;
-
-    const [visualizationMode, setVisualizationMode] = useState("logical");
-    const [shouldHome, setShouldHome] = useState(false); // one of ["logical", "table-view", "geographic"]?
-
-    const [dataset, setDataset] = useState<any | undefined>(null);
-
-    const [controller] = useState<DataController>(
-        new DataController(link, dataset, setDataset),
-    ) as any;
-
-    const [editingName, setEditingName] = useState(false);
-    let [topologyData, setTopologyData] = useState(DEFAULT_LAYER_TOPOLOGY);
-    let [tableData, setTableData] = useState<any[]>(DEFAULT_CIRCUIT_TABLE_DATA);
-    let [datasetVisible, setDatasetVisible] = useState(true);
-    let [showSaveAlert, setShowSaveAlert] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [historyOpen, setHistoryOpen] = useState(false);
-    let mapRef = useRef<any>();
-    const [activeDelta, setActiveDelta] = useState(null);
-    const [activeVersionInfo, setActiveVersionInfo] = useState(null);
-    const [deltaLayers, setDeltaLayers] = useState<DeltaLayers>({ added: true, removed: true, modified: true });
-    // Diff layer index map: base=0, added=1, removed=2, modified=3
-    const DIFF_LAYER_IDX = { added: 1, removed: 2, modified: 3 };
-    const DIFF_COLORS = { added: "#22c55e", removed: "#ef4444", modified: "#f59e0b" };
-
-    const _applyDiffTopology = (diffData, layers) => {
-        if (!mapRef.current) return;
-        const topology = [
-            diffData.base,
-            layers.added   ? diffData.added    : { ...diffData.added,    nodes: [], edges: [] },
-            layers.removed ? diffData.removed  : { ...diffData.removed,  nodes: [], edges: [] },
-            layers.modified? diffData.modified : { ...diffData.modified, nodes: [], edges: [] },
-        ];
-        // requestAnimationFrame avoids collision with the resize handler's
-        // recalculateMapZoom which can trigger a concurrent refresh() causing
-        // Leaflet's "container already initialized" error
-        requestAnimationFrame(() => {
-            if (!mapRef.current) return;
-            mapRef.current.setTopology(topology);
-        });
-    };
-
-    // Store latest diff data in a ref so toggle can re-apply without re-fetching
-    const diffDataRef = useRef(null);
-
-    const handleSelectVersion = async (version, delta) => {
-        if (!delta) {
-            exitDiffMode(false);
-            return;
-        }
-
-        const fromVersion = version - 1;
-        const headers = setAuthHeaders({ "Content-Type": "application/json" });
-
-        if (visualizationMode === "geographic" || visualizationMode === "logical") {
-            const layout = visualizationMode === "geographic" ? "geographic" : "logical";
-            const diffUrl = fromVersion >= 1
-                ? `${API_URL}/output/dataset/${datasetId}/${layout}/diff/${fromVersion}/${version}/`
-                : `${API_URL}/output/dataset/${datasetId}/${layout}/snapshot/json/?version=${version}`;
-            const res = await fetch(diffUrl, { headers });
-            if (!res.ok) return;
-            const diffData = await res.json();
-
-            // If it's a real diff response (has 'base' key), push 4 layers directly to canvas
-            if (diffData.base !== undefined) {
-                // Stamp diff colors directly onto topology objects so the canvas
-                // picks them up via d.color / azColor / zaColor — avoids setOptions
-                // which triggers a Leaflet re-init
-                const stamp = (topo, color) => {
-                    topo.nodes.forEach(n => { n.color = color; });
-                    topo.edges.forEach(e => { e.azColor = color; e.zaColor = color; });
-                    return topo;
-                };
-                stamp(diffData.added,    DIFF_COLORS.added);
-                stamp(diffData.removed,  DIFF_COLORS.removed);
-                stamp(diffData.modified, DIFF_COLORS.modified);
-
-                diffDataRef.current = diffData;
-                const layers = { added: true, removed: true, modified: true };
-                setDeltaLayers(layers);
-
-                // Map already initialized with 4 layers via DEFAULT_DATASET_*MAP constants.
-                _applyDiffTopology(diffData, layers);
-            } else {
-                // Fallback: single snapshot topology (version 1, no prior)
-                if (mapRef.current) mapRef.current.setTopology([diffData]);
-                diffDataRef.current = null;
-            }
-        } else if (visualizationMode === "table-view") {
-            const dsRes = await fetch(`${API_URL}/dataset/id/${datasetId}/?version=${version}`, { headers });
-            if (dsRes.ok) {
-                const ds = await dsRes.json();
-                if (Array.isArray(ds.results)) setTableData(ds.results);
-            }
-        }
-
-        setActiveDelta(delta);
-        setActiveVersionInfo({ from: fromVersion, to: version });
-        setDeltaLayers({ added: true, removed: true, modified: true });
-    };
-
-    const toggleDeltaLayer = (layer) => {
-        setDeltaLayers(prev => {
-            const next = { ...prev, [layer]: !prev[layer] };
-            // Toggle directly on canvas without React re-render
-            if (diffDataRef.current) {
-                _applyDiffTopology(diffDataRef.current, next);
-            }
-            return next;
-        });
-    };
-
     useEffect(() => {
-        const fetchDatasetInstance = async () => {
-            await controller.fetch();
-        };
+        const fetchDatasetInstance = async () => { await controller.fetch(); };
         fetchDatasetInstance();
     }, []);
 
-    const markFavorite = () => {
-        // Use raw ID list from userdata for bookkeeping (favorites context stores full objects for display)
-        const rawFavorites = userDataController.instance?.favorites ?? {};
-        const currentList: string[] = rawFavorites.datasets ?? [];
-        if (currentList.includes(datasetId)) {
-            currentList.splice(currentList.indexOf(datasetId), 1);
-        } else {
-            currentList.push(datasetId);
-        }
-        rawFavorites.datasets = currentList;
-        userDataController.setProperty(`favorites`, rawFavorites);
-        userDataController.update();
-    };
-
     const prepRequest = (dataset: any) => {
-        let headers = {
-            "Content-Type": "application/json",
-        };
+        let headers = { "Content-Type": "application/json" };
         headers = setAuthHeaders(headers);
-        let datasetRevision = {
-            name: dataset.name,
-            query: dataset.query,
-        };
-        // remove 'null' from filters -- side effect of side effect.
-        // see DatasetQueryPanel.deleteCriterion.
+        let datasetRevision = { name: dataset.name, query: dataset.query };
         datasetRevision.query.filters = dataset.query.filters.filter((f: any) => !!f);
-        let requestData = {
-            headers: headers,
-            method: "PATCH",
-            body: JSON.stringify(datasetRevision),
-        };
-        return requestData;
+        return { headers, method: "PATCH", body: JSON.stringify(datasetRevision) };
     };
 
     const fetchGeographicTopologyData = async () => {
@@ -209,11 +155,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
         let apiUrl = `${API_URL}/output/query/geographic/`;
         let requestData = prepRequest(dataset);
         fetch(apiUrl, requestData).then((response) => {
-            if (response.ok) {
-                response.json().then((topologyData) => {
-                    setTopologyData(topologyData);
-                });
-            }
+            if (response.ok) response.json().then((data) => setTopologyData(data));
         });
     };
 
@@ -222,11 +164,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
         let apiUrl = `${API_URL}/output/query/logical/`;
         let requestData = prepRequest(dataset);
         fetch(apiUrl, requestData).then((response) => {
-            if (response.ok) {
-                response.json().then((topologyData) => {
-                    setTopologyData(topologyData);
-                });
-            }
+            if (response.ok) response.json().then((data) => setTopologyData(data));
         });
     };
 
@@ -239,36 +177,24 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
             if (response.ok) {
                 response.json().then((responseData: any[]) => {
                     setLoading(false);
-                    if (Array.isArray(responseData)) {
-                        setTableData(responseData);
-                    } else {
-                        setTableData([{ no: null, data: null }]);
-                    }
+                    if (Array.isArray(responseData)) setTableData(responseData);
+                    else setTableData([{ no: null, data: null }]);
                 });
             }
         });
     };
 
     useEffect(() => {
-        if (visualizationMode == "geographic") {
-            fetchGeographicTopologyData();
-        }
-        if (visualizationMode == "logical") {
-            fetchEdgeGraphTopologyData();
-        }
-        if (visualizationMode == "table-view") {
-            fetchRawCircuitData();
-        }
+        if (visualizationMode == "geographic") fetchGeographicTopologyData();
+        if (visualizationMode == "logical") fetchEdgeGraphTopologyData();
+        if (visualizationMode == "table-view") fetchRawCircuitData();
     }, [dataset, visualizationMode]);
 
-    // Reset shouldHome after topology renders
     useEffect(() => {
         if (shouldHome) setShouldHome(false);
     }, [topologyData]);
 
-    if (!dataset) {
-        return <main></main>;
-    }
+    if (!dataset) return <main></main>;
 
     const getVisualization = () => {
         if (visualizationMode === "table-view") {
@@ -287,87 +213,84 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
         if (visualizationMode === "logical") {
             return (
                 <div className="overflow-none border w-full">
-                    <LogicalDatasetMap
-                        topology={topologyData}
-                        mapRef={mapRef}
-                        datasetVisible={datasetVisible}
-                        shouldHome={shouldHome}
-                    />
+                    <LogicalDatasetMap topology={topologyData} mapRef={mapRef} datasetVisible={datasetVisible} shouldHome={shouldHome} />
                 </div>
             );
         }
         if (visualizationMode == "geographic") {
             return (
                 <div className="overflow-none border w-full">
-                    <GeographicDatasetMap
-                        topology={topologyData}
-                        mapRef={mapRef}
-                        datasetVisible={datasetVisible}
-                        shouldHome={shouldHome}
-                    />
+                    <GeographicDatasetMap topology={topologyData} mapRef={mapRef} datasetVisible={datasetVisible} shouldHome={shouldHome} />
                 </div>
             );
         }
         return "Unknown visualization mode";
     };
 
-    const setDatasetName = (newDatasetName: string) => {
-        controller.setProperty("name", newDatasetName);
-        setEditingName(false);
-    };
-    const toggleDatasetVisible = (visibility: boolean) => {
-        mapRef.current.toggleLayer(0, visibility);
-        setDatasetVisible(visibility);
-    };
+    const setDatasetName = (newName: string) => { controller.setProperty("name", newName); setEditingName(false); };
+    const toggleDatasetVisible = (visibility: boolean) => { mapRef.current.toggleLayer(0, visibility); setDatasetVisible(visibility); };
 
     const saveDataset = () => {
         setLoading(true);
-        let propsToClear: any[] = [];
-        propsToClear.forEach((prop) => {
-            controller.setProperty(prop, null);
-        });
         controller.update().then(() => {
             setShowSaveAlert(true);
-            setTimeout(() => {
-                setLoading(false);
-                setShowSaveAlert(false);
-            }, TOOLTIP_TTL * 1000);
+            setTimeout(() => { setLoading(false); setShowSaveAlert(false); }, TOOLTIP_TTL * 1000);
         });
-
-        // Update lastEdited using the userdata IDs (not the LastEdited full-objects context).
         const currentLastEdited = userDataController.instance?.lastEdited ?? {};
         let newDatasets = ((currentLastEdited?.datasets ?? []) as string[]).filter((e) => e !== datasetId);
-        newDatasets.push(datasetId); // Push at the end (newest = highest index)
-        if (newDatasets.length > 3) {
-            newDatasets.shift(); // removes the oldest element
-        }
+        newDatasets.push(datasetId);
+        if (newDatasets.length > 3) newDatasets.shift();
         userDataController.setProperty(`lastEdited`, { ...currentLastEdited, datasets: newDatasets });
         userDataController.update();
     };
 
+    // Unreviewed indicator: latestCheckpointId exists and differs from acknowledgedCheckpointId
+    const hasUnreviewed = dataset.latestCheckpointId &&
+        dataset.latestCheckpointId !== dataset.acknowledgedCheckpointId;
+
     return (
         <DatasetController.Provider value={{ controller, instance: dataset }}>
             <main className="flex flex-col gap-4 px-4 min-h-full bg-light-background">
-                {/* Topbar */}
-                <DatasetEditorTopbar
-                    datasetName={dataset.name}
-                    loading={loading}
-                    onUpdateName={setDatasetName}
-                    onDiscard={() => controller.fetch()}
-                    onSave={saveDataset}
-                    onToggleHistory={() => setHistoryOpen((o) => !o)}
-                    historyOpen={historyOpen}
-                />
+                {/* Topbar + diff picker popover */}
+                <div className="relative">
+                    <DatasetEditorTopbar
+                        datasetName={dataset.name}
+                        loading={loading}
+                        onUpdateName={setDatasetName}
+                        onDiscard={() => controller.fetch()}
+                        onSave={saveDataset}
+                        onToggleHistory={() => setPickerOpen((o) => !o)}
+                        historyOpen={pickerOpen}
+                        hasUnreviewed={hasUnreviewed}
+                    />
+                    {pickerOpen && datasetId && (
+                        <div className="absolute right-4 top-full z-700">
+                            <DatasetDiffPicker
+                                datasetId={datasetId}
+                                dataset={dataset}
+                                onCompare={handleCompare}
+                                onAcknowledge={handleAcknowledge}
+                                onAccept={handleAccept}
+                                onClose={() => setPickerOpen(false)}
+                                hasActiveDiff={!!activeDelta}
+                                initialFromId={initialDiffFrom}
+                                initialToId={initialDiffTo}
+                            />
+                        </div>
+                    )}
+                </div>
 
                 {/* Dataset Viewer and Sidebar */}
                 <div className="flex flex-row gap-4 w-full h-[432px] p-4 surface rounded-xl shadow-sm">
                     <div className="relative flex-1 min-w-0 flex">
                         {getVisualization()}
-                        {activeDelta && activeVersionInfo && (
+                        {activeDelta && activeSnapshotInfo && (
                             <DeltaOverlay
                                 delta={activeDelta}
-                                fromVersion={activeVersionInfo.from}
-                                toVersion={activeVersionInfo.to}
+                                fromVersion={0}
+                                toVersion={0}
+                                fromSnapshotId={activeSnapshotInfo.from}
+                                toSnapshotId={activeSnapshotInfo.to}
                                 onDismiss={() => exitDiffMode(true)}
                                 mode="dataset"
                                 layers={deltaLayers}
@@ -383,28 +306,14 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                 </div>
 
                 <div className="gap-8 pb-4 flex flex-col">
-                    <DatasetEditorQueryPanel
-                        toggleDatasetVisible={toggleDatasetVisible}
-                        datasetVisible={datasetVisible}
-                    />
+                    <DatasetEditorQueryPanel toggleDatasetVisible={toggleDatasetVisible} datasetVisible={datasetVisible} />
                     <DatasetEditorNodeOptionsPanel />
                 </div>
 
                 {showSaveAlert && (
                     <div className="fixed right-4 bottom-4">
-                        <PktsAlert variant="success" title="Dataset Saved">
-                            New Version: v{controller.instance?.version}.
-                        </PktsAlert>
+                        <PktsAlert variant="success" title="Dataset Saved">Snapshot saved.</PktsAlert>
                     </div>
-                )}
-
-                {historyOpen && datasetId && (
-                    <VersionHistoryPanel
-                        datasetId={datasetId}
-                        currentVersion={controller.instance?.version ?? 1}
-                        onClose={() => setHistoryOpen(false)}
-                        onSelectVersion={handleSelectVersion}
-                    />
                 )}
 
             </main>
