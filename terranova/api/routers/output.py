@@ -100,6 +100,85 @@ def dataset_output(
     return topology
 
 
+@router.get(
+    "/output/dataset/{dataset_id}/{layout}/diff/{v1}/{v2}/",
+    summary="Returns a colored diff topology between two saved dataset versions",
+)
+@version(1)
+def dataset_diff_topology(
+    dataset_id: str,
+    layout: TerranovaLayout,
+    v1: int,
+    v2: int,
+    template: str | None = None,
+    user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
+):
+    from terranova.checkpoint.differ import compute_delta
+
+    COLOR_ADDED    = "#22c55e"
+    COLOR_REMOVED  = "#ef4444"
+    COLOR_MODIFIED = "#f59e0b"
+
+    def _fetch_topology(version_num: int):
+        tv = TerranovaVersion(version=version_num)
+        rows = storage_backend.get_datasets(dataset_id=dataset_id, version=tv)
+        if not rows:
+            raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} version {version_num} not found")
+        ds = Dataset(**rows[0])
+        if ds.results is None:
+            ds.results = []
+        endpoint, context = parse_dataset_endpoint(ds.query.endpoint)
+        path_layout = {"type": "curveLinear", "tension": 0.6} if layout in [TerranovaLayout.logical, "logical"] else {"type": "curveCardinal", "tension": 0.6}
+        node_tmpl = _get_template(template_id=template, geographic=layout in [TerranovaLayout.geographic, "geographic"])
+        topo = datasources[endpoint].backend.render_topology(ds, path_layout=path_layout, use_snapshot=True, node_template=node_tmpl, **context)
+        topo = datasources[endpoint].backend.apply_layout(layout, topo, node_tmpl)
+        return topo, ds.results or []
+
+    topo_v1, results_v1 = _fetch_topology(v1)
+    topo_v2, results_v2 = _fetch_topology(v2)
+
+    delta = compute_delta(results_v1, results_v2)
+
+    # Build name sets from the record-level diff
+    added_names    = {r.get("name", "") for r in delta["nodes"]["added"]}    | {r.get("name", "") for r in delta["edges"]["added"]}
+    removed_names  = {r.get("name", "") for r in delta["nodes"]["removed"]}  | {r.get("name", "") for r in delta["edges"]["removed"]}
+    modified_names = {r.get("before", {}).get("name", "") for r in delta["nodes"]["modified"]} | \
+                     {r.get("before", {}).get("name", "") for r in delta["edges"]["modified"]}
+
+    # Annotate v2 topology nodes with diff colors
+    for node in topo_v2.nodes:
+        if node.name in added_names:
+            node.color = COLOR_ADDED
+        elif node.name in modified_names:
+            node.color = COLOR_MODIFIED
+
+    # Annotate v2 topology edges with diff colors
+    for edge in topo_v2.edges:
+        if edge.name in added_names:
+            edge.azColor = COLOR_ADDED
+            edge.zaColor = COLOR_ADDED
+        elif edge.name in modified_names:
+            edge.azColor = COLOR_MODIFIED
+            edge.zaColor = COLOR_MODIFIED
+
+    # Add removed nodes/edges from v1 topology with red color
+    v1_node_map = {n.name: n for n in topo_v1.nodes}
+    v1_edge_map = {e.name: e for e in topo_v1.edges}
+
+    for name in removed_names:
+        if name in v1_node_map:
+            node = v1_node_map[name].model_copy()
+            node.color = COLOR_REMOVED
+            topo_v2.nodes.append(node)
+        if name in v1_edge_map:
+            edge = v1_edge_map[name].model_copy()
+            edge.azColor = COLOR_REMOVED
+            edge.zaColor = COLOR_REMOVED
+            topo_v2.edges.append(edge)
+
+    return topo_v2
+
+
 # Outputs a dataset directly from a query, only supports live view.
 @router.patch(
     "/output/query/raw/",

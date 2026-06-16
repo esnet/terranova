@@ -55,6 +55,7 @@ class TopologyNodes(BaseModel):
     coordinate: LatLon
     meta: Dict[str, Any]
     children: List[str] | None = None
+    color: str | None = None  # per-element color override for diff rendering
 
 
 class EdgeMeta(BaseModel):
@@ -66,6 +67,8 @@ class TopologyEdges(BaseModel):
     name: str
     coordinates: Annotated[List[LatLon], Field(min_length=2)]
     meta: EdgeMeta
+    azColor: str | None = None  # per-element color override for diff rendering
+    zaColor: str | None = None
 
 
 class Topology(BaseModel):
