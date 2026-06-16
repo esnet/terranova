@@ -25,7 +25,15 @@ export const DatasetController = createContext<DataControllerContextType | null>
 export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     const datasetNameRefInput = useRef<HTMLInputElement>(null);
 
+    const exitDiffMode = (closeHistory = false) => {
+        setActiveDelta(null);
+        setActiveVersionInfo(null);
+        diffDataRef.current = null;
+        if (closeHistory) setHistoryOpen(false);
+    };
+
     const onModeChange = (e: ChangeEvent<HTMLSelectElement>) => {
+        exitDiffMode(true);
         setVisualizationMode(e.target.value);
         mapRef?.current?.homeMap();
     };
@@ -84,10 +92,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
 
     const handleSelectVersion = async (version, delta) => {
         if (!delta) {
-            setActiveDelta(null);
-            setActiveVersionInfo(null);
-            diffDataRef.current = null;
-            // Revert to live topology — map keeps 4 layers, base layer shows live data
+            exitDiffMode(false);
             if (visualizationMode === "geographic") fetchGeographicTopologyData();
             else if (visualizationMode === "logical") fetchEdgeGraphTopologyData();
             else if (visualizationMode === "table-view") fetchRawCircuitData();
@@ -353,7 +358,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                                 delta={activeDelta}
                                 fromVersion={activeVersionInfo.from}
                                 toVersion={activeVersionInfo.to}
-                                onDismiss={() => { setActiveDelta(null); setActiveVersionInfo(null); }}
+                                onDismiss={() => exitDiffMode(true)}
                                 mode="dataset"
                                 layers={deltaLayers}
                                 onToggleLayer={toggleDeltaLayer}

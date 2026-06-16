@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { X, Clock, User, Cpu } from "lucide-react";
+import { X, Clock } from "lucide-react";
+import { PktsChip } from "@esnet/packets-ui-react";
 import { setAuthHeaders } from "../../DataController";
 import { API_URL } from "../../../static/settings";
 
@@ -34,15 +35,6 @@ function fmt(iso: string) {
         hour: "2-digit",
         minute: "2-digit",
     });
-}
-
-function DeltaSummary({ delta }: { delta: Delta | null }) {
-    if (!delta || !delta.changed) return null;
-    return (
-        <span className="text-[10px] text-color-text-alt mt-0.5 truncate block">
-            {delta.summary}
-        </span>
-    );
 }
 
 export function VersionHistoryPanel({
@@ -107,7 +99,7 @@ export function VersionHistoryPanel({
 
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2.5 border-b border-color-border-alt bg-light-secondary text-white shrink-0">
-                <div className="flex items-center gap-2 text-sm font-semibold">
+                <div className="flex items-center gap-2 tn-bold text-sm">
                     <Clock size={13} />
                     Version History
                 </div>
@@ -127,57 +119,59 @@ export function VersionHistoryPanel({
                 {versions.map((v, idx) => {
                     const isSelected = v.version === selected;
                     const isCurrent = v.version === currentVersion;
-                    const delta = idx < versions.length - 1 ? (deltas[v.version] ?? null) : null;
                     const isCheckpoint = !!v.checkpoint;
+                    const delta = idx < versions.length - 1 ? (deltas[v.version] ?? null) : null;
 
                     return (
                         <button
                             key={v.version}
-                            className={`w-full text-left px-3 py-2.5 transition-colors border-b border-color-border-alt
-                                ${isSelected
-                                    ? "bg-light-secondary text-white"
-                                    : "hover:bg-color-layer-2 text-color-text"
-                                }`}
                             onClick={() => handleSelect(v, idx)}
+                            className={`w-full text-left px-3 py-2 border-b border-color-border-alt transition-colors
+                                ${isSelected
+                                    ? "bg-color-layer-1"
+                                    : "bg-color-layer-3 hover:bg-color-layer-2"
+                                }`}
                         >
+                            {/* Version number + chips row */}
                             <div className="flex items-center gap-1.5 min-w-0">
-                                <span className={`text-xs font-mono font-bold shrink-0 ${isSelected ? "text-white" : "text-color-text-alt"}`}>
+                                <span className="tn-bold font-mono text-xs text-color-text shrink-0">
                                     v{v.version}
                                 </span>
 
-                                {isCheckpoint ? (
-                                    <span className={`flex items-center gap-0.5 text-[10px] px-1 py-0.5 rounded font-semibold shrink-0
-                                        ${isSelected ? "bg-white/20 text-white" : "bg-mauve-100 text-mauve-700"}`}>
-                                        <Cpu size={8} /> auto
-                                    </span>
-                                ) : (
-                                    <span className={`flex items-center gap-0.5 text-[10px] px-1 py-0.5 rounded font-semibold shrink-0
-                                        ${isSelected ? "bg-white/20 text-white" : "bg-color-layer-3 text-color-text-alt"}`}>
-                                        <User size={8} /> user
-                                    </span>
+                                {/* Scheduled snapshot chip */}
+                                {isCheckpoint && (
+                                    <PktsChip variant="outline" className="!text-[10px] !py-0 !px-1.5 !h-auto">
+                                        scheduled
+                                    </PktsChip>
                                 )}
 
+                                {/* Current version chip */}
                                 {isCurrent && (
-                                    <span className={`text-[10px] px-1 py-0.5 rounded font-semibold shrink-0
-                                        ${isSelected ? "bg-white/20 text-white" : "bg-color-bg-success text-color-text-success"}`}>
+                                    <PktsChip variant="primary" className="!text-[10px] !py-0 !px-1.5 !h-auto">
                                         current
-                                    </span>
+                                    </PktsChip>
                                 )}
                             </div>
 
-                            <div className={`mt-0.5 text-[11px] flex items-center gap-1 truncate ${isSelected ? "text-white/70" : "text-color-text-alt"}`}>
-                                <span>{fmt(v.lastUpdatedOn)}</span>
-                                <span className="opacity-40">·</span>
-                                <span className="truncate">{v.lastUpdatedBy}</span>
+                            {/* Timestamp + author */}
+                            <div className="mt-0.5 text-xs text-color-text-alt tn-text truncate">
+                                {fmt(v.lastUpdatedOn)}
+                                <span className="opacity-40 mx-1">·</span>
+                                {v.lastUpdatedBy}
                             </div>
 
-                            {isSelected && <DeltaSummary delta={delta} />}
+                            {/* Inline delta summary when selected */}
+                            {isSelected && delta?.changed && (
+                                <div className="mt-1 text-xs text-color-text-alt tn-text">
+                                    {delta.summary}
+                                </div>
+                            )}
                         </button>
                     );
                 })}
             </div>
 
-            <div className="px-3 py-2 text-[10px] text-color-text-alt border-t border-color-border-alt shrink-0">
+            <div className="px-3 py-2 text-xs text-color-text-alt tn-text border-t border-color-border-alt shrink-0">
                 Click a version to compare it against the previous one.
             </div>
         </div>
