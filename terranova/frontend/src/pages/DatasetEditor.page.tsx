@@ -10,7 +10,7 @@ import { DatasetEditorQueryPanel } from "../components/datasetEditor/DatasetEdit
 import { DatasetEditorNodeOptionsPanel } from "../components/datasetEditor/DatasetEditorNodeOptionsPanel.component";
 import { LogicalDatasetMap } from "../components/datasetEditor/LogicalDatasetMap.component";
 import { GeographicDatasetMap } from "../components/datasetEditor/GeographicDatasetMap.component";
-import { DEFAULT_LAYER_TOPOLOGY, DEFAULT_CIRCUIT_TABLE_DATA } from "../data/constants";
+import { DEFAULT_LAYER_TOPOLOGY, DEFAULT_CIRCUIT_TABLE_DATA, DEFAULT_LAYER_CONFIGURATION } from "../data/constants";
 import { API_URL, TOOLTIP_TTL } from "../../static/settings";
 import { DataControllerContextType } from "../types/mapeditor";
 import { DatasetEditorTopbar } from "../components/datasetEditor/DatasetEditorTopbar";
@@ -70,7 +70,13 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
             layers.removed ? diffData.removed  : { ...diffData.removed,  nodes: [], edges: [] },
             layers.modified? diffData.modified : { ...diffData.modified, nodes: [], edges: [] },
         ];
-        mapRef.current.setTopology(topology);
+        // requestAnimationFrame avoids collision with the resize handler's
+        // recalculateMapZoom which can trigger a concurrent refresh() causing
+        // Leaflet's "container already initialized" error
+        requestAnimationFrame(() => {
+            if (!mapRef.current) return;
+            mapRef.current.setTopology(topology);
+        });
     };
 
     // Store latest diff data in a ref so toggle can re-apply without re-fetching
@@ -117,6 +123,21 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                 diffDataRef.current = diffData;
                 const layers = { added: true, removed: true, modified: true };
                 setDeltaLayers(layers);
+
+                // Extend options to 4 layers so the canvas has a config for each topology.
+                // setOptions for layer changes calls renderMap() not refresh() — safe.
+                if (mapRef.current) {
+                    const currentOpts = JSON.parse(JSON.stringify(mapRef.current.options || {}));
+                    const baseLayer = currentOpts.layers?.[0] || JSON.parse(JSON.stringify(DEFAULT_LAYER_CONFIGURATION));
+                    const makeLayer = (color) => ({ ...JSON.parse(JSON.stringify(baseLayer)), color, visible: true });
+                    currentOpts.layers = [
+                        baseLayer,
+                        makeLayer(DIFF_COLORS.added),
+                        makeLayer(DIFF_COLORS.removed),
+                        makeLayer(DIFF_COLORS.modified),
+                    ];
+                    mapRef.current.setOptions(currentOpts);
+                }
                 _applyDiffTopology(diffData, layers);
             } else {
                 // Fallback: single snapshot topology (version 1, no prior)
