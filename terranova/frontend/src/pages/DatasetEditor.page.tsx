@@ -16,6 +16,7 @@ import { DataControllerContextType } from "../types/mapeditor";
 import { DatasetEditorTopbar } from "../components/datasetEditor/DatasetEditorTopbar";
 import { PktsAlert } from "@esnet/packets-ui-react";
 import { VersionHistoryPanel } from "../components/checkpoints/VersionHistoryPanel";
+import { DeltaOverlay, DeltaLayers } from "../components/checkpoints/DeltaOverlay";
 
 interface IDatasetEditorPageProps {}
 
@@ -53,6 +54,20 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     let [showSaveAlert, setShowSaveAlert] = useState(false);
     const [loading, setLoading] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
+    const [activeDelta, setActiveDelta] = useState(null);
+    const [activeVersionInfo, setActiveVersionInfo] = useState(null);
+    const [deltaLayers, setDeltaLayers] = useState<DeltaLayers>({ added: true, removed: true, modified: true });
+
+    const handleSelectVersion = async (version, delta) => {
+        if (!delta) { setActiveDelta(null); setActiveVersionInfo(null); return; }
+        setActiveDelta(delta);
+        setActiveVersionInfo({ from: version - 1, to: version });
+        setDeltaLayers({ added: true, removed: true, modified: true });
+    };
+
+    const toggleDeltaLayer = (layer) => {
+        setDeltaLayers(prev => ({ ...prev, [layer]: !prev[layer] }));
+    };
 
     let mapRef = useRef<any>();
 
@@ -162,7 +177,13 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
         if (visualizationMode === "table-view") {
             return (
                 <div className="overflow-auto max-w-3/4 w-full max-h-128">
-                    <TableView data={tableData} loading={loading} datasetVisible={datasetVisible} />
+                    <TableView
+                        data={tableData}
+                        loading={loading}
+                        datasetVisible={datasetVisible}
+                        delta={activeDelta}
+                        deltaLayers={deltaLayers}
+                    />
                 </div>
             );
         }
@@ -270,10 +291,22 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                         datasetId={datasetId}
                         currentVersion={controller.instance?.version ?? 1}
                         onClose={() => setHistoryOpen(false)}
-                        onSelectVersion={(_version, _delta) => {
-                            // Dataset editor: version selection for reference only (no map overlay here)
-                        }}
+                        onSelectVersion={handleSelectVersion}
                     />
+                )}
+
+                {activeDelta && activeVersionInfo && (
+                    <div className="relative">
+                        <DeltaOverlay
+                            delta={activeDelta}
+                            fromVersion={activeVersionInfo.from}
+                            toVersion={activeVersionInfo.to}
+                            onDismiss={() => { setActiveDelta(null); setActiveVersionInfo(null); }}
+                            mode="dataset"
+                            layers={deltaLayers}
+                            onToggleLayer={toggleDeltaLayer}
+                        />
+                    </div>
                 )}
             </main>
         </DatasetController.Provider>

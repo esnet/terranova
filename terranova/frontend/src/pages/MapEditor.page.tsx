@@ -368,6 +368,7 @@ export function MapEditorPageComponent() {
                                         fromVersion={activeVersionInfo.from}
                                         toVersion={activeVersionInfo.to}
                                         onDismiss={() => { setActiveDelta(null); setActiveVersionInfo(null); }}
+                                        mode="map"
                                     />
                                 )}
                             </div>
