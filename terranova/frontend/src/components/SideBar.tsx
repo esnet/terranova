@@ -46,9 +46,10 @@ export function Sidebar() {
         )
             return;
 
-        type LastUpdatedOn = { lastUpdatedOn: string };
+        type LastUpdatedOn = { lastUpdatedOn?: string; createdOn?: string };
+        const getDate = (x: LastUpdatedOn) => x.lastUpdatedOn || x.createdOn || "";
         const sortOnUpdateDate = (a: LastUpdatedOn, b: LastUpdatedOn) =>
-            b.lastUpdatedOn.localeCompare(a.lastUpdatedOn);
+            getDate(b).localeCompare(getDate(a));
 
         // show the 3 last edited items, from either local or global
         // take the total number of locals, and if that's < 3, add in globals until we get 3 (or there are no globals)
