@@ -139,11 +139,25 @@ def dataset_diff_topology(
 
     delta = compute_delta(results_v1, results_v2)
 
-    # Build name sets from the record-level diff
-    added_names    = {r.get("name", "") for r in delta["nodes"]["added"]}    | {r.get("name", "") for r in delta["edges"]["added"]}
-    removed_names  = {r.get("name", "") for r in delta["nodes"]["removed"]}  | {r.get("name", "") for r in delta["edges"]["removed"]}
-    modified_names = {r.get("before", {}).get("name", "") for r in delta["nodes"]["modified"]} | \
-                     {r.get("before", {}).get("name", "") for r in delta["edges"]["modified"]}
+    def _names_from_records(records):
+        """Extract topology node/edge names from raw circuit records.
+        Records have an 'endpoints' list (each with a 'name') plus a top-level
+        'name' (the circuit name used for edges). We collect both so we can
+        match against topology node names (endpoint names) and edge names (circuit names).
+        """
+        names = set()
+        for r in records:
+            if r.get("name"):
+                names.add(r["name"])
+            for ep in r.get("endpoints", []):
+                if ep.get("name"):
+                    names.add(ep["name"])
+        return names
+
+    added_names    = _names_from_records(delta["nodes"]["added"])   | _names_from_records(delta["edges"]["added"])
+    removed_names  = _names_from_records(delta["nodes"]["removed"]) | _names_from_records(delta["edges"]["removed"])
+    modified_names = _names_from_records([r.get("before", {}) for r in delta["nodes"]["modified"]]) | \
+                     _names_from_records([r.get("before", {}) for r in delta["edges"]["modified"]])
 
     # Annotate v2 topology nodes with diff colors
     for node in topo_v2.nodes:
