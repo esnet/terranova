@@ -20,9 +20,10 @@ export function GeographicDatasetMap(props: GeographicDatasetMapProps) {
 
     useEffect(() => {
         if (props.mapRef.current) {
+            const isFirstLoad = !props.mapRef.current._topology;
             props.mapRef.current.setTopology([props.topology]);
             props.mapRef.current.setOptions(configuration);
-            props.mapRef.current.homeMap();
+            if (isFirstLoad) props.mapRef.current.homeMap();
         }
     }, [props.mapRef, props.mapRef.current, props.topology]);
     return <esnet-map-canvas height="398" ref={props.mapRef} />;
