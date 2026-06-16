@@ -10,7 +10,7 @@ import { DatasetEditorQueryPanel } from "../components/datasetEditor/DatasetEdit
 import { DatasetEditorNodeOptionsPanel } from "../components/datasetEditor/DatasetEditorNodeOptionsPanel.component";
 import { LogicalDatasetMap } from "../components/datasetEditor/LogicalDatasetMap.component";
 import { GeographicDatasetMap } from "../components/datasetEditor/GeographicDatasetMap.component";
-import { DEFAULT_LAYER_TOPOLOGY, DEFAULT_CIRCUIT_TABLE_DATA } from "../data/constants";
+import { DEFAULT_LAYER_TOPOLOGY, DEFAULT_CIRCUIT_TABLE_DATA, DEFAULT_LAYER_CONFIGURATION } from "../data/constants";
 import { API_URL, TOOLTIP_TTL } from "../../static/settings";
 import { DataControllerContextType } from "../types/mapeditor";
 import { DatasetEditorTopbar } from "../components/datasetEditor/DatasetEditorTopbar";
@@ -54,50 +54,107 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     let [showSaveAlert, setShowSaveAlert] = useState(false);
     const [loading, setLoading] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
+    let mapRef = useRef<any>();
     const [activeDelta, setActiveDelta] = useState(null);
     const [activeVersionInfo, setActiveVersionInfo] = useState(null);
     const [deltaLayers, setDeltaLayers] = useState<DeltaLayers>({ added: true, removed: true, modified: true });
+    // Diff layer index map: base=0, added=1, removed=2, modified=3
+    const DIFF_LAYER_IDX = { added: 1, removed: 2, modified: 3 };
+    const DIFF_COLORS = { added: "#22c55e", removed: "#ef4444", modified: "#f59e0b" };
+
+    const _applyDiffTopology = (diffData, layers) => {
+        if (!mapRef.current) return;
+        const topology = [
+            diffData.base,
+            layers.added   ? diffData.added    : { ...diffData.added,    nodes: [], edges: [] },
+            layers.removed ? diffData.removed  : { ...diffData.removed,  nodes: [], edges: [] },
+            layers.modified? diffData.modified : { ...diffData.modified, nodes: [], edges: [] },
+        ];
+        mapRef.current.setTopology(topology);
+    };
+
+    // Store latest diff data in a ref so toggle can re-apply without re-fetching
+    const diffDataRef = useRef(null);
 
     const handleSelectVersion = async (version, delta) => {
         if (!delta) {
             setActiveDelta(null);
             setActiveVersionInfo(null);
-            // Revert to live topology
+            diffDataRef.current = null;
+            // Revert to live topology without homeMap
             if (visualizationMode === "geographic") fetchGeographicTopologyData();
             else if (visualizationMode === "logical") fetchEdgeGraphTopologyData();
             else if (visualizationMode === "table-view") fetchRawCircuitData();
             return;
         }
-        setActiveDelta(delta);
-        setActiveVersionInfo({ from: version - 1, to: version });
-        setDeltaLayers({ added: true, removed: true, modified: true });
 
-        // Fetch diff topology (colored) or version snapshot for table view
-        const headers = setAuthHeaders({ "Content-Type": "application/json" });
         const fromVersion = version - 1;
+        const headers = setAuthHeaders({ "Content-Type": "application/json" });
+
         if (visualizationMode === "geographic" || visualizationMode === "logical") {
             const layout = visualizationMode === "geographic" ? "geographic" : "logical";
-            // Use the diff endpoint so added/removed/modified elements are color-coded
             const diffUrl = fromVersion >= 1
                 ? `${API_URL}/output/dataset/${datasetId}/${layout}/diff/${fromVersion}/${version}/`
                 : `${API_URL}/output/dataset/${datasetId}/${layout}/snapshot/json/?version=${version}`;
             const res = await fetch(diffUrl, { headers });
-            if (res.ok) setTopologyData(await res.json());
+            if (!res.ok) return;
+            const diffData = await res.json();
+
+            // If it's a real diff response (has 'base' key), push 4 layers directly to canvas
+            if (diffData.base !== undefined) {
+                diffDataRef.current = diffData;
+                const layers = { added: true, removed: true, modified: true };
+                setDeltaLayers(layers);
+
+                // Build 4-layer options config — each category gets its own color
+                const baseOpts = mapRef.current.lastValue
+                    ? JSON.parse(JSON.stringify(mapRef.current.getOptions?.() || {}))
+                    : {};
+                const makeLayer = (color) => ({
+                    ...JSON.parse(JSON.stringify(DEFAULT_LAYER_CONFIGURATION)),
+                    color,
+                    visible: true,
+                });
+                if (mapRef.current.setOptions) {
+                    const opts = mapRef.current.getOptions?.() || { layers: [JSON.parse(JSON.stringify(DEFAULT_LAYER_CONFIGURATION))] };
+                    const config = JSON.parse(JSON.stringify(opts));
+                    config.layers = [
+                        { ...config.layers[0] },                    // base (unchanged)
+                        makeLayer(DIFF_COLORS.added),               // added
+                        makeLayer(DIFF_COLORS.removed),             // removed
+                        makeLayer(DIFF_COLORS.modified),            // modified
+                    ];
+                    mapRef.current.setOptions(config);
+                }
+                _applyDiffTopology(diffData, layers);
+            } else {
+                // Fallback: single snapshot topology (version 1, no prior)
+                if (mapRef.current) mapRef.current.setTopology([diffData]);
+                diffDataRef.current = null;
+            }
         } else if (visualizationMode === "table-view") {
-            // Load stored results for this version
             const dsRes = await fetch(`${API_URL}/dataset/id/${datasetId}/?version=${version}`, { headers });
             if (dsRes.ok) {
                 const ds = await dsRes.json();
                 if (Array.isArray(ds.results)) setTableData(ds.results);
             }
         }
+
+        setActiveDelta(delta);
+        setActiveVersionInfo({ from: fromVersion, to: version });
+        setDeltaLayers({ added: true, removed: true, modified: true });
     };
 
     const toggleDeltaLayer = (layer) => {
-        setDeltaLayers(prev => ({ ...prev, [layer]: !prev[layer] }));
+        setDeltaLayers(prev => {
+            const next = { ...prev, [layer]: !prev[layer] };
+            // Toggle directly on canvas without React re-render
+            if (diffDataRef.current) {
+                _applyDiffTopology(diffDataRef.current, next);
+            }
+            return next;
+        });
     };
-
-    let mapRef = useRef<any>();
 
     useEffect(() => {
         const fetchDatasetInstance = async () => {

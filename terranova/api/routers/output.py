@@ -159,38 +159,39 @@ def dataset_diff_topology(
     modified_names = _names_from_records([r.get("before", {}) for r in delta["nodes"]["modified"]]) | \
                      _names_from_records([r.get("before", {}) for r in delta["edges"]["modified"]])
 
-    # Annotate v2 topology nodes with diff colors
-    for node in topo_v2.nodes:
-        if node.name in added_names:
-            node.color = COLOR_ADDED
-        elif node.name in modified_names:
-            node.color = COLOR_MODIFIED
-
-    # Annotate v2 topology edges with diff colors
-    for edge in topo_v2.edges:
-        if edge.name in added_names:
-            edge.azColor = COLOR_ADDED
-            edge.zaColor = COLOR_ADDED
-        elif edge.name in modified_names:
-            edge.azColor = COLOR_MODIFIED
-            edge.zaColor = COLOR_MODIFIED
-
-    # Add removed nodes/edges from v1 topology with red color
+    # Split v2 topology into per-category layers so the frontend can toggle each independently
     v1_node_map = {n.name: n for n in topo_v1.nodes}
     v1_edge_map = {e.name: e for e in topo_v1.edges}
 
-    for name in removed_names:
-        if name in v1_node_map:
-            node = v1_node_map[name].model_copy()
-            node.color = COLOR_REMOVED
-            topo_v2.nodes.append(node)
-        if name in v1_edge_map:
-            edge = v1_edge_map[name].model_copy()
-            edge.azColor = COLOR_REMOVED
-            edge.zaColor = COLOR_REMOVED
-            topo_v2.edges.append(edge)
+    def _make_layer(name: str, nodes, edges, path_layout) -> dict:
+        return {
+            "nodes": [n.model_dump() for n in nodes],
+            "edges": [e.model_dump() for e in edges],
+            "layer": "tail",
+            "name": name,
+            "pathLayout": path_layout,
+        }
 
-    return topo_v2
+    path_layout = topo_v2.pathLayout
+
+    added_nodes   = [n for n in topo_v2.nodes if n.name in added_names]
+    modified_nodes = [n for n in topo_v2.nodes if n.name in modified_names]
+    unchanged_nodes = [n for n in topo_v2.nodes if n.name not in added_names and n.name not in modified_names]
+    removed_nodes = [v1_node_map[name].model_copy() for name in removed_names if name in v1_node_map]
+
+    added_edges   = [e for e in topo_v2.edges if e.name in added_names]
+    modified_edges = [e for e in topo_v2.edges if e.name in modified_names]
+    unchanged_edges = [e for e in topo_v2.edges if e.name not in added_names and e.name not in modified_names]
+    removed_edges = [v1_edge_map[name].model_copy() for name in removed_names if name in v1_edge_map]
+
+    return {
+        "base":     _make_layer("unchanged", unchanged_nodes, unchanged_edges, path_layout),
+        "added":    _make_layer("added",     added_nodes,     added_edges,     path_layout),
+        "removed":  _make_layer("removed",   removed_nodes,   removed_edges,   path_layout),
+        "modified": _make_layer("modified",  modified_nodes,  modified_edges,  path_layout),
+        "summary": delta.get("summary", ""),
+        "changed": delta.get("changed", False),
+    }
 
 
 # Outputs a dataset directly from a query, only supports live view.
