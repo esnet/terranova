@@ -7,9 +7,10 @@ interface LogicalDatasetMapProps {
     datasetVisible: boolean;
     topology: any;
     mapRef: any;
+    shouldHome?: boolean;
 }
 
-export function LogicalDatasetMap(props: LogicalDatasetMapProps) {
+export function LogicalDatasetMap(props: LogicalDatasetMapProps & { shouldHome?: boolean }) {
     let configuration = JSON.parse(JSON.stringify(DEFAULT_DATASET_LOGICAL_MAP.configuration));
     DIFF_LAYER_CONFIGS.forEach(({ color }) => {
         const layer = JSON.parse(JSON.stringify(DEFAULT_LAYER_CONFIGURATION));
@@ -23,7 +24,7 @@ export function LogicalDatasetMap(props: LogicalDatasetMapProps) {
             const isFirstLoad = !props.mapRef.current._topology;
             props.mapRef.current.setTopology([props.topology]);
             props.mapRef.current.setOptions(configuration);
-            if (isFirstLoad) props.mapRef.current.homeMap();
+            if (isFirstLoad || props.shouldHome) props.mapRef.current.homeMap();
         }
     }, [props.mapRef, props.mapRef.current, props.topology]);
     return <esnet-map-canvas height="398" ref={props.mapRef} />;

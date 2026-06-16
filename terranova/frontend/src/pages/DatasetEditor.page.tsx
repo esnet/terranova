@@ -38,10 +38,9 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     };
 
     const onModeChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        // Pass refetch=false — the useEffect handles the fetch for the new mode
         exitDiffMode(true, false);
+        setShouldHome(true);
         setVisualizationMode(e.target.value);
-        mapRef?.current?.homeMap();
     };
 
     const { datasetId } = useParams();
@@ -53,7 +52,8 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
         UserDataController,
     ) as DataControllerContextType;
 
-    const [visualizationMode, setVisualizationMode] = useState("logical"); // one of ["logical", "table-view", "geographic"]?
+    const [visualizationMode, setVisualizationMode] = useState("logical");
+    const [shouldHome, setShouldHome] = useState(false); // one of ["logical", "table-view", "geographic"]?
 
     const [dataset, setDataset] = useState<any | undefined>(null);
 
@@ -261,6 +261,11 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
         }
     }, [dataset, visualizationMode]);
 
+    // Reset shouldHome after topology renders
+    useEffect(() => {
+        if (shouldHome) setShouldHome(false);
+    }, [topologyData]);
+
     if (!dataset) {
         return <main></main>;
     }
@@ -286,6 +291,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                         topology={topologyData}
                         mapRef={mapRef}
                         datasetVisible={datasetVisible}
+                        shouldHome={shouldHome}
                     />
                 </div>
             );
@@ -297,6 +303,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                         topology={topologyData}
                         mapRef={mapRef}
                         datasetVisible={datasetVisible}
+                        shouldHome={shouldHome}
                     />
                 </div>
             );

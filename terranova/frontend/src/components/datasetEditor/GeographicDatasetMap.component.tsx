@@ -7,6 +7,7 @@ interface GeographicDatasetMapProps {
     datasetVisible: boolean;
     topology: any;
     mapRef: any;
+    shouldHome?: boolean;
 }
 
 export function GeographicDatasetMap(props: GeographicDatasetMapProps) {
@@ -23,7 +24,7 @@ export function GeographicDatasetMap(props: GeographicDatasetMapProps) {
             const isFirstLoad = !props.mapRef.current._topology;
             props.mapRef.current.setTopology([props.topology]);
             props.mapRef.current.setOptions(configuration);
-            if (isFirstLoad) props.mapRef.current.homeMap();
+            if (isFirstLoad || props.shouldHome) props.mapRef.current.homeMap();
         }
     }, [props.mapRef, props.mapRef.current, props.topology]);
     return <esnet-map-canvas height="398" ref={props.mapRef} />;
