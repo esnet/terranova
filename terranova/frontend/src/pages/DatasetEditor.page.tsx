@@ -76,7 +76,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
         const headers = setAuthHeaders({ "Content-Type": "application/json" });
         if (visualizationMode === "geographic" || visualizationMode === "logical") {
             const layout = visualizationMode === "geographic" ? "geographic" : "logical";
-            const url = `${API_URL}/output/dataset/${datasetId}/${layout}/snapshot/?version=${version}`;
+            const url = `${API_URL}/output/dataset/${datasetId}/${layout}/snapshot/json/?version=${version}`;
             const res = await fetch(url, { headers });
             if (res.ok) setTopologyData(await res.json());
         } else if (visualizationMode === "table-view") {
