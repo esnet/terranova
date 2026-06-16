@@ -119,20 +119,28 @@ def dataset_diff_topology(
     COLOR_REMOVED  = "#ef4444"
     COLOR_MODIFIED = "#f59e0b"
 
+    path_layout = {"type": "curveLinear", "tension": 0.6} if layout in [TerranovaLayout.logical, "logical"] else {"type": "curveCardinal", "tension": 0.6}
+    node_tmpl = _get_template(template_id=template, geographic=layout in [TerranovaLayout.geographic, "geographic"])
+
+    def _empty_topology(name=""):
+        return Topology(nodes=[], edges=[], layer="tail", name=name, pathLayout=path_layout)
+
     def _fetch_topology(version_num: int):
         tv = TerranovaVersion(version=version_num)
         rows = storage_backend.get_datasets(dataset_id=dataset_id, version=tv)
         if not rows:
             raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} version {version_num} not found")
         ds = Dataset(**rows[0])
-        if ds.results is None:
-            ds.results = []
+        results = ds.results or []
+        if not results:
+            return _empty_topology(ds.name), []
         endpoint, context = parse_dataset_endpoint(ds.query.endpoint)
-        path_layout = {"type": "curveLinear", "tension": 0.6} if layout in [TerranovaLayout.logical, "logical"] else {"type": "curveCardinal", "tension": 0.6}
-        node_tmpl = _get_template(template_id=template, geographic=layout in [TerranovaLayout.geographic, "geographic"])
-        topo = datasources[endpoint].backend.render_topology(ds, path_layout=path_layout, use_snapshot=True, node_template=node_tmpl, **context)
-        topo = datasources[endpoint].backend.apply_layout(layout, topo, node_tmpl)
-        return topo, ds.results or []
+        try:
+            topo = datasources[endpoint].backend.render_topology(ds, path_layout=path_layout, use_snapshot=True, node_template=node_tmpl, **context)
+            topo = datasources[endpoint].backend.apply_layout(layout, topo, node_tmpl)
+            return topo, results
+        except Exception:
+            return _empty_topology(ds.name), results
 
     topo_v1, results_v1 = _fetch_topology(v1)
     topo_v2, results_v2 = _fetch_topology(v2)

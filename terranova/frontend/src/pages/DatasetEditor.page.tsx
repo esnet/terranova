@@ -82,11 +82,21 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     // Store latest diff data in a ref so toggle can re-apply without re-fetching
     const diffDataRef = useRef(null);
 
+    const _restoreSingleLayer = () => {
+        if (!mapRef.current) return;
+        const currentOpts = JSON.parse(JSON.stringify(mapRef.current.options || {}));
+        if (currentOpts.layers?.length > 1) {
+            currentOpts.layers = [currentOpts.layers[0]];
+            mapRef.current.setOptions(currentOpts);
+        }
+    };
+
     const handleSelectVersion = async (version, delta) => {
         if (!delta) {
             setActiveDelta(null);
             setActiveVersionInfo(null);
             diffDataRef.current = null;
+            _restoreSingleLayer();
             // Revert to live topology without homeMap
             if (visualizationMode === "geographic") fetchGeographicTopologyData();
             else if (visualizationMode === "logical") fetchEdgeGraphTopologyData();
