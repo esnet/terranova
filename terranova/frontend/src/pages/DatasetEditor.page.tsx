@@ -72,16 +72,19 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
         setActiveVersionInfo({ from: version - 1, to: version });
         setDeltaLayers({ added: true, removed: true, modified: true });
 
-        // Fetch topology for this specific version so the map shows that snapshot
+        // Fetch diff topology (colored) or version snapshot for table view
         const headers = setAuthHeaders({ "Content-Type": "application/json" });
+        const fromVersion = version - 1;
         if (visualizationMode === "geographic" || visualizationMode === "logical") {
             const layout = visualizationMode === "geographic" ? "geographic" : "logical";
-            const url = `${API_URL}/output/dataset/${datasetId}/${layout}/snapshot/json/?version=${version}`;
-            const res = await fetch(url, { headers });
+            // Use the diff endpoint so added/removed/modified elements are color-coded
+            const diffUrl = fromVersion >= 1
+                ? `${API_URL}/output/dataset/${datasetId}/${layout}/diff/${fromVersion}/${version}/`
+                : `${API_URL}/output/dataset/${datasetId}/${layout}/snapshot/json/?version=${version}`;
+            const res = await fetch(diffUrl, { headers });
             if (res.ok) setTopologyData(await res.json());
         } else if (visualizationMode === "table-view") {
-            const url = `${API_URL}/output/query/raw/?version=${version}`;
-            // raw query doesn't support version — fall back to stored results
+            // Load stored results for this version
             const dsRes = await fetch(`${API_URL}/dataset/id/${datasetId}/?version=${version}`, { headers });
             if (dsRes.ok) {
                 const ds = await dsRes.json();
