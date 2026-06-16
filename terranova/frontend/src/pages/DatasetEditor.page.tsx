@@ -10,7 +10,7 @@ import { DatasetEditorQueryPanel } from "../components/datasetEditor/DatasetEdit
 import { DatasetEditorNodeOptionsPanel } from "../components/datasetEditor/DatasetEditorNodeOptionsPanel.component";
 import { LogicalDatasetMap } from "../components/datasetEditor/LogicalDatasetMap.component";
 import { GeographicDatasetMap } from "../components/datasetEditor/GeographicDatasetMap.component";
-import { DEFAULT_LAYER_TOPOLOGY, DEFAULT_CIRCUIT_TABLE_DATA, DEFAULT_LAYER_CONFIGURATION } from "../data/constants";
+import { DEFAULT_LAYER_TOPOLOGY, DEFAULT_CIRCUIT_TABLE_DATA } from "../data/constants";
 import { API_URL, TOOLTIP_TTL } from "../../static/settings";
 import { DataControllerContextType } from "../types/mapeditor";
 import { DatasetEditorTopbar } from "../components/datasetEditor/DatasetEditorTopbar";
@@ -102,30 +102,21 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
 
             // If it's a real diff response (has 'base' key), push 4 layers directly to canvas
             if (diffData.base !== undefined) {
+                // Stamp diff colors directly onto topology objects so the canvas
+                // picks them up via d.color / azColor / zaColor — avoids setOptions
+                // which triggers a Leaflet re-init
+                const stamp = (topo, color) => {
+                    topo.nodes.forEach(n => { n.color = color; });
+                    topo.edges.forEach(e => { e.azColor = color; e.zaColor = color; });
+                    return topo;
+                };
+                stamp(diffData.added,    DIFF_COLORS.added);
+                stamp(diffData.removed,  DIFF_COLORS.removed);
+                stamp(diffData.modified, DIFF_COLORS.modified);
+
                 diffDataRef.current = diffData;
                 const layers = { added: true, removed: true, modified: true };
                 setDeltaLayers(layers);
-
-                // Build 4-layer options config — each category gets its own color
-                const baseOpts = mapRef.current.lastValue
-                    ? JSON.parse(JSON.stringify(mapRef.current.getOptions?.() || {}))
-                    : {};
-                const makeLayer = (color) => ({
-                    ...JSON.parse(JSON.stringify(DEFAULT_LAYER_CONFIGURATION)),
-                    color,
-                    visible: true,
-                });
-                if (mapRef.current.setOptions) {
-                    const opts = mapRef.current.getOptions?.() || { layers: [JSON.parse(JSON.stringify(DEFAULT_LAYER_CONFIGURATION))] };
-                    const config = JSON.parse(JSON.stringify(opts));
-                    config.layers = [
-                        { ...config.layers[0] },                    // base (unchanged)
-                        makeLayer(DIFF_COLORS.added),               // added
-                        makeLayer(DIFF_COLORS.removed),             // removed
-                        makeLayer(DIFF_COLORS.modified),            // modified
-                    ];
-                    mapRef.current.setOptions(config);
-                }
                 _applyDiffTopology(diffData, layers);
             } else {
                 // Fallback: single snapshot topology (version 1, no prior)
