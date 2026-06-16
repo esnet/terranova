@@ -71,15 +71,10 @@ def dataset_output(
     # by default, results are ordered by lastEditedOn desc.
     dataset = Dataset(**dataset_json[0])
 
-    # does this check need to exist? This feels like a decent safeguard but
-    # should be an impossible scenario?
-    if use_snapshot and not dataset.results:
-        dataset_clause = f" with dataset_id={dataset_id}"
-        version_clause = f" and version = {version}" if version is not None else ""
-        raise HTTPException(
-            status_code=404,
-            detail=f"Dataset{dataset_clause}{version_clause} has no snapshot data",
-        )
+    # If snapshot mode is requested but results is None/empty, treat as empty results
+    # rather than 404 — allows comparing against versions that had no matching data.
+    if use_snapshot and dataset.results is None:
+        dataset.results = []
 
     endpoint, context = parse_dataset_endpoint(dataset.query.endpoint)
 
