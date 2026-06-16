@@ -25,15 +25,21 @@ export const DatasetController = createContext<DataControllerContextType | null>
 export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     const datasetNameRefInput = useRef<HTMLInputElement>(null);
 
-    const exitDiffMode = (closeHistory = false) => {
+    const exitDiffMode = (closeHistory = false, refetch = true) => {
         setActiveDelta(null);
         setActiveVersionInfo(null);
         diffDataRef.current = null;
         if (closeHistory) setHistoryOpen(false);
+        if (refetch) {
+            if (visualizationMode === "geographic") fetchGeographicTopologyData();
+            else if (visualizationMode === "logical") fetchEdgeGraphTopologyData();
+            else if (visualizationMode === "table-view") fetchRawCircuitData();
+        }
     };
 
     const onModeChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        exitDiffMode(true);
+        // Pass refetch=false — the useEffect handles the fetch for the new mode
+        exitDiffMode(true, false);
         setVisualizationMode(e.target.value);
         mapRef?.current?.homeMap();
     };
@@ -93,9 +99,6 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     const handleSelectVersion = async (version, delta) => {
         if (!delta) {
             exitDiffMode(false);
-            if (visualizationMode === "geographic") fetchGeographicTopologyData();
-            else if (visualizationMode === "logical") fetchEdgeGraphTopologyData();
-            else if (visualizationMode === "table-view") fetchRawCircuitData();
             return;
         }
 
