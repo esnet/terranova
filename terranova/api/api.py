@@ -49,6 +49,9 @@ async def lifespan(app):
     if STORAGE_BACKEND == "elasticsearch":
         backend.create_indices()
     backend.initialize_templates()
+    # Migrate old-schema dataset rows to the new Dataset+Snapshot two-table model
+    if hasattr(backend, "migrate_datasets"):
+        backend.migrate_datasets()
     init_scheduler(backend)
     yield
     # Shutdown

@@ -688,6 +688,105 @@ class SQLiteBackend:
 
         self.conn.commit()
 
+    def migrate_datasets(self):
+        """
+        Migrate old-schema dataset rows (with 'version', 'results', 'lastUpdatedBy')
+        to the new two-table schema (Dataset + Snapshot).
+
+        Each unique datasetId in the old schema becomes one Dataset row.
+        Each versioned row becomes a Snapshot. The most recent non-checkpoint row
+        sets currentSnapshotId; the most recent checkpoint row sets latestCheckpointId
+        and acknowledgedCheckpointId.
+        """
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT id, document FROM dataset")
+        rows = cursor.fetchall()
+
+        # Group by datasetId
+        by_dataset = {}
+        for row_id, doc_json in rows:
+            doc = json.loads(doc_json)
+            # Old-schema rows have 'version'; new-schema rows have 'createdBy' or 'currentSnapshotId'
+            if "version" not in doc and "currentSnapshotId" in doc:
+                continue  # already migrated
+            if "version" not in doc:
+                continue
+            did = doc.get("datasetId")
+            if did not in by_dataset:
+                by_dataset[did] = []
+            by_dataset[did].append((row_id, doc))
+
+        if not by_dataset:
+            return  # nothing to migrate
+
+        for dataset_id, version_rows in by_dataset.items():
+            # Sort by version ascending
+            version_rows.sort(key=lambda x: x[1].get("version", 0))
+            latest = version_rows[-1][1]
+
+            # Create Dataset record from latest row (use old id as new id)
+            new_dataset_doc = {
+                "datasetId": dataset_id,
+                "name": latest.get("name", ""),
+                "createdBy": latest.get("lastUpdatedBy", "admin"),
+                "createdOn": latest.get("lastUpdatedOn", datetime.now().isoformat()),
+                "query": latest.get("query", {}),
+                "currentSnapshotId": None,
+                "latestCheckpointId": None,
+                "acknowledgedCheckpointId": None,
+            }
+
+            # Remove all old version rows for this dataset
+            for row_id, _ in version_rows:
+                cursor.execute("DELETE FROM dataset WHERE id = ?", (row_id,))
+
+            # Insert new Dataset row using the datasetId as the row id
+            cursor.execute(
+                "INSERT OR REPLACE INTO dataset (id, document) VALUES (?, ?)",
+                (dataset_id, json.dumps(new_dataset_doc, default=str))
+            )
+
+            # Create Snapshots for each old version row
+            current_snapshot_id = None
+            checkpoint_snapshot_id = None
+            for _row_id, doc in version_rows:
+                snapshot_id = self.generate_id()
+                is_checkpoint = bool(doc.get("checkpoint"))
+                snap_doc = {
+                    "snapshotId": snapshot_id,
+                    "datasetId": dataset_id,
+                    "snapshotType": "checkpoint" if is_checkpoint else "user_save",
+                    "version": doc.get("version") if not is_checkpoint else None,
+                    "results": doc.get("results") or [],
+                    "createdBy": doc.get("lastUpdatedBy", "admin"),
+                    "createdOn": doc.get("lastUpdatedOn", datetime.now().isoformat()),
+                }
+                cursor.execute(
+                    "INSERT INTO snapshot (id, document) VALUES (?, ?)",
+                    (snapshot_id, json.dumps(snap_doc, default=str))
+                )
+                if is_checkpoint:
+                    checkpoint_snapshot_id = snapshot_id
+                else:
+                    current_snapshot_id = snapshot_id
+
+            # Update pointers
+            if current_snapshot_id or checkpoint_snapshot_id:
+                final = json.loads(cursor.execute(
+                    "SELECT document FROM dataset WHERE id = ?", (dataset_id,)
+                ).fetchone()[0])
+                if current_snapshot_id:
+                    final["currentSnapshotId"] = current_snapshot_id
+                if checkpoint_snapshot_id:
+                    final["latestCheckpointId"] = checkpoint_snapshot_id
+                    final["acknowledgedCheckpointId"] = checkpoint_snapshot_id
+                cursor.execute(
+                    "UPDATE dataset SET document = ? WHERE id = ?",
+                    (json.dumps(final, default=str), dataset_id)
+                )
+
+        self.conn.commit()
+
     def initialize_templates(self):
         """Initialize default templates if none exist"""
         if not self.get_templates():

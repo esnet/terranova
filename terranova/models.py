@@ -174,8 +174,10 @@ class Dataset(BaseModel):
     """Dataset metadata and query definition. One row per dataset — mutable."""
     datasetId: str  # 7-char alphanumeric
     name: str
-    createdBy: str
-    createdOn: datetime
+    # createdBy/createdOn may be absent in migrated rows from the old schema;
+    # fall back to lastUpdatedBy/lastUpdatedOn if present
+    createdBy: str | None = None
+    createdOn: datetime | None = None
     query: DatasetQuery
     # Snapshot pointers — updated in place, never versioned
     currentSnapshotId: str | None = None       # latest user_save snapshot
