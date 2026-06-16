@@ -6,6 +6,7 @@ from .constants import CREATE_STATEMENTS, INITIAL_TEMPLATES
 from terranova.backends.auth import User
 from terranova.models import (
     Dataset,
+    Snapshot,
     Map,
     Template,
     # DatasetQuery,
@@ -248,87 +249,125 @@ class ElasticSearchBackend:
         )
         return {"result": response.get("result"), "object": new_map}
 
-    # Datasets
+    # Datasets (metadata + pointer records — one row per dataset, mutable)
 
     def get_datasets(
         self,
         dataset_id: str = None,
         fields: List[str] = None,
         filters: DatasetFilters = DatasetFilters(),
-        version: TerranovaVersion = None,
-    ) -> List[Dataset]:
-        # Based on the dataset_id, this returns the latest version of each document
+    ) -> list:
         filter_spec = []
         if dataset_id is not None:
-            filter = {"term": {"datasetId": dataset_id}}
-            filter_spec.append(filter)
-
+            filter_spec.append({"term": {"datasetId": dataset_id}})
         for term, value in filters.items():
             if value is not None and len(value) >= 1:
                 filter_spec.append({"terms": {term: value}})
-
-        # default for 'latest'
-        collapse = {"field": "datasetId"}
-        if version:
-            version_val = str(version)
-            if version_val == "all":
-                collapse = None
-            elif version_val.isnumeric():
-                filter_spec.append({"term": {"version": version_val}})
-
         query = {"bool": {"filter": filter_spec}}
-        sort = [{"version": {"order": "desc"}}]
-
-        return self.query(ELASTIC_INDICES["dataset"]["read"], query, collapse, sort, fields)
-
-    def update_dataset(
-        self,
-        dataset_id: str,
-        new_dataset: DatasetRevision,
-        query_results: List[Any],
-        user: User,
-    ):
-        latest_dataset = self.get_datasets(dataset_id=dataset_id)
-
-        # can't update a dataset that doesn't exist
-        if len(latest_dataset) == 0:
-            raise TerranovaNotFoundException("No dataset with id %s found" % dataset_id)
-
-        latest_dataset = latest_dataset[0]
-
-        new_dataset = {
-            "datasetId": dataset_id,
-            "name": new_dataset.name,
-            "version": latest_dataset["version"] + 1,
-            "query": new_dataset.query,
-            "results": query_results,
-            "lastUpdatedBy": user.username,
-            "lastUpdatedOn": datetime.now().isoformat(),
-        }
-        response = self.create(
-            ELASTIC_INDICES["dataset"]["write"],
-            id=self.generate_id(),
-            doc=Dataset(**new_dataset).model_dump(),
-        )
-        output = {"result": response.get("result"), "object": new_dataset}
-        return output
+        sort = [{"createdOn": {"order": "desc"}}]
+        return self.query(ELASTIC_INDICES["dataset"]["read"], query, None, sort, fields)
 
     def create_dataset(self, new_dataset: DatasetRevision, user: User):
         dataset_id = self.generate_id()
-        dataset = {
-            "datasetId": dataset_id,
-            "name": new_dataset.name,
-            "version": 1,
-            "query": new_dataset.query,
-            "lastUpdatedBy": user.username,
-            "lastUpdatedOn": datetime.now().isoformat(),
-            "results": None,
-        }
-        response = self.create(
-            ELASTIC_INDICES["dataset"]["write"], id=dataset_id, doc=Dataset(**dataset).model_dump()
+        doc = Dataset(
+            datasetId=dataset_id,
+            name=new_dataset.name,
+            createdBy=user.username,
+            createdOn=datetime.now(),
+            query=new_dataset.query,
+        ).model_dump()
+        self.create(ELASTIC_INDICES["dataset"]["write"], id=dataset_id, doc=doc)
+        return {"result": "created", "object": doc}
+
+    def update_dataset_query(self, dataset_id: str, revision: DatasetRevision, user: User):
+        datasets = self.get_datasets(dataset_id=dataset_id)
+        if not datasets:
+            raise TerranovaNotFoundException(f"No dataset with id {dataset_id} found")
+        updated = {**datasets[0], "name": revision.name, "query": revision.query.model_dump()}
+        self.update(ELASTIC_INDICES["dataset"]["write"], id=dataset_id, doc=updated)
+        return {"result": "updated", "object": updated}
+
+    def update_dataset_pointers(
+        self,
+        dataset_id: str,
+        current_snapshot_id: str = None,
+        latest_checkpoint_id: str = None,
+        acknowledged_checkpoint_id: str = None,
+    ):
+        datasets = self.get_datasets(dataset_id=dataset_id)
+        if not datasets:
+            raise TerranovaNotFoundException(f"No dataset with id {dataset_id} found")
+        updated = {**datasets[0]}
+        if current_snapshot_id is not None:
+            updated["currentSnapshotId"] = current_snapshot_id
+        if latest_checkpoint_id is not None:
+            updated["latestCheckpointId"] = latest_checkpoint_id
+        if acknowledged_checkpoint_id is not None:
+            updated["acknowledgedCheckpointId"] = acknowledged_checkpoint_id
+        self.update(ELASTIC_INDICES["dataset"]["write"], id=dataset_id, doc=updated)
+        return {"result": "updated", "object": updated}
+
+    # Snapshots
+
+    def create_snapshot(
+        self,
+        dataset_id: str,
+        results: List[Any],
+        snapshot_type: str,
+        user: User,
+        version: int | None = None,
+    ) -> dict:
+        if not ELASTIC_INDICES.get("snapshot", {}).get("write"):
+            raise RuntimeError("snapshot index not configured")
+        snapshot_id = self.generate_id()
+        doc = Snapshot(
+            snapshotId=snapshot_id,
+            datasetId=dataset_id,
+            snapshotType=snapshot_type,
+            version=version,
+            results=results,
+            createdBy=user.username,
+            createdOn=datetime.now(),
+        ).model_dump()
+        self.create(ELASTIC_INDICES["snapshot"]["write"], id=snapshot_id, doc=doc)
+        return doc
+
+    def get_snapshot(self, snapshot_id: str) -> dict | None:
+        if not ELASTIC_INDICES.get("snapshot", {}).get("read"):
+            return None
+        results = self.query(
+            ELASTIC_INDICES["snapshot"]["read"],
+            {"bool": {"filter": [{"term": {"snapshotId": snapshot_id}}]}},
         )
-        output = {"result": response.get("result"), "object": dataset}
-        return output
+        return results[0] if results else None
+
+    def get_snapshots(
+        self,
+        dataset_id: str,
+        snapshot_type: str | None = None,
+        limit: int = 50,
+    ) -> list:
+        if not ELASTIC_INDICES.get("snapshot", {}).get("read"):
+            return []
+        filter_spec = [{"term": {"datasetId": dataset_id}}]
+        if snapshot_type is not None:
+            filter_spec.append({"term": {"snapshotType": snapshot_type}})
+        return self.query(
+            ELASTIC_INDICES["snapshot"]["read"],
+            {"bool": {"filter": filter_spec}},
+            sort=[{"createdOn": {"order": "desc"}}],
+            limit=limit,
+        )
+
+    def delete_snapshot(self, snapshot_id: str):
+        self.es.delete(index=ELASTIC_INDICES["snapshot"]["write"], id=snapshot_id)
+        return {"deleted": 1}
+
+    def next_user_save_version(self, dataset_id: str) -> int:
+        existing = self.get_snapshots(dataset_id, snapshot_type="user_save", limit=1)
+        if not existing or existing[0].get("version") is None:
+            return 1
+        return existing[0]["version"] + 1
 
     # Templates
 

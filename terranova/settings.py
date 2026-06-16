@@ -55,6 +55,10 @@ ELASTIC_INDICES = {
         "read": ELASTIC.get("indices", {}).get("userdata", {}).get("read"),
         "write": ELASTIC.get("indices", {}).get("userdata", {}).get("write"),
     },
+    "snapshot": {
+        "read": ELASTIC.get("indices", {}).get("snapshot", {}).get("read"),
+        "write": ELASTIC.get("indices", {}).get("snapshot", {}).get("write"),
+    },
     "checkpoint_schedule": {
         "read": ELASTIC.get("indices", {}).get("checkpoint_schedule", {}).get("read"),
         "write": ELASTIC.get("indices", {}).get("checkpoint_schedule", {}).get("write"),

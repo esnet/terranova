@@ -12,8 +12,10 @@ from terranova.models import (
     DatasetRevision,
     DatasetFilters,
     DatasetFieldEnum,
+    SnapshotFieldEnum,
     TerranovaNotFoundException,
-    TerranovaVersion,
+    SnapshotAcknowledgeRequest,
+    SnapshotAcceptRequest,
 )
 from terranova.checkpoint.differ import compute_delta, hash_results
 
@@ -22,21 +24,20 @@ router = APIRouter(tags=["Terranova Datasets"])
 default_fields = [
     DatasetFieldEnum.datasetId,
     DatasetFieldEnum.name,
-    DatasetFieldEnum.version,
-    DatasetFieldEnum.lastUpdatedBy,
-    DatasetFieldEnum.lastUpdatedOn,
+    DatasetFieldEnum.currentSnapshotId,
+    DatasetFieldEnum.latestCheckpointId,
+    DatasetFieldEnum.acknowledgedCheckpointId,
 ]
 
 
 def parse_dataset_endpoint(endpoint_string):
     """
     Helper function that parses a dataset endpoint like
-    'esdb' or 'google_sheets?sheet_id=abcdef' and returns
-    ('esdb', {}) and ('google_sheets', {"sheet_id": "abcdef"})
+    'google_sheets' or 'google_sheets?sheet_id=abcdef' and returns
+    ('google_sheets', {}) and ('google_sheets', {"sheet_id": "abcdef"})
     respectively.
     """
     endpoint = endpoint_string.split("?")[0]
-    # if there's context data, set it
     context = {}
     if len(endpoint_string.split("?", 1)) > 1:
         context_data = endpoint_string.split("?", 1)[1]
@@ -52,93 +53,155 @@ def parse_dataset_endpoint(endpoint_string):
 @router.get("/datasets/", summary="Gets all datasets, optionally filtered")
 @version(1)
 def datasets(
-    version: TerranovaVersion = Depends(),
     fields: List[DatasetFieldEnum] = Query(default_fields),
     filters: DatasetFilters = Depends(),
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
 ) -> List[dict[str, Any]]:
-
-    result = storage_backend.get_datasets(
-        fields=[f.name for f in fields], filters=filters, version=version
+    return storage_backend.get_datasets(
+        fields=[f.name for f in fields], filters=filters
     )
-
-    return result
 
 
 @router.get("/dataset/id/{datasetId}/", summary="Gets a single dataset by its ID")
 @version(1)
 def dataset_by_id(
     datasetId: str,
-    version: TerranovaVersion = Depends(),
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
 ) -> Dataset:
-    result = storage_backend.get_datasets(dataset_id=datasetId, version=version)
-    if len(result) < 1:
+    result = storage_backend.get_datasets(dataset_id=datasetId)
+    if not result:
         raise HTTPException(status_code=404, detail="Dataset with id %s not found" % datasetId)
     return result[0]
 
 
 @router.get(
-    "/dataset/id/{datasetId}/versions/",
-    summary="Lists all versions of a dataset, optionally filtered by checkpoint flag",
+    "/dataset/id/{datasetId}/snapshots/",
+    summary="Lists snapshots for a dataset",
 )
 @version(1)
-def dataset_versions(
+def dataset_snapshots(
     datasetId: str,
-    checkpoint: bool | None = Query(None, description="Filter to checkpoint-only or user-only versions"),
+    type: str | None = Query(None, description="Filter by snapshot type: user_save or checkpoint"),
+    limit: int = Query(50),
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
 ) -> List[dict[str, Any]]:
-    # Fetch all versions
-    all_version = TerranovaVersion(version="all")  # type: ignore[call-arg]
-    results = storage_backend.get_datasets(
-        dataset_id=datasetId,
-        fields=["datasetId", "name", "version", "lastUpdatedBy", "lastUpdatedOn", "checkpoint"],
-        version=all_version,
-    )
-    if not results:
+    # Verify dataset exists
+    datasets_list = storage_backend.get_datasets(dataset_id=datasetId)
+    if not datasets_list:
         raise HTTPException(status_code=404, detail="Dataset with id %s not found" % datasetId)
-    if checkpoint is not None:
-        results = [r for r in results if bool(r.get("checkpoint")) == checkpoint]
-    return results
+    return storage_backend.get_snapshots(datasetId, snapshot_type=type, limit=limit)
 
 
 @router.get(
-    "/dataset/id/{datasetId}/diff/{v1}/{v2}/",
-    summary="Returns the diff between two versions of a dataset",
+    "/snapshot/id/{snapshotId}/",
+    summary="Gets a single snapshot by its ID",
+)
+@version(1)
+def snapshot_by_id(
+    snapshotId: str,
+    user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
+) -> dict:
+    snap = storage_backend.get_snapshot(snapshotId)
+    if not snap:
+        raise HTTPException(status_code=404, detail="Snapshot %s not found" % snapshotId)
+    return snap
+
+
+@router.get(
+    "/dataset/id/{datasetId}/diff/{snapshotId1}/{snapshotId2}/",
+    summary="Returns the diff between two snapshots of a dataset",
 )
 @version(1)
 def dataset_diff(
     datasetId: str,
-    v1: int,
-    v2: int,
+    snapshotId1: str,
+    snapshotId2: str,
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
 ) -> dict:
-    def _fetch(v: int):
-        tv = TerranovaVersion(version=v)  # type: ignore[call-arg]
-        res = storage_backend.get_datasets(dataset_id=datasetId, version=tv)
-        if not res:
-            raise HTTPException(
-                status_code=404,
-                detail="Dataset %s version %d not found" % (datasetId, v),
-            )
-        return res[0]
+    def _fetch_snap(sid: str):
+        snap = storage_backend.get_snapshot(sid)
+        if not snap:
+            raise HTTPException(status_code=404, detail="Snapshot %s not found" % sid)
+        return snap
 
-    ds1 = _fetch(v1)
-    ds2 = _fetch(v2)
-    delta = compute_delta(ds1.get("results") or [], ds2.get("results") or [])
+    snap1 = _fetch_snap(snapshotId1)
+    snap2 = _fetch_snap(snapshotId2)
+    r1 = snap1.get("results") or []
+    r2 = snap2.get("results") or []
+    delta = compute_delta(r1, r2)
     return {
         "datasetId": datasetId,
-        "fromVersion": v1,
-        "toVersion": v2,
-        "fromHash": hash_results(ds1.get("results") or []),
-        "toHash": hash_results(ds2.get("results") or []),
+        "fromSnapshotId": snapshotId1,
+        "toSnapshotId": snapshotId2,
+        "fromHash": hash_results(r1),
+        "toHash": hash_results(r2),
         "delta": delta,
     }
 
 
+@router.post(
+    "/dataset/id/{datasetId}/acknowledge/",
+    summary="Mark a checkpoint snapshot as reviewed (advances the diff pointer)",
+)
+@version(1)
+def acknowledge_checkpoint(
+    datasetId: str,
+    body: SnapshotAcknowledgeRequest,
+    user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
+):
+    try:
+        result = storage_backend.update_dataset_pointers(
+            datasetId, acknowledged_checkpoint_id=body.snapshotId
+        )
+        return result["object"]
+    except TerranovaNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post(
+    "/dataset/id/{datasetId}/accept/",
+    summary="Accept checkpoint changes: re-runs the query, saves a new user_save snapshot, advances the diff pointer",
+)
+@version(1)
+def accept_checkpoint(
+    datasetId: str,
+    body: SnapshotAcceptRequest,
+    user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
+):
+    try:
+        datasets_list = storage_backend.get_datasets(dataset_id=datasetId)
+        if not datasets_list:
+            raise TerranovaNotFoundException(f"Dataset {datasetId} not found")
+        dataset = datasets_list[0]
+
+        # Re-run the live query
+        endpoint, context = parse_dataset_endpoint(dataset["query"]["endpoint"])
+        from terranova.models import DatasetQuery
+        query = DatasetQuery(**dataset["query"])
+        query_results = datasources[endpoint].backend.query(
+            query.filters, limit=None, apply_templated_filters=False, **context
+        )
+
+        # Create new user_save snapshot
+        next_version = storage_backend.next_user_save_version(datasetId)
+        snap = storage_backend.create_snapshot(
+            datasetId, query_results.data, "user_save", user, version=next_version
+        )
+
+        # Update dataset pointers
+        updated = storage_backend.update_dataset_pointers(
+            datasetId,
+            current_snapshot_id=snap["snapshotId"],
+            acknowledged_checkpoint_id=body.snapshotId,
+        )
+        return {"snapshot": snap, "dataset": updated["object"]}
+    except TerranovaNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 @router.put(
     "/dataset/id/{datasetId}/",
-    summary="Creates a new version of an existing dataset based on the dataset ID",
+    summary="Update a dataset's query and save a new user_save snapshot",
 )
 @version(1)
 def update_dataset(
@@ -147,11 +210,24 @@ def update_dataset(
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
 ):
     try:
+        # Update query/name in place
+        storage_backend.update_dataset_query(datasetId, datasetRevision, user)
+
+        # Run live query and create a user_save snapshot
         endpoint, context = parse_dataset_endpoint(datasetRevision.query.endpoint)
         query_results = datasources[endpoint].backend.query(
             datasetRevision.query.filters, limit=None, apply_templated_filters=False, **context
         )
-        return storage_backend.update_dataset(datasetId, datasetRevision, query_results.data, user)
+        next_version = storage_backend.next_user_save_version(datasetId)
+        snap = storage_backend.create_snapshot(
+            datasetId, query_results.data, "user_save", user, version=next_version
+        )
+
+        # Update currentSnapshotId pointer
+        result = storage_backend.update_dataset_pointers(
+            datasetId, current_snapshot_id=snap["snapshotId"]
+        )
+        return {"result": "updated", "snapshot": snap, "object": result["object"]}
     except TerranovaNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
 

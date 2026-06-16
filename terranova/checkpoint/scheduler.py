@@ -92,7 +92,7 @@ async def run_checkpoint(schedule_id: str) -> dict:
     """
     Execute one checkpoint run for the given schedule.
 
-    Returns a dict with keys: schedule_id, status, version (if saved), summary.
+    Returns a dict with keys: schedule_id, status, snapshot_id (if saved), summary.
     """
     from terranova.backends.storage import backend as storage_backend
     from terranova.backends.datasources import datasources
@@ -104,10 +104,10 @@ async def run_checkpoint(schedule_id: str) -> dict:
     schedule = schedules[0]
 
     dataset_id = schedule["datasetId"]
-    datasets = storage_backend.get_datasets(dataset_id=dataset_id)
-    if not datasets:
+    dataset_list = storage_backend.get_datasets(dataset_id=dataset_id)
+    if not dataset_list:
         raise TerranovaNotFoundException(f"Dataset {dataset_id} not found")
-    dataset = datasets[0]
+    dataset = dataset_list[0]
 
     # Run the live query
     try:
@@ -127,8 +127,14 @@ async def run_checkpoint(schedule_id: str) -> dict:
         logger.error("Checkpoint %s query failed: %s", schedule_id, err)
         return {"schedule_id": schedule_id, "status": "error", "error": err}
 
-    # Compare with the latest stored results
-    prev_results = dataset.get("results") or []
+    # Compare with the latest checkpoint results
+    latest_checkpoint_id = dataset.get("latestCheckpointId")
+    if latest_checkpoint_id:
+        prev_snap = storage_backend.get_snapshot(latest_checkpoint_id)
+        prev_results = prev_snap.get("results") or [] if prev_snap else []
+    else:
+        prev_results = []
+
     current_hash = hash_results(current_results)
     prev_hash = hash_results(prev_results)
 
@@ -139,78 +145,66 @@ async def run_checkpoint(schedule_id: str) -> dict:
         logger.debug("Checkpoint %s: no change", schedule_id)
         return {"schedule_id": schedule_id, "status": "ok", "summary": "No changes detected"}
 
-    # Data changed — compute delta and save a new version
+    # Data changed — create a new checkpoint Snapshot
     delta = compute_delta(prev_results, current_results)
-
-    # Build a DatasetRevision from stored query definition
-    from terranova.models import DatasetRevision, DatasetQuery
-    from terranova.abstract_models import QueryFilter
 
     class _SystemUser:
         username = "terranova-scheduler"
 
-    revision = DatasetRevision(
-        name=dataset["name"],
-        query=DatasetQuery(**dataset["query"]),
+    new_snap = storage_backend.create_snapshot(
+        dataset_id, current_results, "checkpoint", _SystemUser()
+    )
+    new_snapshot_id = new_snap["snapshotId"]
+
+    # Update dataset's latestCheckpointId pointer
+    storage_backend.update_dataset_pointers(
+        dataset_id, latest_checkpoint_id=new_snapshot_id
     )
 
-    saved = storage_backend.update_dataset(
-        dataset_id, revision, current_results, _SystemUser()
-    )
-    new_version = saved["object"]["version"]
-
-    # Mark the new version as a checkpoint
-    # update_dataset creates a new row; we need to tag it
-    from terranova.models import TerranovaVersion
-    new_v = TerranovaVersion(version=new_version)  # type: ignore[call-arg]
-    version_docs = storage_backend.get_datasets(dataset_id=dataset_id, version=new_v)
-    if version_docs:
-        # Patch the checkpoint flag in-place via the raw backend
-        _patch_checkpoint_flag(storage_backend, dataset_id, new_version)
-
-    # Apply retention policy
+    # Apply retention policy (prune old checkpoint snapshots)
     from terranova.models import RetentionPolicy
     retention_data = schedule.get("retention") or {}
     retention = RetentionPolicy(**retention_data)
     pruned = apply_retention(dataset_id, retention, storage_backend)
 
-    # Send notifications
-    configs = storage_backend.get_notification_configs(schedule_id=schedule_id)
-    if configs:
-        try:
-            await notify(schedule, dataset, new_version, delta, configs)
-        except Exception as e:
-            logger.error("Notification failed for checkpoint %s: %s", schedule_id, e)
+    # Determine the last user_save snapshot for the notification deep-link
+    user_snaps = storage_backend.get_snapshots(dataset_id, snapshot_type="user_save", limit=1)
+    prev_user_snapshot_id = user_snaps[0]["snapshotId"] if user_snaps else None
+
+    # Reload dataset to get current acknowledgedCheckpointId
+    dataset = storage_backend.get_datasets(dataset_id=dataset_id)[0]
+    acknowledged_id = dataset.get("acknowledgedCheckpointId")
+
+    # Only notify if there's an unacknowledged change
+    if new_snapshot_id != acknowledged_id:
+        configs = storage_backend.get_notification_configs(schedule_id=schedule_id)
+        if configs:
+            try:
+                await notify(
+                    schedule, dataset, new_snapshot_id,
+                    prev_user_snapshot_id, delta, configs
+                )
+            except Exception as e:
+                logger.error("Notification failed for checkpoint %s: %s", schedule_id, e)
 
     storage_backend.update_checkpoint_schedule_status(
         schedule_id, datetime.now(), "changed"
     )
 
     summary = delta.get("summary", "Changes detected")
-    logger.info(
-        "Checkpoint %s: %s (v%d saved, %d pruned)",
-        schedule_id, summary, new_version, pruned,
-    )
+    logger.info("Checkpoint %s: %s (snapshot %s saved, %d pruned)", schedule_id, summary, new_snapshot_id, pruned)
     return {
         "schedule_id": schedule_id,
         "status": "changed",
-        "version": new_version,
+        "snapshot_id": new_snapshot_id,
         "summary": summary,
         "pruned": pruned,
     }
 
 
-def _patch_checkpoint_flag(storage_backend, dataset_id: str, version: int):
-    """
-    Mark a specific dataset version as checkpoint=True.
-
-    The standard update_dataset doesn't expose the checkpoint field (it's scheduler-only),
-    so we patch the stored document directly via the backend's low-level interface.
-    """
-    from terranova.models import TerranovaVersion
-    v = TerranovaVersion(version=version)  # type: ignore[call-arg]
-    docs = storage_backend.get_datasets(dataset_id=dataset_id, version=v)
-    if not docs:
+def _unused_patch_checkpoint_flag(storage_backend, dataset_id: str, version: int):
+    """Kept for reference during migration; no longer used."""
+    if not storage_backend:
         return
     doc = dict(docs[0])
     doc["checkpoint"] = True

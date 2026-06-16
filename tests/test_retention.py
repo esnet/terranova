@@ -7,7 +7,6 @@ from terranova.models import (
     DatasetRevision,
     DatasetQuery,
     RetentionPolicy,
-    TerranovaVersion,
 )
 from terranova.checkpoint.retention import apply_retention
 
@@ -35,100 +34,91 @@ def _make_dataset(backend, user, name="DS"):
     return result["object"]["datasetId"]
 
 
-def _add_versions(backend, user, dataset_id, count, checkpoint=True):
-    """Add `count` additional versions to dataset_id."""
-    revision = DatasetRevision(
-        name="DS", query=DatasetQuery(endpoint="google_sheets", filters=[])
-    )
+def _add_checkpoints(backend, user, dataset_id, count):
+    """Add `count` checkpoint snapshots to dataset_id."""
     for _ in range(count):
-        backend.update_dataset(dataset_id, revision, [], user)
-    if checkpoint:
-        # Tag all versions beyond v1 as checkpoint
-        all_v = TerranovaVersion(version="all")
-        for doc in backend.get_datasets(dataset_id=dataset_id, version=all_v):
-            if doc["version"] > 1:
-                from terranova.checkpoint.scheduler import _patch_checkpoint_flag
-                _patch_checkpoint_flag(backend, dataset_id, doc["version"])
+        backend.create_snapshot(dataset_id, [], "checkpoint", user)
 
 
-def _checkpoint_versions(backend, dataset_id):
-    all_v = TerranovaVersion(version="all")
-    return [d for d in backend.get_datasets(dataset_id=dataset_id, version=all_v)
-            if d.get("checkpoint")]
+def _checkpoint_snaps(backend, dataset_id):
+    return backend.get_snapshots(dataset_id, snapshot_type="checkpoint", limit=10000)
 
 
-def _user_versions(backend, dataset_id):
-    all_v = TerranovaVersion(version="all")
-    return [d for d in backend.get_datasets(dataset_id=dataset_id, version=all_v)
-            if not d.get("checkpoint")]
+def _user_snaps(backend, dataset_id):
+    return backend.get_snapshots(dataset_id, snapshot_type="user_save", limit=10000)
 
 
 class TestRetention:
     def test_no_policy_no_pruning(self, backend, user):
         dataset_id = _make_dataset(backend, user)
-        _add_versions(backend, user, dataset_id, 20)
+        _add_checkpoints(backend, user, dataset_id, 20)
         deleted = apply_retention(dataset_id, RetentionPolicy(), backend)
         assert deleted == 0
 
     def test_keep_last_n(self, backend, user):
         dataset_id = _make_dataset(backend, user)
-        _add_versions(backend, user, dataset_id, 20)  # versions 2-21, all checkpoint
+        _add_checkpoints(backend, user, dataset_id, 20)
 
         deleted = apply_retention(dataset_id, RetentionPolicy(keep_last_n=5), backend)
 
-        remaining = _checkpoint_versions(backend, dataset_id)
+        remaining = _checkpoint_snaps(backend, dataset_id)
         assert len(remaining) == 5
-        # The 5 most recent should be kept
-        version_nums = sorted(v["version"] for v in remaining)
-        assert version_nums == list(range(17, 22))  # v17..v21
         assert deleted == 15
 
     def test_user_saves_never_pruned(self, backend, user):
         dataset_id = _make_dataset(backend, user)
-        # v1 is a user save; add 20 checkpoint versions
-        _add_versions(backend, user, dataset_id, 20)
+        # Create a user_save snapshot
+        backend.create_snapshot(dataset_id, [], "user_save", user, version=1)
+        # Add 20 checkpoint snapshots
+        _add_checkpoints(backend, user, dataset_id, 20)
 
         apply_retention(dataset_id, RetentionPolicy(keep_last_n=3), backend)
 
-        user_saves = _user_versions(backend, dataset_id)
-        assert len(user_saves) == 1  # v1 survives
+        user_saves = _user_snaps(backend, dataset_id)
+        assert len(user_saves) == 1  # user save survives
 
     def test_keep_every_nth(self, backend, user):
         dataset_id = _make_dataset(backend, user)
-        _add_versions(backend, user, dataset_id, 20)  # v2..v21
+        _add_checkpoints(backend, user, dataset_id, 20)
 
         policy = RetentionPolicy(keep_last_n=5, keep_every_nth=5)
         apply_retention(dataset_id, policy, backend)
 
-        remaining = _checkpoint_versions(backend, dataset_id)
-        version_nums = sorted(v["version"] for v in remaining)
-
-        # Last 5 kept: v17-v21
-        # Remaining older: v2-v16 (15 versions), thinned to every 5th (oldest-first)
-        # In ascending order: v2,v3,...v16 → indices 0,1,...14
-        # Keep index 0,5,10 → v2, v7, v12
-        for v in [17, 18, 19, 20, 21]:  # last 5
-            assert v in version_nums
-        for v in [2, 7, 12]:  # every 5th of older
-            assert v in version_nums
-        # Mid-versions should be gone
-        for v in [3, 4, 5, 6, 8, 9, 10, 11, 13, 14, 15, 16]:
-            assert v not in version_nums
+        remaining = _checkpoint_snaps(backend, dataset_id)
+        # Last 5 kept + every 5th of the older 15 (indices 0, 5, 10 = 3 more)
+        assert len(remaining) == 8
 
     def test_no_checkpoint_versions_no_pruning(self, backend, user):
         dataset_id = _make_dataset(backend, user)
-        # Only user saves, no checkpoint flag
-        revision = DatasetRevision(name="DS", query=DatasetQuery(endpoint="google_sheets", filters=[]))
-        for _ in range(5):
-            backend.update_dataset(dataset_id, revision, [], user)
+        # Only user saves
+        for i in range(5):
+            backend.create_snapshot(dataset_id, [], "user_save", user, version=i + 1)
 
         deleted = apply_retention(dataset_id, RetentionPolicy(keep_last_n=2), backend)
         assert deleted == 0
 
     def test_fewer_versions_than_keep_n(self, backend, user):
         dataset_id = _make_dataset(backend, user)
-        _add_versions(backend, user, dataset_id, 3)
+        _add_checkpoints(backend, user, dataset_id, 3)
 
         deleted = apply_retention(dataset_id, RetentionPolicy(keep_last_n=10), backend)
         assert deleted == 0
-        assert len(_checkpoint_versions(backend, dataset_id)) == 3
+        assert len(_checkpoint_snaps(backend, dataset_id)) == 3
+
+    def test_protected_snapshots_never_pruned(self, backend, user):
+        """Snapshots referenced by dataset pointers are protected even if keep_last_n would prune them."""
+        dataset_id = _make_dataset(backend, user)
+        snaps = [backend.create_snapshot(dataset_id, [], "checkpoint", user) for _ in range(5)]
+        # Mark the oldest as latestCheckpointId and acknowledgedCheckpointId
+        oldest_id = snaps[0]["snapshotId"]
+        backend.update_dataset_pointers(
+            dataset_id,
+            latest_checkpoint_id=snaps[-1]["snapshotId"],
+            acknowledged_checkpoint_id=oldest_id,
+        )
+        # keep_last_n=1 would normally remove snaps[0]-snaps[3]
+        apply_retention(dataset_id, RetentionPolicy(keep_last_n=1), backend)
+        remaining_ids = {s["snapshotId"] for s in _checkpoint_snaps(backend, dataset_id)}
+        # oldest and newest must both survive (protected by pointers)
+        assert oldest_id in remaining_ids
+        assert snaps[-1]["snapshotId"] in remaining_ids

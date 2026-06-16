@@ -41,8 +41,8 @@ TypeFilters = get_all_type_filters()
 
 @router.get(
     "/output/dataset/{dataset_id}/{layout}/{datatype}/{output_type}/",
-    summary="Get the output from dataset with dataset_id, given a layout and datatype, \
-optionally selecting an output_type and version",
+    summary="Get the output from dataset with dataset_id, given a layout and datatype. "
+            "For snapshot datatype, pass ?snapshot_id=<id> to use a specific snapshot.",
 )
 @version(1)
 def dataset_output(
@@ -51,7 +51,7 @@ def dataset_output(
     datatype: TerranovaDatatype,
     output_type: TerranovaOutputType | None = None,
     template: str | None = None,
-    version: TerranovaVersion = Depends(),
+    snapshot_id: str | None = None,
     filters: TypeFilters = Depends(),
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
 ):
@@ -60,23 +60,12 @@ def dataset_output(
 
     use_snapshot = datatype == TerranovaDatatype.snapshot
 
-    dataset_json = storage_backend.get_datasets(dataset_id=dataset_id, version=version)
-    if len(dataset_json) < 1:
-        version_suffix = f" and version = {version}" if version is not None else ""
-        raise HTTPException(
-            status_code=404,
-            detail=f"No dataset found with dataset_id = {dataset_id}{version_suffix}",
-        )
+    dataset_list = storage_backend.get_datasets(dataset_id=dataset_id)
+    if not dataset_list:
+        raise HTTPException(status_code=404, detail=f"No dataset found with dataset_id = {dataset_id}")
 
-    # by default, results are ordered by lastEditedOn desc.
-    dataset = Dataset(**dataset_json[0])
-
-    # If snapshot mode is requested but results is None/empty, treat as empty results
-    # rather than 404 — allows comparing against versions that had no matching data.
-    if use_snapshot and dataset.results is None:
-        dataset.results = []
-
-    endpoint, context = parse_dataset_endpoint(dataset.query.endpoint)
+    dataset_doc = dataset_list[0]
+    endpoint, context = parse_dataset_endpoint(dataset_doc["query"]["endpoint"])
 
     path_layout = {"type": "curveCardinal", "tension": 0.6}
     if layout in [TerranovaLayout.logical, "logical"]:
@@ -85,13 +74,57 @@ def dataset_output(
         template_id=template, geographic=layout in [TerranovaLayout.geographic, "geographic"]
     )
 
-    topology = datasources[endpoint].backend.render_topology(
-        dataset,
-        path_layout=path_layout,
-        use_snapshot=use_snapshot,
-        node_template=node_template,
-        **context,
-    )
+    if use_snapshot:
+        # Resolve snapshot results
+        if snapshot_id:
+            snap = storage_backend.get_snapshot(snapshot_id)
+            results = snap.get("results") or [] if snap else []
+        else:
+            # Default to currentSnapshotId
+            current_id = dataset_doc.get("currentSnapshotId")
+            if current_id:
+                snap = storage_backend.get_snapshot(current_id)
+                results = snap.get("results") or [] if snap else []
+            else:
+                results = []
+        # Build a temporary dataset-like object with results for render_topology
+        from terranova.abstract_models import BaseDatasource
+        from dataclasses import dataclass
+
+        @dataclass
+        class _DatasetProxy:
+            datasetId: str
+            name: str
+            query: object
+            results: list
+
+        from terranova.models import DatasetQuery
+        proxy = _DatasetProxy(
+            datasetId=dataset_doc["datasetId"],
+            name=dataset_doc["name"],
+            query=DatasetQuery(**dataset_doc["query"]),
+            results=results,
+        )
+        topology = datasources[endpoint].backend.render_topology(
+            proxy, path_layout=path_layout, use_snapshot=True, node_template=node_template, **context
+        )
+    else:
+        from terranova.models import DatasetQuery
+        @dataclass
+        class _DatasetProxy:
+            datasetId: str
+            name: str
+            query: object
+            results: list = None
+
+        proxy = _DatasetProxy(
+            datasetId=dataset_doc["datasetId"],
+            name=dataset_doc["name"],
+            query=DatasetQuery(**dataset_doc["query"]),
+        )
+        topology = datasources[endpoint].backend.render_topology(
+            proxy, path_layout=path_layout, use_snapshot=False, node_template=node_template, **context
+        )
 
     topology = datasources[endpoint].backend.apply_layout(layout, topology, node_template)
 
@@ -101,19 +134,21 @@ def dataset_output(
 
 
 @router.get(
-    "/output/dataset/{dataset_id}/{layout}/diff/{v1}/{v2}/",
-    summary="Returns a colored diff topology between two saved dataset versions",
+    "/output/dataset/{dataset_id}/{layout}/diff/{snapshot_id_1}/{snapshot_id_2}/",
+    summary="Returns a colored diff topology between two snapshots of a dataset",
 )
 @version(1)
 def dataset_diff_topology(
     dataset_id: str,
     layout: TerranovaLayout,
-    v1: int,
-    v2: int,
+    snapshot_id_1: str,
+    snapshot_id_2: str,
     template: str | None = None,
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
 ):
     from terranova.checkpoint.differ import compute_delta
+    from dataclasses import dataclass
+    from terranova.models import DatasetQuery
 
     COLOR_ADDED    = "#22c55e"
     COLOR_REMOVED  = "#ef4444"
@@ -122,28 +157,45 @@ def dataset_diff_topology(
     path_layout = {"type": "curveLinear", "tension": 0.6} if layout in [TerranovaLayout.logical, "logical"] else {"type": "curveCardinal", "tension": 0.6}
     node_tmpl = _get_template(template_id=template, geographic=layout in [TerranovaLayout.geographic, "geographic"])
 
+    # Load dataset for query/name metadata
+    dataset_list = storage_backend.get_datasets(dataset_id=dataset_id)
+    if not dataset_list:
+        raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} not found")
+    dataset_doc = dataset_list[0]
+    endpoint, context = parse_dataset_endpoint(dataset_doc["query"]["endpoint"])
+
     def _empty_topology(name=""):
         return Topology(nodes=[], edges=[], layer="tail", name=name, pathLayout=path_layout)
 
-    def _fetch_topology(version_num: int):
-        tv = TerranovaVersion(version=version_num)
-        rows = storage_backend.get_datasets(dataset_id=dataset_id, version=tv)
-        if not rows:
-            raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} version {version_num} not found")
-        ds = Dataset(**rows[0])
-        results = ds.results or []
+    @dataclass
+    class _Proxy:
+        datasetId: str
+        name: str
+        query: object
+        results: list
+
+    def _fetch_topology(snapshot_id: str):
+        snap = storage_backend.get_snapshot(snapshot_id)
+        if not snap:
+            raise HTTPException(status_code=404, detail=f"Snapshot {snapshot_id} not found")
+        results = snap.get("results") or []
         if not results:
-            return _empty_topology(ds.name), []
-        endpoint, context = parse_dataset_endpoint(ds.query.endpoint)
+            return _empty_topology(dataset_doc["name"]), []
+        proxy = _Proxy(
+            datasetId=dataset_id,
+            name=dataset_doc["name"],
+            query=DatasetQuery(**dataset_doc["query"]),
+            results=results,
+        )
         try:
-            topo = datasources[endpoint].backend.render_topology(ds, path_layout=path_layout, use_snapshot=True, node_template=node_tmpl, **context)
+            topo = datasources[endpoint].backend.render_topology(proxy, path_layout=path_layout, use_snapshot=True, node_template=node_tmpl, **context)
             topo = datasources[endpoint].backend.apply_layout(layout, topo, node_tmpl)
             return topo, results
         except Exception:
-            return _empty_topology(ds.name), results
+            return _empty_topology(dataset_doc["name"]), results
 
-    topo_v1, results_v1 = _fetch_topology(v1)
-    topo_v2, results_v2 = _fetch_topology(v2)
+    topo_v1, results_v1 = _fetch_topology(snapshot_id_1)
+    topo_v2, results_v2 = _fetch_topology(snapshot_id_2)
 
     delta = compute_delta(results_v1, results_v2)
 
@@ -482,8 +534,7 @@ def _make_ephemeral_dataset(query: DatasetQuery) -> Dataset:
     return Dataset(
         datasetId="ephemeral",
         name="ephemeral",
-        version=1,
-        lastUpdatedBy="n/a",
-        lastUpdatedOn=datetime.datetime.now(),
+        createdBy="n/a",
+        createdOn=datetime.datetime.now(),
         query=query,
     )

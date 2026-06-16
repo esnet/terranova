@@ -174,35 +174,32 @@ class TestNotificationConfigCRUD:
         assert result == []
 
 
-class TestDatasetVersioning:
-    def test_dataset_checkpoint_field_persists(self, backend, user, dataset_id):
-        """Checkpoint flag is stored and retrieved correctly."""
-        datasets = backend.get_datasets(dataset_id=dataset_id)
-        assert datasets[0].get("checkpoint") is None  # user-created, no flag
+class TestSnapshotOperations:
+    def test_snapshot_types_stored_correctly(self, backend, user, dataset_id):
+        """Snapshot type is stored and retrieved correctly."""
+        snap = backend.create_snapshot(dataset_id, [], "user_save", user, version=1)
+        assert snap["snapshotType"] == "user_save"
+        assert snap["version"] == 1
 
-    def test_delete_dataset_version(self, backend, user, dataset_id):
-        """delete_dataset_version removes exactly that version."""
-        revision = DatasetRevision(
-            name="Test Dataset",
-            query=DatasetQuery(endpoint="google_sheets", filters=[]),
-        )
-        # Create v2
-        backend.update_dataset(dataset_id, revision, [], user)
+        ckpt = backend.create_snapshot(dataset_id, [], "checkpoint", user)
+        assert ckpt["snapshotType"] == "checkpoint"
+        assert ckpt["version"] is None
 
-        all_version_obj = __import__('terranova.models', fromlist=['TerranovaVersion']).TerranovaVersion
-        # Fetch all versions
-        from terranova.models import TerranovaVersion
-        all_v = TerranovaVersion(version="all")
-        versions_before = backend.get_datasets(dataset_id=dataset_id, version=all_v)
-        assert len(versions_before) == 2
+    def test_delete_snapshot(self, backend, user, dataset_id):
+        """delete_snapshot removes exactly that snapshot."""
+        s1 = backend.create_snapshot(dataset_id, [], "checkpoint", user)
+        s2 = backend.create_snapshot(dataset_id, [], "checkpoint", user)
 
-        backend.delete_dataset_version(dataset_id, 2)
-        versions_after = backend.get_datasets(dataset_id=dataset_id, version=all_v)
-        assert len(versions_after) == 1
-        assert versions_after[0]["version"] == 1
+        snaps_before = backend.get_snapshots(dataset_id)
+        assert len(snaps_before) == 2
 
-    def test_delete_version_does_not_affect_other_datasets(self, backend, user, dataset_id):
-        """Deleting a version of one dataset doesn't touch another."""
+        backend.delete_snapshot(s1["snapshotId"])
+        snaps_after = backend.get_snapshots(dataset_id)
+        assert len(snaps_after) == 1
+        assert snaps_after[0]["snapshotId"] == s2["snapshotId"]
+
+    def test_delete_snapshot_does_not_affect_other_datasets(self, backend, user, dataset_id):
+        """Deleting a snapshot of one dataset doesn't touch another."""
         revision = DatasetRevision(
             name="Other Dataset",
             query=DatasetQuery(endpoint="google_sheets", filters=[]),
@@ -210,9 +207,11 @@ class TestDatasetVersioning:
         other = backend.create_dataset(revision, user)
         other_id = other["object"]["datasetId"]
 
-        backend.delete_dataset_version(dataset_id, 1)
+        snap_other = backend.create_snapshot(other_id, [], "checkpoint", user)
+        snap_this = backend.create_snapshot(dataset_id, [], "checkpoint", user)
 
-        from terranova.models import TerranovaVersion
-        all_v = TerranovaVersion(version="all")
-        other_versions = backend.get_datasets(dataset_id=other_id, version=all_v)
-        assert len(other_versions) == 1
+        backend.delete_snapshot(snap_this["snapshotId"])
+
+        other_snaps = backend.get_snapshots(other_id)
+        assert len(other_snaps) == 1
+        assert other_snaps[0]["snapshotId"] == snap_other["snapshotId"]

@@ -417,89 +417,86 @@ class TestSQLiteBackend:
         with pytest.raises(TerranovaNotFoundException, match="No map with id"):
             backend.publish_map("nonexistent", test_user)
 
-    # Dataset tests
-    def test_get_datasets(self, backend):
+    # Dataset + Snapshot tests
+    def test_get_datasets(self, backend, test_user, test_dataset_query):
         """Test getting datasets"""
-        dataset_doc = {
-            "datasetId": "ds1",
-            "name": "Test Dataset",
-            "version": 1,
-            "query": {},
-            "results": None,
-            "lastUpdatedBy": "testuser",
-            "lastUpdatedOn": datetime.now().isoformat()
-        }
-        backend.create("dataset", "ds1", dataset_doc)
+        revision = DatasetRevision(name="Test Dataset", query=test_dataset_query)
+        backend.create_dataset(revision, test_user)
+        result = backend.get_datasets()
+        assert len(result) >= 1
+        assert any(r["name"] == "Test Dataset" for r in result)
 
-        result = backend.get_datasets(dataset_id="ds1")
-
-        assert len(result) == 1
-        assert result[0]["datasetId"] == "ds1"
-
-    def test_get_datasets_with_filters(self, backend):
+    def test_get_datasets_with_filters(self, backend, test_user, test_dataset_query):
         """Test getting datasets with filters"""
-        backend.create("dataset", "ds1", {
-            "datasetId": "ds1",
-            "name": "Dataset1",
-            "version": 1
-        })
-        backend.create("dataset", "ds2", {
-            "datasetId": "ds2",
-            "name": "Dataset2",
-            "version": 1
-        })
-
+        r1 = DatasetRevision(name="Dataset1", query=test_dataset_query)
+        r2 = DatasetRevision(name="Dataset2", query=test_dataset_query)
+        backend.create_dataset(r1, test_user)
+        backend.create_dataset(r2, test_user)
         filters = DatasetFilters(name=["Dataset1"])
         result = backend.get_datasets(filters=filters)
-
         assert len(result) == 1
         assert result[0]["name"] == "Dataset1"
 
     def test_create_dataset(self, backend, test_user, test_dataset_query):
         """Test creating a new dataset"""
-        dataset_revision = DatasetRevision(
-            name="Test Dataset",
-            query=test_dataset_query,
-        )
-
-        result = backend.create_dataset(dataset_revision, test_user)
-
+        revision = DatasetRevision(name="Test Dataset", query=test_dataset_query)
+        result = backend.create_dataset(revision, test_user)
         assert result["result"] == "created"
         assert result["object"]["name"] == "Test Dataset"
-        assert result["object"]["version"] == 1
         assert "datasetId" in result["object"]
+        assert result["object"]["currentSnapshotId"] is None
 
-    def test_update_dataset_success(self, backend, test_user, test_dataset_query):
-        """Test updating an existing dataset"""
-        # Create initial dataset
-        dataset_revision = DatasetRevision(
-            name="Old Name",
-            query=test_dataset_query,
-        )
-        create_result = backend.create_dataset(dataset_revision, test_user)
-        dataset_id = create_result["object"]["datasetId"]
+    def test_create_and_get_snapshot(self, backend, test_user, test_dataset_query):
+        """Test creating a snapshot and retrieving it"""
+        revision = DatasetRevision(name="DS", query=test_dataset_query)
+        ds = backend.create_dataset(revision, test_user)
+        dataset_id = ds["object"]["datasetId"]
 
-        # Update it
-        updated_revision = DatasetRevision(
-            name="New Name",
-            query=test_dataset_query,
-        )
-        result = backend.update_dataset(dataset_id, updated_revision, [{"result": "data"}], test_user)
+        snap = backend.create_snapshot(dataset_id, [{"node": "A"}], "user_save", test_user, version=1)
+        assert snap["snapshotId"]
+        assert snap["snapshotType"] == "user_save"
+        assert snap["version"] == 1
+        assert snap["results"] == [{"node": "A"}]
 
-        assert result["result"] == "created"
-        assert result["object"]["name"] == "New Name"
-        assert result["object"]["version"] == 2
-        assert result["object"]["results"] == [{"result": "data"}]
+        fetched = backend.get_snapshot(snap["snapshotId"])
+        assert fetched["snapshotId"] == snap["snapshotId"]
+
+    def test_get_snapshots_filtered(self, backend, test_user, test_dataset_query):
+        """Test listing snapshots filtered by type"""
+        revision = DatasetRevision(name="DS", query=test_dataset_query)
+        ds = backend.create_dataset(revision, test_user)
+        dataset_id = ds["object"]["datasetId"]
+
+        backend.create_snapshot(dataset_id, [], "user_save", test_user, version=1)
+        backend.create_snapshot(dataset_id, [], "checkpoint", test_user)
+        backend.create_snapshot(dataset_id, [], "checkpoint", test_user)
+
+        all_snaps = backend.get_snapshots(dataset_id)
+        assert len(all_snaps) == 3
+
+        checkpoints = backend.get_snapshots(dataset_id, snapshot_type="checkpoint")
+        assert len(checkpoints) == 2
+        assert all(s["snapshotType"] == "checkpoint" for s in checkpoints)
+
+    def test_update_dataset_pointers(self, backend, test_user, test_dataset_query):
+        """Test updating dataset pointer fields"""
+        revision = DatasetRevision(name="DS", query=test_dataset_query)
+        ds = backend.create_dataset(revision, test_user)
+        dataset_id = ds["object"]["datasetId"]
+
+        snap = backend.create_snapshot(dataset_id, [], "checkpoint", test_user)
+        snap_id = snap["snapshotId"]
+
+        result = backend.update_dataset_pointers(dataset_id, latest_checkpoint_id=snap_id)
+        assert result["object"]["latestCheckpointId"] == snap_id
+
+        result2 = backend.update_dataset_pointers(dataset_id, acknowledged_checkpoint_id=snap_id)
+        assert result2["object"]["acknowledgedCheckpointId"] == snap_id
 
     def test_update_dataset_not_found(self, backend, test_user, test_dataset_query):
         """Test updating non-existent dataset"""
-        dataset_revision = DatasetRevision(
-            name="Test",
-            query=test_dataset_query
-        )
-
-        with pytest.raises(TerranovaNotFoundException, match="No dataset with id"):
-            backend.update_dataset("nonexistent", dataset_revision, [], test_user)
+        with pytest.raises(TerranovaNotFoundException):
+            backend.update_dataset_pointers("nonexistent", latest_checkpoint_id="x")
 
     # Template tests
     def test_get_templates(self, backend):

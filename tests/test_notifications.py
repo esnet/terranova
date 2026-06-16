@@ -9,7 +9,6 @@ SCHEDULE = {
     "scheduleId": "SCHED01",
     "name": "Hourly topology check",
     "datasetId": "DS00001",
-    "mapId": "MAP0001",
 }
 
 DATASET = {
@@ -23,6 +22,9 @@ DELTA = {
     "nodes": {"added": [{"endpoint_id": "NYC"}], "removed": []},
     "edges": {"added": [], "removed": [{"src": "SEA", "dst": "LAX"}]},
 }
+
+FROM_SNAP = "snap_from_001"
+TO_SNAP   = "snap_to_002"
 
 
 @pytest.fixture(autouse=True)
@@ -50,9 +52,9 @@ class TestEmailNotification:
                 recipients=["ops@test.local"],
                 schedule_name=SCHEDULE["name"],
                 dataset_name=DATASET["name"],
-                map_id=SCHEDULE["mapId"],
                 dataset_id=DATASET["datasetId"],
-                version=5,
+                from_snapshot_id=FROM_SNAP,
+                to_snapshot_id=TO_SNAP,
                 delta=DELTA,
             )
 
@@ -62,7 +64,6 @@ class TestEmailNotification:
             message_str = call_args[0][2]
             assert "Hourly topology check" in message_str
             assert "2 nodes added, 1 edge removed" in message_str
-            assert "MAP0001" in message_str
 
     @pytest.mark.asyncio
     async def test_email_skipped_when_no_smtp_host(self, monkeypatch):
@@ -74,9 +75,9 @@ class TestEmailNotification:
                 recipients=["ops@test.local"],
                 schedule_name="test",
                 dataset_name="DS",
-                map_id="MAP",
                 dataset_id="DS1",
-                version=1,
+                from_snapshot_id=None,
+                to_snapshot_id="snap1",
                 delta=DELTA,
             )
             mock_smtp_cls.assert_not_called()
@@ -90,9 +91,9 @@ class TestEmailNotification:
                 recipients=[],
                 schedule_name="test",
                 dataset_name="DS",
-                map_id="MAP",
                 dataset_id="DS1",
-                version=1,
+                from_snapshot_id=None,
+                to_snapshot_id="snap1",
                 delta=DELTA,
             )
             mock_smtp_cls.assert_not_called()
@@ -110,14 +111,15 @@ class TestEmailNotification:
                 recipients=["a@b.com"],
                 schedule_name="S",
                 dataset_name="D",
-                map_id="MAPXYZ",
                 dataset_id="DSXYZ",
-                version=7,
+                from_snapshot_id=FROM_SNAP,
+                to_snapshot_id=TO_SNAP,
                 delta=DELTA,
             )
             message_str = mock_smtp.sendmail.call_args[0][2]
-            assert "https://terranova.test/map/MAPXYZ" in message_str
-            assert "version=7" in message_str
+            assert "https://terranova.test/dataset/DSXYZ" in message_str
+            assert f"diffTo={TO_SNAP}" in message_str
+            assert f"diffFrom={FROM_SNAP}" in message_str
 
 
 class TestSlackNotification:
@@ -137,9 +139,9 @@ class TestSlackNotification:
                 webhook_url="https://hooks.slack.com/test",
                 schedule_name=SCHEDULE["name"],
                 dataset_name=DATASET["name"],
-                map_id=SCHEDULE["mapId"],
                 dataset_id=DATASET["datasetId"],
-                version=3,
+                from_snapshot_id=FROM_SNAP,
+                to_snapshot_id=TO_SNAP,
                 delta=DELTA,
             )
 
@@ -147,13 +149,12 @@ class TestSlackNotification:
             call_kwargs = mock_client.post.call_args[1]
             payload = call_kwargs["json"]
 
-            # Verify Block Kit structure
             assert "blocks" in payload
             block_texts = str(payload["blocks"])
             assert "Hourly topology check" in block_texts
             assert "Core Circuits" in block_texts
             assert "2 nodes added" in block_texts
-            assert "https://terranova.test/map/MAP0001" in block_texts
+            assert f"diffTo={TO_SNAP}" in block_texts
 
     @pytest.mark.asyncio
     async def test_notify_dispatches_to_configs(self):
@@ -166,7 +167,7 @@ class TestSlackNotification:
         with patch.object(notifications, "send_email", new=AsyncMock()) as mock_email, \
              patch.object(notifications, "send_slack", new=AsyncMock()) as mock_slack:
 
-            await notifications.notify(SCHEDULE, DATASET, 5, DELTA, configs)
+            await notifications.notify(SCHEDULE, DATASET, TO_SNAP, FROM_SNAP, DELTA, configs)
 
             mock_email.assert_called_once()
             mock_slack.assert_called_once()
@@ -180,6 +181,7 @@ class TestSlackNotification:
         configs = [{"emailRecipients": [], "slackWebhookUrl": None}]
 
         with patch.object(notifications, "send_slack", new=AsyncMock()) as mock_slack:
-            await notifications.notify(SCHEDULE, DATASET, 1, DELTA, configs)
+            await notifications.notify(SCHEDULE, DATASET, TO_SNAP, FROM_SNAP, DELTA, configs)
             mock_slack.assert_called_once()
+            # First positional arg is webhook_url
             assert mock_slack.call_args[0][0] == "https://hooks.slack.com/global"

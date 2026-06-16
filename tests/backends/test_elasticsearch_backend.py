@@ -526,19 +526,19 @@ class TestElasticSearchBackend:
 
         assert result["result"] == "created"
         assert result["object"]["name"] == "Test Dataset"
-        assert result["object"]["version"] == 1
         assert "datasetId" in result["object"]
+        assert result["object"].get("currentSnapshotId") is None
 
-    def test_update_dataset_success(self, backend, mock_es, test_user, test_dataset_query):
-        """Test updating an existing dataset"""
+    def test_update_dataset_query(self, backend, mock_es, test_user, test_dataset_query):
+        """Test updating a dataset's query in-place"""
         mock_es.search.return_value = {
             "hits": {
                 "hits": [
-                    {"_source": {"datasetId": "ds1", "name": "Old Name", "version": 1}}
+                    {"_source": {"datasetId": "ds1", "name": "Old Name", "query": {}}}
                 ]
             }
         }
-        mock_es.create.return_value = {"result": "created"}
+        mock_es.index.return_value = {"result": "updated"}
 
         dataset_revision = DatasetRevision(
             name="New Name",
@@ -549,12 +549,10 @@ class TestElasticSearchBackend:
             with patch("terranova.backends.elasticsearch.ELASTIC_INDICES", {
                 "dataset": {"read": "test-dataset", "write": "test-dataset"}
             }):
-                result = backend.update_dataset("ds1", dataset_revision, [{"result": "data"}], test_user)
+                result = backend.update_dataset_query("ds1", dataset_revision, test_user)
 
-        assert result["result"] == "created"
+        assert result["result"] == "updated"
         assert result["object"]["name"] == "New Name"
-        assert result["object"]["version"] == 2
-        assert result["object"]["results"] == [{"result": "data"}]
 
     def test_update_dataset_not_found(self, backend, mock_es, test_user, test_dataset_query):
         """Test updating non-existent dataset"""
@@ -567,8 +565,8 @@ class TestElasticSearchBackend:
 
         with patch.object(type(backend), 'es', property(lambda self: mock_es)):
             with patch("terranova.backends.elasticsearch.ELASTIC_INDICES", {"dataset": {"read": "test-dataset"}}):
-                with pytest.raises(TerranovaNotFoundException, match="No dataset with id"):
-                    backend.update_dataset("nonexistent", dataset_revision, [], test_user)
+                with pytest.raises(TerranovaNotFoundException):
+                    backend.update_dataset_query("nonexistent", dataset_revision, test_user)
 
     # Template tests
     def test_get_templates(self, backend, mock_es):

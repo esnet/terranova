@@ -171,20 +171,41 @@ class DatasetQuery(BaseModel):
 
 
 class Dataset(BaseModel):
-    datasetId: str  # 7-char alphanumeric string
+    """Dataset metadata and query definition. One row per dataset — mutable."""
+    datasetId: str  # 7-char alphanumeric
     name: str
-    version: int
-    lastUpdatedBy: str  # both the "owner" and "last editor"
-    lastUpdatedOn: datetime
+    createdBy: str
+    createdOn: datetime
     query: DatasetQuery
-    results: List[Any] | None = None  # only set for Datasets with valid query filters
-    # True when this version was written by the scheduler; None/False for user saves
-    checkpoint: bool | None = None
+    # Snapshot pointers — updated in place, never versioned
+    currentSnapshotId: str | None = None       # latest user_save snapshot
+    latestCheckpointId: str | None = None      # latest scheduler checkpoint snapshot
+    acknowledgedCheckpointId: str | None = None  # last checkpoint the user has reviewed
 
 
 class DatasetRevision(BaseModel):
+    """Used for creating or updating a dataset's query/name."""
     name: str
     query: DatasetQuery
+
+
+class Snapshot(BaseModel):
+    """Immutable record of query results at a point in time."""
+    snapshotId: str  # 7-char alphanumeric
+    datasetId: str
+    snapshotType: str  # "user_save" | "checkpoint"
+    version: int | None = None  # set on user_save snapshots; None for checkpoint snapshots
+    results: List[Any]
+    createdBy: str
+    createdOn: datetime
+
+
+class SnapshotAcknowledgeRequest(BaseModel):
+    snapshotId: str
+
+
+class SnapshotAcceptRequest(BaseModel):
+    snapshotId: str
 
 
 class UserDataRevision(BaseModel):
@@ -263,6 +284,7 @@ class PasswordReset(BaseModel):
 
 MapFieldEnum = Enum("MapFieldEnum", {k: k for k in Map.model_fields.keys()})
 DatasetFieldEnum = Enum("DatasetFieldEnum", {k: k for k in Dataset.model_fields.keys()})
+SnapshotFieldEnum = Enum("SnapshotFieldEnum", {k: k for k in Snapshot.model_fields.keys()})
 
 # For specifying versions, we want to limit to specifiying an integer representing an
 # individual version. Alternatively they can specify the special string "all" for getting

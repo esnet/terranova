@@ -21,16 +21,20 @@ from terranova.settings import (
 logger = logging.getLogger(__name__)
 
 
-def _map_url(map_id: str, dataset_id: str, version: int) -> str:
+def _dataset_diff_url(dataset_id: str, from_snapshot_id: str | None, to_snapshot_id: str) -> str:
+    """Deep-link URL that opens the dataset editor with the diff picker pre-populated."""
     base = NOTIFICATIONS_BASE_URL.rstrip("/")
-    return f"{base}/map/{map_id}?dataset={dataset_id}&version={version}"
+    url = f"{base}/dataset/{dataset_id}?diffTo={to_snapshot_id}"
+    if from_snapshot_id:
+        url += f"&diffFrom={from_snapshot_id}"
+    return url
 
 
 def _email_body(
-    schedule_name: str, dataset_name: str, map_id: str,
-    dataset_id: str, version: int, delta: dict,
+    schedule_name: str, dataset_name: str,
+    dataset_id: str, from_snapshot_id: str | None, to_snapshot_id: str, delta: dict,
 ) -> tuple[str, str]:
-    url = _map_url(map_id, dataset_id, version)
+    url = _dataset_diff_url(dataset_id, from_snapshot_id, to_snapshot_id)
     summary = delta.get("summary", "Changes detected")
     subject = f"[Terranova] Topology change detected: {schedule_name}"
     body = f"""\
@@ -51,9 +55,9 @@ async def send_email(
     recipients: list[str],
     schedule_name: str,
     dataset_name: str,
-    map_id: str,
     dataset_id: str,
-    version: int,
+    from_snapshot_id: str | None,
+    to_snapshot_id: str,
     delta: dict,
 ):
     if not NOTIFICATIONS_SMTP_HOST:
@@ -62,7 +66,7 @@ async def send_email(
     if not recipients:
         return
 
-    subject, body = _email_body(schedule_name, dataset_name, map_id, dataset_id, version, delta)
+    subject, body = _email_body(schedule_name, dataset_name, dataset_id, from_snapshot_id, to_snapshot_id, delta)
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
@@ -86,12 +90,12 @@ async def send_slack(
     webhook_url: str,
     schedule_name: str,
     dataset_name: str,
-    map_id: str,
     dataset_id: str,
-    version: int,
+    from_snapshot_id: str | None,
+    to_snapshot_id: str,
     delta: dict,
 ):
-    url = _map_url(map_id, dataset_id, version)
+    url = _dataset_diff_url(dataset_id, from_snapshot_id, to_snapshot_id)
     summary = delta.get("summary", "Changes detected")
 
     payload = {
@@ -136,17 +140,17 @@ async def send_slack(
 async def notify(
     schedule: dict,
     dataset: dict,
-    version: int,
+    to_snapshot_id: str,
+    from_snapshot_id: str | None,
     delta: dict,
     notification_configs: list[dict],
 ):
     """
     Dispatch notifications for a detected change.
 
-    Uses per-config recipients/webhook when set; falls back to the global
-    NOTIFICATIONS_SLACK_WEBHOOK_URL for Slack if no per-config URL is present.
+    from_snapshot_id: the last user_save snapshot (the "base" for the diff link)
+    to_snapshot_id: the new checkpoint snapshot just created
     """
-    map_id = schedule.get("mapId") or ""
     dataset_id = dataset["datasetId"]
     dataset_name = dataset.get("name", dataset_id)
     schedule_name = schedule.get("name", schedule["scheduleId"])
@@ -158,10 +162,10 @@ async def notify(
         if recipients:
             await send_email(
                 recipients, schedule_name, dataset_name,
-                map_id, dataset_id, version, delta,
+                dataset_id, from_snapshot_id, to_snapshot_id, delta,
             )
         if slack_url:
             await send_slack(
                 slack_url, schedule_name, dataset_name,
-                map_id, dataset_id, version, delta,
+                dataset_id, from_snapshot_id, to_snapshot_id, delta,
             )
