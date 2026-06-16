@@ -59,10 +59,35 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     const [deltaLayers, setDeltaLayers] = useState<DeltaLayers>({ added: true, removed: true, modified: true });
 
     const handleSelectVersion = async (version, delta) => {
-        if (!delta) { setActiveDelta(null); setActiveVersionInfo(null); return; }
+        if (!delta) {
+            setActiveDelta(null);
+            setActiveVersionInfo(null);
+            // Revert to live topology
+            if (visualizationMode === "geographic") fetchGeographicTopologyData();
+            else if (visualizationMode === "logical") fetchEdgeGraphTopologyData();
+            else if (visualizationMode === "table-view") fetchRawCircuitData();
+            return;
+        }
         setActiveDelta(delta);
         setActiveVersionInfo({ from: version - 1, to: version });
         setDeltaLayers({ added: true, removed: true, modified: true });
+
+        // Fetch topology for this specific version so the map shows that snapshot
+        const headers = setAuthHeaders({ "Content-Type": "application/json" });
+        if (visualizationMode === "geographic" || visualizationMode === "logical") {
+            const layout = visualizationMode === "geographic" ? "geographic" : "logical";
+            const url = `${API_URL}/output/dataset/${datasetId}/${layout}/snapshot/?version=${version}`;
+            const res = await fetch(url, { headers });
+            if (res.ok) setTopologyData(await res.json());
+        } else if (visualizationMode === "table-view") {
+            const url = `${API_URL}/output/query/raw/?version=${version}`;
+            // raw query doesn't support version — fall back to stored results
+            const dsRes = await fetch(`${API_URL}/dataset/id/${datasetId}/?version=${version}`, { headers });
+            if (dsRes.ok) {
+                const ds = await dsRes.json();
+                if (Array.isArray(ds.results)) setTableData(ds.results);
+            }
+        }
     };
 
     const toggleDeltaLayer = (layer) => {
@@ -176,7 +201,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
     const getVisualization = () => {
         if (visualizationMode === "table-view") {
             return (
-                <div className="overflow-auto max-w-3/4 w-full max-h-128">
+                <div className="overflow-auto w-full h-full">
                     <TableView
                         data={tableData}
                         loading={loading}
@@ -262,7 +287,20 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
 
                 {/* Dataset Viewer and Sidebar */}
                 <div className="flex flex-row gap-4 w-full h-[432px] p-4 surface rounded-xl shadow-sm">
-                    {getVisualization()}
+                    <div className="relative flex-1 min-w-0 flex">
+                        {getVisualization()}
+                        {activeDelta && activeVersionInfo && (
+                            <DeltaOverlay
+                                delta={activeDelta}
+                                fromVersion={activeVersionInfo.from}
+                                toVersion={activeVersionInfo.to}
+                                onDismiss={() => { setActiveDelta(null); setActiveVersionInfo(null); }}
+                                mode="dataset"
+                                layers={deltaLayers}
+                                onToggleLayer={toggleDeltaLayer}
+                            />
+                        )}
+                    </div>
                     <DatasetEditorSidebar
                         visualizationMode={visualizationMode}
                         handleOnModeChange={onModeChange}
@@ -295,19 +333,6 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                     />
                 )}
 
-                {activeDelta && activeVersionInfo && (
-                    <div className="relative">
-                        <DeltaOverlay
-                            delta={activeDelta}
-                            fromVersion={activeVersionInfo.from}
-                            toVersion={activeVersionInfo.to}
-                            onDismiss={() => { setActiveDelta(null); setActiveVersionInfo(null); }}
-                            mode="dataset"
-                            layers={deltaLayers}
-                            onToggleLayer={toggleDeltaLayer}
-                        />
-                    </div>
-                )}
             </main>
         </DatasetController.Provider>
     );
