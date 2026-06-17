@@ -25,6 +25,7 @@ interface DiffResult {
 interface DatasetDiffPickerProps {
     datasetId: string;
     dataset: any;  // full dataset doc with pointer fields
+    visualizationMode: string;  // "logical" | "geographic" | "table-view"
     onCompare: (snap1Id: string, snap2Id: string, diffData: DiffResult, delta: any) => void;
     onAcknowledge: (snapshotId: string) => void;
     onAccept: (snapshotId: string) => void;
@@ -50,6 +51,7 @@ function snapLabel(snap: Snapshot): string {
 export function DatasetDiffPicker({
     datasetId,
     dataset,
+    visualizationMode,
     onCompare,
     onAcknowledge,
     onAccept,
@@ -102,8 +104,8 @@ export function DatasetDiffPicker({
         setComparing(true);
         try {
             const headers = setAuthHeaders({ "Content-Type": "application/json" });
-            // Fetch diff topology
-            const layout = "logical"; // caller decides actual layout; we just get the delta
+            // Fetch diff topology using the current visualization mode's layout
+            const layout = visualizationMode === "geographic" ? "geographic" : "logical";
             const diffRes = await fetch(
                 `${API_URL}/output/dataset/${datasetId}/${layout}/diff/${fromId}/${toId}/`,
                 { headers }

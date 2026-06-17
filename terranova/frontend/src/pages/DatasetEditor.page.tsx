@@ -268,6 +268,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                             <DatasetDiffPicker
                                 datasetId={datasetId}
                                 dataset={dataset}
+                                visualizationMode={visualizationMode}
                                 onCompare={handleCompare}
                                 onAcknowledge={handleAcknowledge}
                                 onAccept={handleAccept}
