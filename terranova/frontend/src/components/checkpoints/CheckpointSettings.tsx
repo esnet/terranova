@@ -333,7 +333,15 @@ function ScheduleCard({
 
                     {/* Retention */}
                     <div className="flex flex-col gap-2">
-                        <span className="text-xs tn-bold text-color-text-alt uppercase tracking-wide">Retention</span>
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs tn-bold text-color-text-alt uppercase tracking-wide">Retention</span>
+                            <span className="relative group">
+                                <Info size={12} className="text-color-text-alt cursor-help" />
+                                <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug normal-case tracking-normal">
+                                    Controls how many checkpoint snapshots are kept. <strong>Keep last N</strong> retains the N most recent checkpoints. <strong>Keep every Nth</strong> additionally thins older checkpoints to one per N — useful for long-running datasets where you want a sparse historical record. User saves are never pruned.
+                                </span>
+                            </span>
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                             <PktsInputRow label="Keep last N checkpoints">
                                 <PktsInputText
@@ -529,6 +537,12 @@ function NewScheduleForm({
                 >
                     {retentionOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                     Retention policy
+                    <span className="relative group" onClick={e => e.stopPropagation()}>
+                        <Info size={12} className="text-color-text-alt cursor-help" />
+                        <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug normal-case tracking-normal">
+                            Controls how many checkpoint snapshots are kept. <strong>Keep last N</strong> retains the N most recent checkpoints. <strong>Keep every Nth</strong> additionally thins older checkpoints to one per N — useful for long-running datasets. User saves are never pruned.
+                        </span>
+                    </span>
                 </button>
                 {retentionOpen && (
                     <div className="grid grid-cols-2 gap-3">
