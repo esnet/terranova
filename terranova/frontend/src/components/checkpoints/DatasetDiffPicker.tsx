@@ -156,8 +156,12 @@ export function DatasetDiffPicker({
         }
     };
 
+    // Mark Viewed / Accept are only meaningful when the incoming snapshot is a checkpoint
+    const toSnap = snapshots.find(s => s.snapshotId === toId);
+    const toIsCheckpoint = toSnap?.snapshotType === "checkpoint";
+
     const canCompare = fromId && toId && fromId !== toId && !comparing;
-    const canAct = hasActiveDiff && !acting;
+    const canAct = hasActiveDiff && toIsCheckpoint && !acting;
     const hasUnreviewed = dataset?.latestCheckpointId &&
         dataset.latestCheckpointId !== dataset?.acknowledgedCheckpointId;
 
@@ -177,7 +181,7 @@ export function DatasetDiffPicker({
                 </div>
             ) : (
                 <>
-                    <PktsInputRow label="From (older)">
+                    <PktsInputRow label="Baseline">
                         <PktsInputSelect
                             name="diff-from"
                             value={fromId}
@@ -191,7 +195,7 @@ export function DatasetDiffPicker({
                         </PktsInputSelect>
                     </PktsInputRow>
 
-                    <PktsInputRow label="To (newer)">
+                    <PktsInputRow label="Incoming changes">
                         <PktsInputSelect
                             name="diff-to"
                             value={toId}
@@ -216,25 +220,32 @@ export function DatasetDiffPicker({
                     </PktsButton>
 
                     {hasActiveDiff && (
-                        <div className="flex gap-2 pt-1 border-t border-color-border-alt">
-                            <PktsButton
-                                variant="secondary"
-                                disabled={!canAct}
-                                onClick={handleAcknowledge}
-                                className="flex-1 flex items-center justify-center gap-1 text-xs"
-                            >
-                                {acting && <Loader2 size={11} className="animate-spin" />}
-                                Mark Viewed
-                            </PktsButton>
-                            <PktsButton
-                                variant="primary"
-                                disabled={!canAct}
-                                onClick={handleAccept}
-                                className="flex-1 flex items-center justify-center gap-1 text-xs"
-                            >
-                                {acting && <Loader2 size={11} className="animate-spin" />}
-                                Accept Changes
-                            </PktsButton>
+                        <div className="flex flex-col gap-1.5 pt-1 border-t border-color-border-alt">
+                            {!toIsCheckpoint && (
+                                <p className="text-xs text-color-text-alt italic">
+                                    Mark Viewed and Accept are only available when comparing against a checkpoint snapshot.
+                                </p>
+                            )}
+                            <div className="flex gap-2">
+                                <PktsButton
+                                    variant="secondary"
+                                    disabled={!canAct}
+                                    onClick={handleAcknowledge}
+                                    className="flex-1 flex items-center justify-center gap-1 text-xs"
+                                >
+                                    {acting && <Loader2 size={11} className="animate-spin" />}
+                                    Mark Viewed
+                                </PktsButton>
+                                <PktsButton
+                                    variant="primary"
+                                    disabled={!canAct}
+                                    onClick={handleAccept}
+                                    className="flex-1 flex items-center justify-center gap-1 text-xs"
+                                >
+                                    {acting && <Loader2 size={11} className="animate-spin" />}
+                                    Accept Changes
+                                </PktsButton>
+                            </div>
                         </div>
                     )}
                 </>
