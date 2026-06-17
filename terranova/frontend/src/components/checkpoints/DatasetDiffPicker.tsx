@@ -181,7 +181,7 @@ export function DatasetDiffPicker({
                 </div>
             ) : (
                 <>
-                    <PktsInputRow label="Baseline">
+                    <PktsInputRow label="Current version">
                         <PktsInputSelect
                             name="diff-from"
                             value={fromId}
@@ -195,7 +195,7 @@ export function DatasetDiffPicker({
                         </PktsInputSelect>
                     </PktsInputRow>
 
-                    <PktsInputRow label="Incoming changes">
+                    <PktsInputRow label="New version">
                         <PktsInputSelect
                             name="diff-to"
                             value={toId}
