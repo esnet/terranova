@@ -373,7 +373,7 @@ function ScheduleCard({
                                 <span className="relative group">
                                     <Info size={12} className="text-color-text-alt cursor-help" />
                                     <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug">
-                                        Notifications are sent when the scheduler detects a change between two consecutive checkpoints. Each notification targets either an email address list or a Slack webhook — add one per destination.
+                                        Notifications are sent when the scheduler detects a change between the current checkpoint and the last acknowledged checkpoint. Each notification targets either an email address list or a Slack webhook — add one per destination.
                                     </span>
                                 </span>
                             </div>
@@ -520,7 +520,7 @@ function NewScheduleForm({
                     <span className="relative group">
                         <Info size={12} className="text-color-text-alt cursor-help" />
                         <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug">
-                            Sent when the scheduler detects a change between two consecutive checkpoints. Choose Email or Slack. Add more notifications after saving the schedule.
+                            Sent when the scheduler detects a change between the current checkpoint and the last acknowledged checkpoint. Choose Email or Slack. Add more notifications after saving.
                         </span>
                     </span>
                 </div>

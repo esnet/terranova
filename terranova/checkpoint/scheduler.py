@@ -127,13 +127,23 @@ async def run_checkpoint(schedule_id: str) -> dict:
         logger.error("Checkpoint %s query failed: %s", schedule_id, err)
         return {"schedule_id": schedule_id, "status": "error", "error": err}
 
-    # Compare with the latest checkpoint results
-    latest_checkpoint_id = dataset.get("latestCheckpointId")
-    if latest_checkpoint_id:
-        prev_snap = storage_backend.get_snapshot(latest_checkpoint_id)
-        prev_results = prev_snap.get("results") or [] if prev_snap else []
+    # Compare current results against the last acknowledged checkpoint.
+    # This is the correct baseline: the state the user last signed off on.
+    # If the data matches what was acknowledged, nothing new to report — even if
+    # there are intermediate unacknowledged checkpoints sitting in storage.
+    acknowledged_checkpoint_id = dataset.get("acknowledgedCheckpointId")
+    if acknowledged_checkpoint_id:
+        ack_snap = storage_backend.get_snapshot(acknowledged_checkpoint_id)
+        prev_results = ack_snap.get("results") or [] if ack_snap else []
     else:
-        prev_results = []
+        # No acknowledged checkpoint yet — compare against the current snapshot
+        # (currentSnapshotId = last user save) so we catch the first real change.
+        current_snapshot_id = dataset.get("currentSnapshotId")
+        if current_snapshot_id:
+            cur_snap = storage_backend.get_snapshot(current_snapshot_id)
+            prev_results = cur_snap.get("results") or [] if cur_snap else []
+        else:
+            prev_results = []
 
     current_hash = hash_results(current_results)
     prev_hash = hash_results(prev_results)
@@ -142,10 +152,10 @@ async def run_checkpoint(schedule_id: str) -> dict:
         storage_backend.update_checkpoint_schedule_status(
             schedule_id, datetime.now(), "ok"
         )
-        logger.debug("Checkpoint %s: no change", schedule_id)
+        logger.debug("Checkpoint %s: no change from acknowledged state", schedule_id)
         return {"schedule_id": schedule_id, "status": "ok", "summary": "No changes detected"}
 
-    # Data changed — create a new checkpoint Snapshot
+    # Data differs from acknowledged state — create a new checkpoint Snapshot
     delta = compute_delta(prev_results, current_results)
 
     class _SystemUser:
@@ -167,22 +177,20 @@ async def run_checkpoint(schedule_id: str) -> dict:
     retention = RetentionPolicy(**retention_data)
     pruned = apply_retention(dataset_id, retention, storage_backend)
 
-    # Determine the last user_save snapshot for the notification deep-link
-    user_snaps = storage_backend.get_snapshots(dataset_id, snapshot_type="user_save", limit=1)
-    prev_user_snapshot_id = user_snaps[0]["snapshotId"] if user_snaps else None
-
-    # Reload dataset to get current acknowledgedCheckpointId
+    # Reload dataset after pointer update
     dataset = storage_backend.get_datasets(dataset_id=dataset_id)[0]
+
+    # Notify — the diff link goes from acknowledgedCheckpointId to the new checkpoint.
+    # acknowledged_checkpoint_id may have changed if we updated it above, so re-read.
     acknowledged_id = dataset.get("acknowledgedCheckpointId")
 
-    # Only notify if there's an unacknowledged change
     if new_snapshot_id != acknowledged_id:
         configs = storage_backend.get_notification_configs(schedule_id=schedule_id)
         if configs:
             try:
                 await notify(
                     schedule, dataset, new_snapshot_id,
-                    prev_user_snapshot_id, delta, configs
+                    acknowledged_checkpoint_id, delta, configs
                 )
             except Exception as e:
                 logger.error("Notification failed for checkpoint %s: %s", schedule_id, e)
