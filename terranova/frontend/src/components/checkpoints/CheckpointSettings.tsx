@@ -264,20 +264,27 @@ function ScheduleCard({
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0">
-                    <PktsIconButton
-                        variant="tertiary"
+                    <button
                         disabled={running}
                         onClick={handleRunNow}
                         title="Run now"
+                        className="p-1.5 rounded text-color-text-alt hover:text-color-text hover:bg-color-layer-3 transition-colors disabled:opacity-40"
                     >
-                        {running ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-                    </PktsIconButton>
-                    <PktsIconButton variant="destructive" onClick={onDelete} title="Delete">
-                        <Trash2 size={14} />
-                    </PktsIconButton>
-                    <PktsIconButton variant="tertiary" onClick={() => setExpanded(e => !e)}>
-                        {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </PktsIconButton>
+                        {running ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+                    </button>
+                    <button
+                        onClick={onDelete}
+                        title="Delete"
+                        className="p-1.5 rounded text-color-text-alt hover:text-color-text-error hover:bg-color-bg-error transition-colors"
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                    <button
+                        onClick={() => setExpanded(e => !e)}
+                        className="p-1.5 rounded text-color-text-alt hover:text-color-text hover:bg-color-layer-3 transition-colors"
+                    >
+                        {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
                 </div>
             </div>
 
@@ -386,8 +393,10 @@ function NewScheduleForm({
     const [datasetId, setDatasetId]           = useState("");
     const [intervalPreset, setIntervalPreset] = useState("Every 6 Hours");
     const [customMinutes, setCustomMinutes]   = useState("");
-    const [saving, setSaving]                 = useState(false);
-    const [error, setError]                   = useState<string | null>(null);
+    const [emailRecipients, setEmailRecipients] = useState("");
+    const [slackWebhook, setSlackWebhook]       = useState("");
+    const [saving, setSaving]                   = useState(false);
+    const [error, setError]                     = useState<string | null>(null);
 
     const resolvedMinutes = (): number => {
         if (intervalPreset === "Other") return parseInt(customMinutes) || 360;
@@ -411,6 +420,18 @@ function NewScheduleForm({
                 method: "POST",
                 body: JSON.stringify(body),
             });
+            // Create notification config if email or Slack was provided
+            const emails = emailRecipients.split(",").map(s => s.trim()).filter(Boolean);
+            if (emails.length > 0 || slackWebhook.trim()) {
+                await apiFetch("/notification-config/", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        scheduleId: created.scheduleId,
+                        emailRecipients: emails,
+                        slackWebhookUrl: slackWebhook.trim() || null,
+                    }),
+                });
+            }
             onCreated(created);
         } catch (err: any) {
             setError(err?.message ?? "Failed to create schedule");
@@ -467,10 +488,29 @@ function NewScheduleForm({
                 </PktsInputRow>
             )}
 
+            {/* Optional notifications */}
+            <div className="flex flex-col gap-2 pt-1 border-t border-color-border-alt">
+                <span className="text-xs tn-bold text-color-text-alt uppercase tracking-wide">Notifications (optional)</span>
+                <PktsInputRow label="Email recipients">
+                    <PktsInputText
+                        placeholder="ops@example.com, noc@example.com"
+                        value={emailRecipients}
+                        onChange={(e: any) => setEmailRecipients(e.target.value)}
+                    />
+                </PktsInputRow>
+                <PktsInputRow label="Slack webhook URL">
+                    <PktsInputText
+                        placeholder="https://hooks.slack.com/services/…"
+                        value={slackWebhook}
+                        onChange={(e: any) => setSlackWebhook(e.target.value)}
+                    />
+                </PktsInputRow>
+            </div>
+
             {error && <p className="text-xs text-color-text-error">{error}</p>}
 
             <div className="flex gap-2 justify-end">
-                <PktsButton type="button" variant="tertiary" onClick={onCancel}>Cancel</PktsButton>
+                <PktsButton type="button" variant="secondary" onClick={onCancel}>Cancel</PktsButton>
                 <PktsButton type="submit" variant="primary" disabled={saving || !datasetId}>
                     {saving && <Loader2 size={12} className="animate-spin mr-1" />}
                     Create Schedule
