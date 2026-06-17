@@ -377,7 +377,7 @@ function ScheduleCard({
                                     </span>
                                 </span>
                             </div>
-                            <PktsButton variant="tertiary" onClick={addNotification}>
+                            <PktsButton variant="secondary" onClick={addNotification} className="w-fit">
                                 <Plus size={12} className="mr-1" /> Add
                             </PktsButton>
                         </div>
@@ -419,6 +419,9 @@ function NewScheduleForm({
     const [customMinutes, setCustomMinutes]   = useState("");
     const [notifType, setNotifType]   = useState("email");
     const [notifValue, setNotifValue] = useState("");
+    const [retentionOpen, setRetentionOpen]     = useState(false);
+    const [keepLastN, setKeepLastN]             = useState("50");
+    const [keepEveryNth, setKeepEveryNth]       = useState("10");
     const [saving, setSaving]                   = useState(false);
     const [error, setError]                     = useState<string | null>(null);
 
@@ -438,7 +441,10 @@ function NewScheduleForm({
                 name: scheduleName.trim() || `Checkpoint: ${datasets.find(d => d.datasetId === datasetId)?.name ?? datasetId}`,
                 intervalMinutes: resolvedMinutes(),
                 enabled: true,
-                retention: { keep_last_n: 50, keep_every_nth: 10 },
+                retention: {
+                    keep_last_n:    keepLastN    ? parseInt(keepLastN)    : null,
+                    keep_every_nth: keepEveryNth ? parseInt(keepEveryNth) : null,
+                },
             };
             const created = await apiFetch("/checkpoint-schedule/", {
                 method: "POST",
@@ -512,6 +518,40 @@ function NewScheduleForm({
                     />
                 </PktsInputRow>
             )}
+
+            {/* Retention (twirldown) */}
+            <div className="flex flex-col gap-2 pt-1 border-t border-color-border-alt">
+                <button
+                    type="button"
+                    className="flex items-center gap-1 text-xs tn-bold text-color-text-alt uppercase tracking-wide w-fit"
+                    onClick={() => setRetentionOpen(o => !o)}
+                >
+                    {retentionOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                    Retention policy
+                </button>
+                {retentionOpen && (
+                    <div className="grid grid-cols-2 gap-3">
+                        <PktsInputRow label="Keep last N checkpoints">
+                            <PktsInputText
+                                type="number"
+                                min="1"
+                                placeholder="∞ (keep all)"
+                                value={keepLastN}
+                                onChange={(e: any) => setKeepLastN(e.target.value)}
+                            />
+                        </PktsInputRow>
+                        <PktsInputRow label="Keep every Nth">
+                            <PktsInputText
+                                type="number"
+                                min="1"
+                                placeholder="none"
+                                value={keepEveryNth}
+                                onChange={(e: any) => setKeepEveryNth(e.target.value)}
+                            />
+                        </PktsInputRow>
+                    </div>
+                )}
+            </div>
 
             {/* Optional notification */}
             <div className="flex flex-col gap-2 pt-1 border-t border-color-border-alt">
