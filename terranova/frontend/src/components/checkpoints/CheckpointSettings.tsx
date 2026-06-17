@@ -521,7 +521,7 @@ function NewScheduleForm({
             )}
 
             {/* Retention (twirldown) */}
-            <div className="flex flex-col gap-2 pt-1 border-t border-color-border-alt">
+            <div className="flex flex-col gap-2 pt-1">
                 <button
                     type="button"
                     className="flex items-center gap-1 text-xs tn-bold text-color-text-alt uppercase tracking-wide w-fit"
@@ -555,7 +555,7 @@ function NewScheduleForm({
             </div>
 
             {/* Notification (twirldown) */}
-            <div className="flex flex-col gap-2 pt-1 border-t border-color-border-alt">
+            <div className="flex flex-col gap-2 pt-1">
                 <button
                     type="button"
                     className="flex items-center gap-1.5 text-xs tn-bold text-color-text-alt uppercase tracking-wide w-fit"
