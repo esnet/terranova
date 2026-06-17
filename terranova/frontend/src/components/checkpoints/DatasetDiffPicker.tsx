@@ -3,7 +3,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { setAuthHeaders } from "../../DataController";
 import { API_URL } from "../../../static/settings";
 import { PktsButton, PktsInputSelect, PktsInputOption, PktsInputRow } from "@esnet/packets-ui-react";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 interface Snapshot {
     snapshotId: string;
@@ -156,19 +156,35 @@ export function DatasetDiffPicker({
         }
     };
 
-    // Mark Viewed / Accept are only meaningful when the incoming snapshot is a checkpoint
+    // Mark Viewed / Accept are only meaningful when the new version is a checkpoint
     const toSnap = snapshots.find(s => s.snapshotId === toId);
     const toIsCheckpoint = toSnap?.snapshotType === "checkpoint";
+
+    // Snapshots are sorted newest-first; "new version" must be newer than "old version"
+    const fromIdx = snapshots.findIndex(s => s.snapshotId === fromId);
+    // Snapshots strictly newer than fromId are those at lower indices (newer = smaller index)
+    const newerSnapshots = fromIdx < 0 ? snapshots : snapshots.slice(0, fromIdx);
 
     const canCompare = fromId && toId && fromId !== toId && !comparing;
     const canAct = hasActiveDiff && toIsCheckpoint && !acting;
     const hasUnreviewed = dataset?.latestCheckpointId &&
         dataset.latestCheckpointId !== dataset?.acknowledgedCheckpointId;
 
-    return (
-        <div className="absolute right-0 top-full mt-1 z-700 w-80 bg-color-layer-1 border border-color-border-alt rounded-xl shadow-xl p-4 flex flex-col gap-3">
-            <div className="tn-bold text-sm text-color-text">Compare Snapshots</div>
+    const handleDismiss = () => {
+        onClose();
+    };
 
+    return (
+        <div className="absolute right-0 top-full mt-1 z-700 w-80 bg-color-layer-1 border border-color-border-alt rounded-xl shadow-xl overflow-hidden">
+            {/* Header with dismiss */}
+            <div className="flex items-center justify-between px-4 py-2.5 bg-light-secondary text-white">
+                <span className="tn-bold text-sm">Compare Versions</span>
+                <button onClick={handleDismiss} className="hover:opacity-70 transition-opacity" aria-label="Dismiss">
+                    <X size={15} />
+                </button>
+            </div>
+
+            <div className="p-4 flex flex-col gap-3">
             {hasUnreviewed && (
                 <div className="text-xs text-color-text-warning bg-color-bg-warning rounded px-2 py-1">
                     Unreviewed checkpoint changes available.
@@ -181,11 +197,17 @@ export function DatasetDiffPicker({
                 </div>
             ) : (
                 <>
-                    <PktsInputRow label="Current version">
+                    <PktsInputRow label="Old version">
                         <PktsInputSelect
                             name="diff-from"
                             value={fromId}
-                            onChange={(e) => setFromId(e.target.value)}
+                            onChange={(e) => {
+                                setFromId(e.target.value);
+                                // Reset toId if it's no longer newer than the new fromId
+                                const newFromIdx = snapshots.findIndex(s => s.snapshotId === e.target.value);
+                                const currentToIdx = snapshots.findIndex(s => s.snapshotId === toId);
+                                if (currentToIdx >= newFromIdx) setToId("");
+                            }}
                         >
                             {snapshots.map(s => (
                                 <PktsInputOption key={s.snapshotId} value={s.snapshotId}>
@@ -200,8 +222,10 @@ export function DatasetDiffPicker({
                             name="diff-to"
                             value={toId}
                             onChange={(e) => setToId(e.target.value)}
+                            disabled={!fromId || newerSnapshots.length === 0}
                         >
-                            {snapshots.map(s => (
+                            {!toId && <PktsInputOption value="">— select —</PktsInputOption>}
+                            {newerSnapshots.map(s => (
                                 <PktsInputOption key={s.snapshotId} value={s.snapshotId}>
                                     {snapLabel(s)}
                                 </PktsInputOption>
@@ -250,6 +274,7 @@ export function DatasetDiffPicker({
                     )}
                 </>
             )}
+            </div>
         </div>
     );
 }

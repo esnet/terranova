@@ -272,7 +272,7 @@ export const DatasetEditorPageComponent = (_props: IDatasetEditorPageProps) => {
                                 onCompare={handleCompare}
                                 onAcknowledge={handleAcknowledge}
                                 onAccept={handleAccept}
-                                onClose={() => setPickerOpen(false)}
+                                onClose={() => exitDiffMode(true)}
                                 hasActiveDiff={!!activeDelta}
                                 initialFromId={initialDiffFrom}
                                 initialToId={initialDiffTo}
