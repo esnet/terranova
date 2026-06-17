@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Plus, Trash2, Play, ChevronDown, ChevronUp, Loader2, Info } from "lucide-react";
+import { Plus, Trash2, Play, ChevronDown, ChevronRight, Loader2, Info } from "lucide-react";
 import {
     PktsButton,
     PktsIconButton,
@@ -299,7 +299,7 @@ function ScheduleCard({
                         variant="tertiary"
                         onClick={() => setExpanded(e => !e)}
                     >
-                        {expanded ? <ChevronUp /> : <ChevronDown />}
+                        {expanded ? <ChevronDown /> : <ChevronRight />}
                     </PktsIconButton>
                 </div>
             </div>
@@ -419,6 +419,7 @@ function NewScheduleForm({
     const [customMinutes, setCustomMinutes]   = useState("");
     const [notifType, setNotifType]   = useState("email");
     const [notifValue, setNotifValue] = useState("");
+    const [notifOpen, setNotifOpen]             = useState(false);
     const [retentionOpen, setRetentionOpen]     = useState(false);
     const [keepLastN, setKeepLastN]             = useState("50");
     const [keepEveryNth, setKeepEveryNth]       = useState("10");
@@ -526,7 +527,7 @@ function NewScheduleForm({
                     className="flex items-center gap-1 text-xs tn-bold text-color-text-alt uppercase tracking-wide w-fit"
                     onClick={() => setRetentionOpen(o => !o)}
                 >
-                    {retentionOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                    {retentionOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                     Retention policy
                 </button>
                 {retentionOpen && (
@@ -553,38 +554,45 @@ function NewScheduleForm({
                 )}
             </div>
 
-            {/* Optional notification */}
+            {/* Notification (twirldown) */}
             <div className="flex flex-col gap-2 pt-1 border-t border-color-border-alt">
-                <div className="flex items-center gap-1">
-                    <span className="text-xs tn-bold text-color-text-alt uppercase tracking-wide">Notification (optional)</span>
+                <button
+                    type="button"
+                    className="flex items-center gap-1.5 text-xs tn-bold text-color-text-alt uppercase tracking-wide w-fit"
+                    onClick={() => setNotifOpen(o => !o)}
+                >
+                    {notifOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                    Notification (optional)
                     <span className="relative group">
-                        <Info size={12} className="text-color-text-alt cursor-help" />
-                        <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug">
+                        <Info size={12} className="text-color-text-alt cursor-help normal-case font-normal" />
+                        <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug normal-case tracking-normal">
                             Sent when the scheduler detects a change between the current checkpoint and the last acknowledged checkpoint. Choose Email or Slack. Add more notifications after saving.
                         </span>
                     </span>
-                </div>
-                <div className="flex gap-2 items-end">
-                    <div className="w-32 shrink-0">
-                        <PktsInputRow label="Type">
-                            <PktsInputSelect value={notifType} onChange={(e: any) => { setNotifType(e.target.value); setNotifValue(""); }}>
-                                <PktsInputOption value="email">Email</PktsInputOption>
-                                <PktsInputOption value="slack">Slack</PktsInputOption>
-                            </PktsInputSelect>
-                        </PktsInputRow>
+                </button>
+                {notifOpen && (
+                    <div className="flex gap-2 items-end">
+                        <div className="w-32 shrink-0">
+                            <PktsInputRow label="Type">
+                                <PktsInputSelect value={notifType} onChange={(e: any) => { setNotifType(e.target.value); setNotifValue(""); }}>
+                                    <PktsInputOption value="email">Email</PktsInputOption>
+                                    <PktsInputOption value="slack">Slack</PktsInputOption>
+                                </PktsInputSelect>
+                            </PktsInputRow>
+                        </div>
+                        <div className="flex-1">
+                            <PktsInputRow label={notifType === "slack" ? "Webhook URL" : "Recipients"}>
+                                <PktsInputText
+                                    placeholder={notifType === "slack"
+                                        ? "https://hooks.slack.com/services/…"
+                                        : "ops@example.com, noc@example.com"}
+                                    value={notifValue}
+                                    onChange={(e: any) => setNotifValue(e.target.value)}
+                                />
+                            </PktsInputRow>
+                        </div>
                     </div>
-                    <div className="flex-1">
-                        <PktsInputRow label={notifType === "slack" ? "Webhook URL" : "Recipients"}>
-                            <PktsInputText
-                                placeholder={notifType === "slack"
-                                    ? "https://hooks.slack.com/services/…"
-                                    : "ops@example.com, noc@example.com"}
-                                value={notifValue}
-                                onChange={(e: any) => setNotifValue(e.target.value)}
-                            />
-                        </PktsInputRow>
-                    </div>
-                </div>
+                )}
             </div>
 
             {error && <p className="text-xs text-color-text-error">{error}</p>}
