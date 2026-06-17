@@ -1,5 +1,15 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Plus, Trash2, Play, Mail, Slack, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { Plus, Trash2, Play, Mail, Slack, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import {
+    PktsButton,
+    PktsIconButton,
+    PktsInputText,
+    PktsInputSelect,
+    PktsInputOption,
+    PktsInputRow,
+    PktsInputSwitch,
+    PktsSpinner,
+} from "@esnet/packets-ui-react";
 import { setAuthHeaders } from "../../DataController";
 import { API_URL } from "../../../static/settings";
 import { Accordion } from "../Accordion";
@@ -31,38 +41,61 @@ interface NotificationConfig {
     scheduleId: string;
     emailRecipients: string[];
     slackWebhookUrl: string | null;
-    createdBy: string;
-    createdOn: string;
+}
+
+interface Dataset {
+    datasetId: string;
+    name: string;
+}
+
+// ─── Interval presets ────────────────────────────────────────────────────────
+
+const INTERVAL_PRESETS = [
+    { label: "Daily",             minutes: 1440 },
+    { label: "Every 12 Hours",    minutes: 720  },
+    { label: "Every 6 Hours",     minutes: 360  },
+    { label: "Every 3 Hours",     minutes: 180  },
+    { label: "Every Hour",        minutes: 60   },
+    { label: "Every 30 Minutes",  minutes: 30   },
+    { label: "Other",             minutes: null },
+] as const;
+
+function minutesToPreset(m: number): string {
+    const found = INTERVAL_PRESETS.find(p => p.minutes === m);
+    return found ? found.label : "Other";
+}
+
+function formatInterval(minutes: number): string {
+    const preset = INTERVAL_PRESETS.find(p => p.minutes === minutes);
+    return preset?.label ?? `Every ${minutes} min`;
 }
 
 // ─── API helpers ─────────────────────────────────────────────────────────────
 
-function authHeaders(extra: Record<string, string> = {}) {
-    return setAuthHeaders({ "Content-Type": "application/json", ...extra });
-}
-
 async function apiFetch(path: string, opts: RequestInit = {}) {
-    const headers = authHeaders();
+    const headers = setAuthHeaders({ "Content-Type": "application/json" });
     const res = await fetch(`${API_URL}${path}`, { ...opts, headers });
     if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
     return res.json();
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Status badge ─────────────────────────────────────────────────────────────
 
 function StatusPill({ status }: { status: string | null }) {
     if (!status) return null;
     const styles: Record<string, string> = {
-        ok:      "bg-emerald-100 text-emerald-700",
-        changed: "bg-violet-100 text-violet-700",
-        error:   "bg-red-100 text-red-600",
+        ok:      "bg-color-bg-success text-color-text-success",
+        changed: "bg-mauve-100 text-mauve-700",
+        error:   "bg-color-bg-error text-color-text-error",
     };
     return (
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${styles[status] ?? "bg-gray-100 text-gray-500"}`}>
+        <span className={`text-[10px] tn-bold px-1.5 py-0.5 rounded ${styles[status] ?? "bg-color-layer-3 text-color-text-alt"}`}>
             {status}
         </span>
     );
 }
+
+// ─── Notification row ────────────────────────────────────────────────────────
 
 function NotificationConfigRow({
     config,
@@ -74,15 +107,13 @@ function NotificationConfigRow({
     onUpdate: (updated: Partial<NotificationConfig>) => void;
 }) {
     const [emailDraft, setEmailDraft] = useState(config.emailRecipients.join(", "));
-    const [slackDraft, setSlackDraft]  = useState(config.slackWebhookUrl ?? "");
-    const [saving, setSaving] = useState(false);
+    const [slackDraft, setSlackDraft] = useState(config.slackWebhookUrl ?? "");
 
     const save = async () => {
-        setSaving(true);
         try {
             const body = {
                 scheduleId: config.scheduleId,
-                emailRecipients: emailDraft.split(",").map((s) => s.trim()).filter(Boolean),
+                emailRecipients: emailDraft.split(",").map(s => s.trim()).filter(Boolean),
                 slackWebhookUrl: slackDraft || null,
             };
             const updated = await apiFetch(`/notification-config/id/${config.configId}/`, {
@@ -90,53 +121,48 @@ function NotificationConfigRow({
                 body: JSON.stringify(body),
             });
             onUpdate(updated);
-        } finally {
-            setSaving(false);
-        }
+        } catch { /* silent */ }
     };
 
     return (
-        <div className="border border-gray-100 rounded-lg p-3 bg-gray-50 flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-                <Mail size={13} className="text-gray-400 shrink-0" />
-                <input
-                    className="flex-1 text-xs border border-gray-200 rounded px-2 py-1 bg-white"
-                    placeholder="Email recipients (comma-separated)"
+        <div className="flex flex-col gap-2 p-3 rounded border border-color-border-alt bg-color-layer-2">
+            <PktsInputRow label="Email recipients">
+                <PktsInputText
+                    placeholder="ops@example.com, noc@example.com"
                     value={emailDraft}
-                    onChange={(e) => setEmailDraft(e.target.value)}
+                    onChange={(e: any) => setEmailDraft(e.target.value)}
                     onBlur={save}
                 />
-            </div>
-            <div className="flex items-center gap-2">
-                <Slack size={13} className="text-gray-400 shrink-0" />
-                <input
-                    className="flex-1 text-xs border border-gray-200 rounded px-2 py-1 bg-white"
-                    placeholder="Slack webhook URL (optional)"
+            </PktsInputRow>
+            <PktsInputRow label="Slack webhook URL">
+                <PktsInputText
+                    placeholder="https://hooks.slack.com/services/…"
                     value={slackDraft}
-                    onChange={(e) => setSlackDraft(e.target.value)}
+                    onChange={(e: any) => setSlackDraft(e.target.value)}
                     onBlur={save}
                 />
-            </div>
+            </PktsInputRow>
             <div className="flex justify-end">
-                <button
-                    onClick={onDelete}
-                    className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors"
-                >
-                    <Trash2 size={11} /> Remove
-                </button>
+                <PktsButton variant="destructive" onClick={onDelete}>
+                    Remove
+                </PktsButton>
             </div>
         </div>
     );
 }
 
+// ─── Schedule card ────────────────────────────────────────────────────────────
+
 function ScheduleCard({
     schedule,
+    datasets,
     onDelete,
     onToggle,
     onRunNow,
     onUpdate,
 }: {
     schedule: CheckpointSchedule;
+    datasets: Dataset[];
     onDelete: () => void;
     onToggle: () => void;
     onRunNow: () => void;
@@ -147,9 +173,17 @@ function ScheduleCard({
     const [loadingNotifs, setLoadingNotifs] = useState(false);
     const [running, setRunning] = useState(false);
 
-    const [intervalDraft, setIntervalDraft]     = useState(String(schedule.intervalMinutes));
-    const [keepLastN, setKeepLastN]             = useState(String(schedule.retention.keep_last_n ?? ""));
-    const [keepEveryNth, setKeepEveryNth]       = useState(String(schedule.retention.keep_every_nth ?? ""));
+    const [intervalPreset, setIntervalPreset] = useState(minutesToPreset(schedule.intervalMinutes));
+    const [customMinutes, setCustomMinutes]   = useState(
+        minutesToPreset(schedule.intervalMinutes) === "Other" ? String(schedule.intervalMinutes) : ""
+    );
+    const [keepLastN, setKeepLastN]       = useState(String(schedule.retention.keep_last_n ?? ""));
+    const [keepEveryNth, setKeepEveryNth] = useState(String(schedule.retention.keep_every_nth ?? ""));
+
+    const resolvedMinutes = (): number => {
+        if (intervalPreset === "Other") return parseInt(customMinutes) || schedule.intervalMinutes;
+        return INTERVAL_PRESETS.find(p => p.label === intervalPreset)?.minutes ?? schedule.intervalMinutes;
+    };
 
     const fetchNotifs = useCallback(async () => {
         setLoadingNotifs(true);
@@ -169,10 +203,10 @@ function ScheduleCard({
         const body = {
             datasetId: schedule.datasetId,
             name: schedule.name,
-            intervalMinutes: parseInt(intervalDraft) || schedule.intervalMinutes,
+            intervalMinutes: resolvedMinutes(),
             enabled: schedule.enabled,
             retention: {
-                keep_last_n: keepLastN ? parseInt(keepLastN) : null,
+                keep_last_n:    keepLastN    ? parseInt(keepLastN)    : null,
                 keep_every_nth: keepEveryNth ? parseInt(keepEveryNth) : null,
             },
         };
@@ -194,160 +228,141 @@ function ScheduleCard({
     };
 
     const addNotification = async () => {
-        const body = {
-            scheduleId: schedule.scheduleId,
-            emailRecipients: [],
-            slackWebhookUrl: null,
-        };
         const created = await apiFetch("/notification-config/", {
             method: "POST",
-            body: JSON.stringify(body),
+            body: JSON.stringify({ scheduleId: schedule.scheduleId, emailRecipients: [], slackWebhookUrl: null }),
         });
-        setNotifications((prev) => [...prev, created]);
+        setNotifications(prev => [...prev, created]);
     };
 
     const deleteNotification = async (configId: string) => {
         await apiFetch(`/notification-config/id/${configId}/`, { method: "DELETE" });
-        setNotifications((prev) => prev.filter((n) => n.configId !== configId));
+        setNotifications(prev => prev.filter(n => n.configId !== configId));
     };
+
+    const datasetName = datasets.find(d => d.datasetId === schedule.datasetId)?.name ?? schedule.datasetId;
 
     return (
         <Card className="flex flex-col gap-0 overflow-hidden !p-0">
-            {/* Card header row */}
+            {/* Header row */}
             <div className="flex items-center gap-3 px-4 py-3">
-                {/* Enable toggle */}
-                <button onClick={onToggle} className="shrink-0 text-gray-400 hover:text-gray-700 transition-colors">
-                    {schedule.enabled
-                        ? <ToggleRight size={20} className="text-emerald-500" />
-                        : <ToggleLeft size={20} />
-                    }
-                </button>
+                <PktsInputSwitch
+                    checked={schedule.enabled}
+                    onChange={onToggle}
+                    aria-label={schedule.enabled ? "Disable schedule" : "Enable schedule"}
+                />
 
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-semibold text-gray-800 truncate">{schedule.name}</span>
+                        <span className="text-sm tn-bold text-color-text truncate">{schedule.name}</span>
                         <StatusPill status={schedule.lastRunStatus} />
                     </div>
-                    <div className="text-xs text-gray-400 mt-0.5 truncate">
-                        Dataset: <code className="font-mono">{schedule.datasetId}</code>
-                        {" · "}
-                        every {schedule.intervalMinutes}m
+                    <div className="text-xs text-color-text-alt mt-0.5 truncate tn-text">
+                        {datasetName} · {formatInterval(schedule.intervalMinutes)}
                         {schedule.lastRunOn && ` · last run ${new Date(schedule.lastRunOn).toLocaleTimeString()}`}
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                        onClick={handleRunNow}
+                <div className="flex items-center gap-1 shrink-0">
+                    <PktsIconButton
+                        variant="tertiary"
                         disabled={running}
-                        title="Run checkpoint now"
-                        className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-colors disabled:opacity-50"
+                        onClick={handleRunNow}
+                        title="Run now"
                     >
                         {running ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-                    </button>
-                    <button
-                        onClick={onDelete}
-                        title="Delete schedule"
-                        className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                    >
+                    </PktsIconButton>
+                    <PktsIconButton variant="destructive" onClick={onDelete} title="Delete">
                         <Trash2 size={14} />
-                    </button>
-                    <button
-                        onClick={() => setExpanded((e) => !e)}
-                        className="p-1.5 rounded hover:bg-gray-100 text-gray-400 transition-colors"
-                    >
+                    </PktsIconButton>
+                    <PktsIconButton variant="tertiary" onClick={() => setExpanded(e => !e)}>
                         {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
+                    </PktsIconButton>
                 </div>
             </div>
 
-            {/* Expanded settings */}
+            {/* Expanded section */}
             {expanded && (
-                <div className="border-t border-gray-100 px-4 py-3 flex flex-col gap-4 bg-gray-50">
-                    {/* Interval + retention */}
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
-                                Interval (min)
-                            </label>
-                            <input
+                <div className="border-t border-color-border-alt px-4 py-4 flex flex-col gap-4 bg-color-layer-2">
+
+                    {/* Interval */}
+                    <PktsInputRow label="Interval">
+                        <PktsInputSelect
+                            value={intervalPreset}
+                            onChange={(e: any) => { setIntervalPreset(e.target.value); saveSchedule(); }}
+                        >
+                            {INTERVAL_PRESETS.map(p => (
+                                <PktsInputOption key={p.label} value={p.label}>{p.label}</PktsInputOption>
+                            ))}
+                        </PktsInputSelect>
+                    </PktsInputRow>
+                    {intervalPreset === "Other" && (
+                        <PktsInputRow label="Custom interval (minutes)">
+                            <PktsInputText
                                 type="number"
-                                min={1}
-                                className="text-xs border border-gray-200 rounded px-2 py-1 bg-white"
-                                value={intervalDraft}
-                                onChange={(e) => setIntervalDraft(e.target.value)}
+                                min="1"
+                                value={customMinutes}
+                                onChange={(e: any) => setCustomMinutes(e.target.value)}
                                 onBlur={saveSchedule}
                             />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
-                                Keep last N
-                            </label>
-                            <input
-                                type="number"
-                                min={1}
-                                className="text-xs border border-gray-200 rounded px-2 py-1 bg-white"
-                                placeholder="∞"
-                                value={keepLastN}
-                                onChange={(e) => setKeepLastN(e.target.value)}
-                                onBlur={saveSchedule}
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
-                                Keep every Nth
-                            </label>
-                            <input
-                                type="number"
-                                min={1}
-                                className="text-xs border border-gray-200 rounded px-2 py-1 bg-white"
-                                placeholder="none"
-                                value={keepEveryNth}
-                                onChange={(e) => setKeepEveryNth(e.target.value)}
-                                onBlur={saveSchedule}
-                            />
+                        </PktsInputRow>
+                    )}
+
+                    {/* Retention */}
+                    <div className="flex flex-col gap-2">
+                        <span className="text-xs tn-bold text-color-text-alt uppercase tracking-wide">Retention</span>
+                        <div className="grid grid-cols-2 gap-3">
+                            <PktsInputRow label="Keep last N checkpoints">
+                                <PktsInputText
+                                    type="number"
+                                    min="1"
+                                    placeholder="∞ (keep all)"
+                                    value={keepLastN}
+                                    onChange={(e: any) => setKeepLastN(e.target.value)}
+                                    onBlur={saveSchedule}
+                                />
+                            </PktsInputRow>
+                            <PktsInputRow label="Keep every Nth">
+                                <PktsInputText
+                                    type="number"
+                                    min="1"
+                                    placeholder="none"
+                                    value={keepEveryNth}
+                                    onChange={(e: any) => setKeepEveryNth(e.target.value)}
+                                    onBlur={saveSchedule}
+                                />
+                            </PktsInputRow>
                         </div>
                     </div>
 
+                    {/* Error */}
                     {schedule.lastError && (
-                        <div className="text-xs text-red-600 bg-red-50 rounded px-3 py-2 border border-red-100">
-                            <span className="font-semibold">Last error: </span>{schedule.lastError}
+                        <div className="text-xs text-color-text-error bg-color-bg-error rounded px-3 py-2">
+                            <span className="tn-bold">Last error: </span>{schedule.lastError}
                         </div>
                     )}
 
-                    {/* Notification configs */}
+                    {/* Notifications */}
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
-                                Notifications
-                            </span>
-                            <button
-                                onClick={addNotification}
-                                className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 transition-colors"
-                            >
-                                <Plus size={11} /> Add
-                            </button>
+                            <span className="text-xs tn-bold text-color-text-alt uppercase tracking-wide">Notifications</span>
+                            <PktsButton variant="tertiary" onClick={addNotification}>
+                                <Plus size={12} className="mr-1" /> Add
+                            </PktsButton>
                         </div>
-
-                        {loadingNotifs && (
-                            <div className="text-xs text-gray-400">Loading…</div>
-                        )}
-
-                        {notifications.map((n) => (
+                        {loadingNotifs && <PktsSpinner />}
+                        {notifications.map(n => (
                             <NotificationConfigRow
                                 key={n.configId}
                                 config={n}
                                 onDelete={() => deleteNotification(n.configId)}
-                                onUpdate={(updated) =>
-                                    setNotifications((prev) =>
-                                        prev.map((x) => (x.configId === n.configId ? { ...x, ...updated } : x)),
-                                    )
+                                onUpdate={updated =>
+                                    setNotifications(prev => prev.map(x => x.configId === n.configId ? { ...x, ...updated } : x))
                                 }
                             />
                         ))}
-
                         {!loadingNotifs && notifications.length === 0 && (
-                            <p className="text-xs text-gray-400 italic">No notifications configured.</p>
+                            <p className="text-xs text-color-text-alt tn-text italic">No notifications configured.</p>
                         )}
                     </div>
                 </div>
@@ -358,27 +373,37 @@ function ScheduleCard({
 
 // ─── New schedule form ────────────────────────────────────────────────────────
 
-interface NewScheduleFormProps {
+function NewScheduleForm({
+    datasets,
+    onCreated,
+    onCancel,
+}: {
+    datasets: Dataset[];
     onCreated: (s: CheckpointSchedule) => void;
     onCancel: () => void;
-}
-
-function NewScheduleForm({ onCreated, onCancel }: NewScheduleFormProps) {
+}) {
+    const [scheduleName, setScheduleName]     = useState("");
     const [datasetId, setDatasetId]           = useState("");
-    const [name, setName]                     = useState("");
-    const [intervalMinutes, setIntervalMinutes] = useState("360");
+    const [intervalPreset, setIntervalPreset] = useState("Every 6 Hours");
+    const [customMinutes, setCustomMinutes]   = useState("");
     const [saving, setSaving]                 = useState(false);
     const [error, setError]                   = useState<string | null>(null);
 
+    const resolvedMinutes = (): number => {
+        if (intervalPreset === "Other") return parseInt(customMinutes) || 360;
+        return INTERVAL_PRESETS.find(p => p.label === intervalPreset)?.minutes ?? 360;
+    };
+
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!datasetId) return;
         setSaving(true);
         setError(null);
         try {
             const body = {
-                datasetId: datasetId.trim(),
-                name: name.trim() || `Checkpoint: ${datasetId.trim()}`,
-                intervalMinutes: parseInt(intervalMinutes) || 360,
+                datasetId,
+                name: scheduleName.trim() || `Checkpoint: ${datasets.find(d => d.datasetId === datasetId)?.name ?? datasetId}`,
+                intervalMinutes: resolvedMinutes(),
                 enabled: true,
                 retention: { keep_last_n: 50, keep_every_nth: 10 },
             };
@@ -395,56 +420,61 @@ function NewScheduleForm({ onCreated, onCancel }: NewScheduleFormProps) {
     };
 
     return (
-        <form onSubmit={submit} className="border border-blue-200 rounded-lg p-4 bg-blue-50 flex flex-col gap-3">
-            <div className="text-sm font-semibold text-gray-700">New Checkpoint Schedule</div>
-            <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1 col-span-2">
-                    <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Dataset ID</label>
-                    <input
-                        required
-                        className="text-xs border border-gray-200 rounded px-2 py-1.5 bg-white font-mono"
-                        placeholder="e.g. aBc1234"
-                        value={datasetId}
-                        onChange={(e) => setDatasetId(e.target.value)}
-                    />
-                </div>
-                <div className="flex flex-col gap-1 col-span-2">
-                    <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Name</label>
-                    <input
-                        className="text-xs border border-gray-200 rounded px-2 py-1.5 bg-white"
-                        placeholder="e.g. Hourly topology check"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                    />
-                </div>
-                <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Interval (min)</label>
-                    <input
+        <form onSubmit={submit} className="border border-color-border-alt rounded-lg p-4 bg-color-layer-2 flex flex-col gap-3">
+            <div className="text-sm tn-bold text-color-text">New Checkpoint Schedule</div>
+
+            <PktsInputRow label="Schedule Name">
+                <PktsInputText
+                    placeholder="e.g. Hourly topology check"
+                    value={scheduleName}
+                    onChange={(e: any) => setScheduleName(e.target.value)}
+                />
+            </PktsInputRow>
+
+            <PktsInputRow label="Dataset">
+                <PktsInputSelect
+                    value={datasetId}
+                    onChange={(e: any) => setDatasetId(e.target.value)}
+                >
+                    <PktsInputOption value="">— select a dataset —</PktsInputOption>
+                    {datasets.map(d => (
+                        <PktsInputOption key={d.datasetId} value={d.datasetId}>
+                            {d.name}
+                        </PktsInputOption>
+                    ))}
+                </PktsInputSelect>
+            </PktsInputRow>
+
+            <PktsInputRow label="Interval">
+                <PktsInputSelect
+                    value={intervalPreset}
+                    onChange={(e: any) => setIntervalPreset(e.target.value)}
+                >
+                    {INTERVAL_PRESETS.map(p => (
+                        <PktsInputOption key={p.label} value={p.label}>{p.label}</PktsInputOption>
+                    ))}
+                </PktsInputSelect>
+            </PktsInputRow>
+            {intervalPreset === "Other" && (
+                <PktsInputRow label="Custom interval (minutes)">
+                    <PktsInputText
                         type="number"
-                        min={1}
-                        className="text-xs border border-gray-200 rounded px-2 py-1.5 bg-white"
-                        value={intervalMinutes}
-                        onChange={(e) => setIntervalMinutes(e.target.value)}
+                        min="1"
+                        placeholder="e.g. 120"
+                        value={customMinutes}
+                        onChange={(e: any) => setCustomMinutes(e.target.value)}
                     />
-                </div>
-            </div>
-            {error && <p className="text-xs text-red-500">{error}</p>}
+                </PktsInputRow>
+            )}
+
+            {error && <p className="text-xs text-color-text-error">{error}</p>}
+
             <div className="flex gap-2 justify-end">
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded border border-gray-200 bg-white transition-colors"
-                >
-                    Cancel
-                </button>
-                <button
-                    type="submit"
-                    disabled={saving || !datasetId.trim()}
-                    className="text-xs text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded transition-colors disabled:opacity-50 flex items-center gap-1"
-                >
-                    {saving && <Loader2 size={11} className="animate-spin" />}
-                    Create
-                </button>
+                <PktsButton type="button" variant="tertiary" onClick={onCancel}>Cancel</PktsButton>
+                <PktsButton type="submit" variant="primary" disabled={saving || !datasetId}>
+                    {saving && <Loader2 size={12} className="animate-spin mr-1" />}
+                    Create Schedule
+                </PktsButton>
             </div>
         </form>
     );
@@ -453,26 +483,31 @@ function NewScheduleForm({ onCreated, onCancel }: NewScheduleFormProps) {
 // ─── Main export ─────────────────────────────────────────────────────────────
 
 export function CheckpointSettings() {
-    const [schedules, setSchedules]       = useState<CheckpointSchedule[]>([]);
-    const [loading, setLoading]           = useState(true);
-    const [showNewForm, setShowNewForm]   = useState(false);
+    const [schedules, setSchedules]     = useState<CheckpointSchedule[]>([]);
+    const [datasets, setDatasets]       = useState<Dataset[]>([]);
+    const [loading, setLoading]         = useState(true);
+    const [showNewForm, setShowNewForm] = useState(false);
 
-    const fetchSchedules = useCallback(async () => {
+    const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await apiFetch("/checkpoint-schedules/");
-            setSchedules(data);
+            const [schedulesData, datasetsData] = await Promise.all([
+                apiFetch("/checkpoint-schedules/"),
+                apiFetch("/datasets/"),
+            ]);
+            setSchedules(schedulesData);
+            setDatasets(datasetsData);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    useEffect(() => { fetchSchedules(); }, []);
+    useEffect(() => { fetchAll(); }, []);
 
     const deleteSchedule = async (scheduleId: string) => {
         if (!confirm("Delete this checkpoint schedule?")) return;
         await apiFetch(`/checkpoint-schedule/id/${scheduleId}/`, { method: "DELETE" });
-        setSchedules((prev) => prev.filter((s) => s.scheduleId !== scheduleId));
+        setSchedules(prev => prev.filter(s => s.scheduleId !== scheduleId));
     };
 
     const toggleSchedule = async (schedule: CheckpointSchedule) => {
@@ -487,9 +522,7 @@ export function CheckpointSettings() {
             method: "PUT",
             body: JSON.stringify(body),
         });
-        setSchedules((prev) =>
-            prev.map((s) => (s.scheduleId === schedule.scheduleId ? updated : s)),
-        );
+        setSchedules(prev => prev.map(s => s.scheduleId === schedule.scheduleId ? updated : s));
     };
 
     return (
@@ -497,39 +530,39 @@ export function CheckpointSettings() {
             <Accordion header="Checkpoint Schedules">
                 <div className="flex flex-col gap-3">
                     <p className="tn-text text-sm mb-2">
-                        Checkpoint schedules automatically snapshot dataset query results on a schedule.
-                        When topology changes are detected, connected notifications are dispatched.
+                        Checkpoint schedules automatically snapshot dataset query results on a recurring schedule.
+                        When data changes are detected, configured notifications are dispatched.
                     </p>
 
                     {loading && (
-                        <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
-                            <Loader2 size={14} className="animate-spin" /> Loading schedules…
+                        <div className="flex items-center gap-2 py-4">
+                            <PktsSpinner /> <span className="text-sm text-color-text-alt">Loading…</span>
                         </div>
                     )}
 
                     {!loading && schedules.length === 0 && !showNewForm && (
-                        <p className="text-sm text-gray-400 italic py-2">No checkpoint schedules configured.</p>
+                        <p className="text-sm text-color-text-alt tn-text italic py-2">No checkpoint schedules configured.</p>
                     )}
 
-                    {schedules.map((s) => (
+                    {schedules.map(s => (
                         <ScheduleCard
                             key={s.scheduleId}
                             schedule={s}
+                            datasets={datasets}
                             onDelete={() => deleteSchedule(s.scheduleId)}
                             onToggle={() => toggleSchedule(s)}
-                            onRunNow={fetchSchedules}
-                            onUpdate={(updated) =>
-                                setSchedules((prev) =>
-                                    prev.map((x) => (x.scheduleId === s.scheduleId ? updated : x)),
-                                )
+                            onRunNow={fetchAll}
+                            onUpdate={updated =>
+                                setSchedules(prev => prev.map(x => x.scheduleId === s.scheduleId ? updated : x))
                             }
                         />
                     ))}
 
                     {showNewForm && (
                         <NewScheduleForm
-                            onCreated={(created) => {
-                                setSchedules((prev) => [...prev, created]);
+                            datasets={datasets}
+                            onCreated={created => {
+                                setSchedules(prev => [...prev, created]);
                                 setShowNewForm(false);
                             }}
                             onCancel={() => setShowNewForm(false)}
@@ -537,10 +570,7 @@ export function CheckpointSettings() {
                     )}
 
                     {!showNewForm && (
-                        <button
-                            onClick={() => setShowNewForm(true)}
-                            className="cursor-pointer w-full"
-                        >
+                        <button onClick={() => setShowNewForm(true)} className="cursor-pointer w-full">
                             <Card className="flex justify-center items-center gap-2 hover:shadow-md hover:text-dark-primary transition duration-300">
                                 <Plus className="mb-0.5" />
                                 Add Checkpoint Schedule
