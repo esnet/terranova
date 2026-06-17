@@ -156,8 +156,8 @@ function NotificationConfigRow({
                         />
                     </PktsInputRow>
                 </div>
-                <PktsIconButton className="small-icon" variant="destructive" onClick={onDelete} title="Remove">
-                    <Trash2 />
+                <PktsIconButton className="small-icon" variant="tertiary" onClick={onDelete} title="Remove">
+                    <Trash2 className="text-color-text-error" />
                 </PktsIconButton>
             </div>
         </div>
@@ -288,11 +288,11 @@ function ScheduleCard({
                     </PktsIconButton>
                     <PktsIconButton
                         className="small-icon"
-                        variant="destructive"
+                        variant="tertiary"
                         onClick={onDelete}
                         title="Delete"
                     >
-                        <Trash2 />
+                        <Trash2 className="text-color-text-error" />
                     </PktsIconButton>
                     <PktsIconButton
                         className="small-icon"
