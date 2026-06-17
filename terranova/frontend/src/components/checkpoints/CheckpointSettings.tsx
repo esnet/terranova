@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Plus, Trash2, Play, Mail, Slack, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Plus, Trash2, Play, ChevronDown, ChevronUp, Loader2, Info } from "lucide-react";
 import {
     PktsButton,
     PktsIconButton,
@@ -106,15 +106,19 @@ function NotificationConfigRow({
     onDelete: () => void;
     onUpdate: (updated: Partial<NotificationConfig>) => void;
 }) {
-    const [emailDraft, setEmailDraft] = useState(config.emailRecipients.join(", "));
-    const [slackDraft, setSlackDraft] = useState(config.slackWebhookUrl ?? "");
+    // Determine current type from which field is set
+    const initialType = config.slackWebhookUrl ? "slack" : "email";
+    const [notifType, setNotifType] = useState(initialType);
+    const [valueDraft, setValueDraft] = useState(
+        notifType === "slack" ? (config.slackWebhookUrl ?? "") : config.emailRecipients.join(", ")
+    );
 
     const save = async () => {
         try {
             const body = {
                 scheduleId: config.scheduleId,
-                emailRecipients: emailDraft.split(",").map(s => s.trim()).filter(Boolean),
-                slackWebhookUrl: slackDraft || null,
+                emailRecipients: notifType === "email" ? valueDraft.split(",").map(s => s.trim()).filter(Boolean) : [],
+                slackWebhookUrl: notifType === "slack" ? (valueDraft.trim() || null) : null,
             };
             const updated = await apiFetch(`/notification-config/id/${config.configId}/`, {
                 method: "PUT",
@@ -124,28 +128,37 @@ function NotificationConfigRow({
         } catch { /* silent */ }
     };
 
+    const handleTypeChange = (e: any) => {
+        setNotifType(e.target.value);
+        setValueDraft(""); // clear value when switching type
+    };
+
     return (
         <div className="flex flex-col gap-2 p-3 rounded border border-color-border-alt bg-color-layer-2">
-            <PktsInputRow label="Email recipients">
-                <PktsInputText
-                    placeholder="ops@example.com, noc@example.com"
-                    value={emailDraft}
-                    onChange={(e: any) => setEmailDraft(e.target.value)}
-                    onBlur={save}
-                />
-            </PktsInputRow>
-            <PktsInputRow label="Slack webhook URL">
-                <PktsInputText
-                    placeholder="https://hooks.slack.com/services/…"
-                    value={slackDraft}
-                    onChange={(e: any) => setSlackDraft(e.target.value)}
-                    onBlur={save}
-                />
-            </PktsInputRow>
-            <div className="flex justify-end">
-                <PktsButton variant="destructive" onClick={onDelete}>
-                    Remove
-                </PktsButton>
+            <div className="flex gap-2 items-end">
+                <div className="w-32 shrink-0">
+                    <PktsInputRow label="Type">
+                        <PktsInputSelect value={notifType} onChange={handleTypeChange}>
+                            <PktsInputOption value="email">Email</PktsInputOption>
+                            <PktsInputOption value="slack">Slack</PktsInputOption>
+                        </PktsInputSelect>
+                    </PktsInputRow>
+                </div>
+                <div className="flex-1">
+                    <PktsInputRow label={notifType === "slack" ? "Webhook URL" : "Recipients"}>
+                        <PktsInputText
+                            placeholder={notifType === "slack"
+                                ? "https://hooks.slack.com/services/…"
+                                : "ops@example.com, noc@example.com"}
+                            value={valueDraft}
+                            onChange={(e: any) => setValueDraft(e.target.value)}
+                            onBlur={save}
+                        />
+                    </PktsInputRow>
+                </div>
+                <PktsIconButton className="small-icon" variant="destructive" onClick={onDelete} title="Remove">
+                    <Trash2 />
+                </PktsIconButton>
             </div>
         </div>
     );
@@ -264,27 +277,30 @@ function ScheduleCard({
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0">
-                    <button
+                    <PktsIconButton
+                        className="small-icon"
+                        variant="tertiary"
                         disabled={running}
                         onClick={handleRunNow}
                         title="Run now"
-                        className="p-1.5 rounded text-color-text-alt hover:text-color-text hover:bg-color-layer-3 transition-colors disabled:opacity-40"
                     >
-                        {running ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-                    </button>
-                    <button
+                        {running ? <Loader2 className="animate-spin" /> : <Play />}
+                    </PktsIconButton>
+                    <PktsIconButton
+                        className="small-icon"
+                        variant="destructive"
                         onClick={onDelete}
                         title="Delete"
-                        className="p-1.5 rounded text-color-text-alt hover:text-color-text-error hover:bg-color-bg-error transition-colors"
                     >
-                        <Trash2 size={16} />
-                    </button>
-                    <button
+                        <Trash2 />
+                    </PktsIconButton>
+                    <PktsIconButton
+                        className="small-icon"
+                        variant="tertiary"
                         onClick={() => setExpanded(e => !e)}
-                        className="p-1.5 rounded text-color-text-alt hover:text-color-text hover:bg-color-layer-3 transition-colors"
                     >
-                        {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
+                        {expanded ? <ChevronUp /> : <ChevronDown />}
+                    </PktsIconButton>
                 </div>
             </div>
 
@@ -352,7 +368,15 @@ function ScheduleCard({
                     {/* Notifications */}
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs tn-bold text-color-text-alt uppercase tracking-wide">Notifications</span>
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs tn-bold text-color-text-alt uppercase tracking-wide">Notifications</span>
+                                <span className="relative group">
+                                    <Info size={12} className="text-color-text-alt cursor-help" />
+                                    <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug">
+                                        Notifications are sent when the scheduler detects a change between two consecutive checkpoints. Each notification targets either an email address list or a Slack webhook — add one per destination.
+                                    </span>
+                                </span>
+                            </div>
                             <PktsButton variant="tertiary" onClick={addNotification}>
                                 <Plus size={12} className="mr-1" /> Add
                             </PktsButton>
@@ -393,8 +417,8 @@ function NewScheduleForm({
     const [datasetId, setDatasetId]           = useState("");
     const [intervalPreset, setIntervalPreset] = useState("Every 6 Hours");
     const [customMinutes, setCustomMinutes]   = useState("");
-    const [emailRecipients, setEmailRecipients] = useState("");
-    const [slackWebhook, setSlackWebhook]       = useState("");
+    const [notifType, setNotifType]   = useState("email");
+    const [notifValue, setNotifValue] = useState("");
     const [saving, setSaving]                   = useState(false);
     const [error, setError]                     = useState<string | null>(null);
 
@@ -420,15 +444,16 @@ function NewScheduleForm({
                 method: "POST",
                 body: JSON.stringify(body),
             });
-            // Create notification config if email or Slack was provided
-            const emails = emailRecipients.split(",").map(s => s.trim()).filter(Boolean);
-            if (emails.length > 0 || slackWebhook.trim()) {
+            // Create notification config if a destination was provided
+            if (notifValue.trim()) {
                 await apiFetch("/notification-config/", {
                     method: "POST",
                     body: JSON.stringify({
                         scheduleId: created.scheduleId,
-                        emailRecipients: emails,
-                        slackWebhookUrl: slackWebhook.trim() || null,
+                        emailRecipients: notifType === "email"
+                            ? notifValue.split(",").map(s => s.trim()).filter(Boolean)
+                            : [],
+                        slackWebhookUrl: notifType === "slack" ? notifValue.trim() : null,
                     }),
                 });
             }
@@ -488,23 +513,38 @@ function NewScheduleForm({
                 </PktsInputRow>
             )}
 
-            {/* Optional notifications */}
+            {/* Optional notification */}
             <div className="flex flex-col gap-2 pt-1 border-t border-color-border-alt">
-                <span className="text-xs tn-bold text-color-text-alt uppercase tracking-wide">Notifications (optional)</span>
-                <PktsInputRow label="Email recipients">
-                    <PktsInputText
-                        placeholder="ops@example.com, noc@example.com"
-                        value={emailRecipients}
-                        onChange={(e: any) => setEmailRecipients(e.target.value)}
-                    />
-                </PktsInputRow>
-                <PktsInputRow label="Slack webhook URL">
-                    <PktsInputText
-                        placeholder="https://hooks.slack.com/services/…"
-                        value={slackWebhook}
-                        onChange={(e: any) => setSlackWebhook(e.target.value)}
-                    />
-                </PktsInputRow>
+                <div className="flex items-center gap-1">
+                    <span className="text-xs tn-bold text-color-text-alt uppercase tracking-wide">Notification (optional)</span>
+                    <span className="relative group">
+                        <Info size={12} className="text-color-text-alt cursor-help" />
+                        <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug">
+                            Sent when the scheduler detects a change between two consecutive checkpoints. Choose Email or Slack. Add more notifications after saving the schedule.
+                        </span>
+                    </span>
+                </div>
+                <div className="flex gap-2 items-end">
+                    <div className="w-32 shrink-0">
+                        <PktsInputRow label="Type">
+                            <PktsInputSelect value={notifType} onChange={(e: any) => { setNotifType(e.target.value); setNotifValue(""); }}>
+                                <PktsInputOption value="email">Email</PktsInputOption>
+                                <PktsInputOption value="slack">Slack</PktsInputOption>
+                            </PktsInputSelect>
+                        </PktsInputRow>
+                    </div>
+                    <div className="flex-1">
+                        <PktsInputRow label={notifType === "slack" ? "Webhook URL" : "Recipients"}>
+                            <PktsInputText
+                                placeholder={notifType === "slack"
+                                    ? "https://hooks.slack.com/services/…"
+                                    : "ops@example.com, noc@example.com"}
+                                value={notifValue}
+                                onChange={(e: any) => setNotifValue(e.target.value)}
+                            />
+                        </PktsInputRow>
+                    </div>
+                </div>
             </div>
 
             {error && <p className="text-xs text-color-text-error">{error}</p>}
