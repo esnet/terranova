@@ -338,7 +338,7 @@ function ScheduleCard({
                             <span className="relative group">
                                 <Info size={12} className="text-color-text-alt cursor-help" />
                                 <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug normal-case tracking-normal">
-                                    Controls how many checkpoint snapshots are kept. <strong>Keep last N</strong> retains the N most recent checkpoints. <strong>Keep every Nth</strong> additionally thins older checkpoints to one per N — useful for long-running datasets where you want a sparse historical record. User saves are never pruned.
+                                    <strong>Keep last N</strong> always retains the N most recent checkpoints. <strong>Keep every Nth</strong> controls what happens to older ones: leave it blank to discard everything beyond the last N, or set it to e.g. 10 to keep one-in-ten as a sparse archive. The two settings work together, not instead of each other. User saves are never pruned.
                                 </span>
                             </span>
                         </div>
@@ -357,7 +357,7 @@ function ScheduleCard({
                                 <PktsInputText
                                     type="number"
                                     min="1"
-                                    placeholder="none"
+                                    placeholder="blank = discard older"
                                     value={keepEveryNth}
                                     onChange={(e: any) => setKeepEveryNth(e.target.value)}
                                     onBlur={saveSchedule}
@@ -540,7 +540,7 @@ function NewScheduleForm({
                     <span className="relative group" onClick={e => e.stopPropagation()}>
                         <Info size={12} className="text-color-text-alt cursor-help" />
                         <span className="pointer-events-none absolute left-5 top-0 z-50 w-64 rounded bg-esnetblack-800 text-esnetwhite-50 text-xs px-2.5 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-snug normal-case tracking-normal">
-                            Controls how many checkpoint snapshots are kept. <strong>Keep last N</strong> retains the N most recent checkpoints. <strong>Keep every Nth</strong> additionally thins older checkpoints to one per N — useful for long-running datasets. User saves are never pruned.
+                            <strong>Keep last N</strong> always retains the N most recent checkpoints. <strong>Keep every Nth</strong> controls what happens to older ones: leave it blank to discard everything beyond the last N, or set it to e.g. 10 to keep one-in-ten as a sparse archive. The two settings work together, not instead of each other. User saves are never pruned.
                         </span>
                     </span>
                 </button>
