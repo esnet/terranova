@@ -50,6 +50,34 @@ def test_create_forked_dataset(page, login):
 
 
 
+def test_create_dataset_button_disabled_during_submit(page, login):
+    """
+    Verify that the Create Dataset button is disabled while the form submission
+    is in-flight, preventing double-submissions (fix/submit-state PR).
+    """
+    import threading
+
+    page.goto(f"{FRONTEND_BASE}/dataset/new")
+    page.get_by_role("textbox", name="Name*").fill("Submit State Test Dataset")
+
+    resume = threading.Event()
+
+    def pause_post(route):
+        resume.wait(timeout=5)
+        route.continue_()
+
+    page.route("**/dataset/", pause_post)
+
+    page.get_by_role("button", name="Create Dataset").click()
+
+    btn = page.get_by_role("button", name="Create Dataset")
+    expect(btn).to_be_disabled(timeout=3000)
+
+    resume.set()
+    page.unroute("**/dataset/")
+    expect(page).to_have_url(re.compile(r".*/dataset/\w+"), timeout=10000)
+
+
 def test_dataset_library(page, create_test_dataset):
     page.goto(f"{FRONTEND_BASE}/library/datasets")
     expect(page.get_by_text("Dataset Library")).to_be_visible()
