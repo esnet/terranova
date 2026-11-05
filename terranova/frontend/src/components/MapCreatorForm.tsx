@@ -28,6 +28,7 @@ export function MapCreatorForm(props: any) {
     // prefer a controlled state form over uncontrolled, because one of the inputs
     // (fork from version) is dependent on a previous value (fork from map)
     const [formValues, setFormValues] = useState<Form>({});
+    const [submitting, setSubmitting] = useState(false);
 
     const setFormValue = (property: string) => (value: any) => {
         setFormValues((prev) => {
@@ -47,8 +48,10 @@ export function MapCreatorForm(props: any) {
 
     const onSubmit = async (e: any) => {
         e.preventDefault();
+        if (submitting) return;
         if (!formValues.name) return;
         if (formValues.fork && (!formValues.forkMap || !formValues.forkMapVersion)) return;
+        setSubmitting(true);
         // TODO: add form basic form validation, a lengthy process
 
         const newMap = structuredClone(DEFAULT_MAP);
@@ -108,7 +111,7 @@ export function MapCreatorForm(props: any) {
                     />
                 )}
                 <div className="mt-2 ml-auto w-fit">
-                    <PktsButton variant="secondary" type="submit">
+                    <PktsButton variant="secondary" type="submit" disabled={submitting}>
                         Create Map
                     </PktsButton>
                 </div>

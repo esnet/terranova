@@ -28,6 +28,7 @@ export function DatasetCreatorForm(props: any) {
     // prefer a controlled state form over uncontrolled, because one of the inputs
     // (fork from version) is dependent on a previous value (fork from dataset)
     const [formValues, setFormValues] = useState<Form>({});
+    const [submitting, setSubmitting] = useState(false);
 
     const setFormValue = (property: string) => (value: any) => {
         setFormValues((prev) => {
@@ -48,8 +49,10 @@ export function DatasetCreatorForm(props: any) {
     // get some information from the DataController (set of options for 'select' elements, e.g.)
     const onSubmit = async (e: any) => {
         e.preventDefault();
+        if (submitting) return;
         if (!formValues.name) return;
         if (formValues.fork && (!formValues.forkDataset || !formValues.forkDatasetVersion)) return;
+        setSubmitting(true);
         // TODO: add form basic form validation, a lengthy process
 
         const newDataset = structuredClone(DEFAULT_DATASET);
@@ -110,7 +113,7 @@ export function DatasetCreatorForm(props: any) {
                     />
                 )}
                 <div className="mt-2 ml-auto w-fit">
-                    <PktsButton variant="secondary" type="submit">
+                    <PktsButton variant="secondary" type="submit" disabled={submitting}>
                         Create Dataset
                     </PktsButton>
                 </div>
