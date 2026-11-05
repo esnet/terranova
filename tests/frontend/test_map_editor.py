@@ -278,6 +278,18 @@ def test_override_delete_node(page, create_test_map):
     expect(page.get_by_role("main")).to_be_visible()
 
 
+def test_highlight_color_removed(page, create_test_map):
+    """
+    Regression test: the Highlight Color control was removed from the layer
+    options panel (commit f723e25). Verify it no longer appears.
+    """
+    map_id = create_test_map
+    page.goto(f"{FRONTEND_BASE}/map/{map_id}")
+    expect(page.get_by_role("main")).to_be_visible()
+    # The label "Highlight Color" must not appear anywhere in the map editor
+    expect(page.get_by_role("main")).not_to_contain_text("Highlight Color")
+
+
 def test_publish_not_available(page, login_as_write_user):
     """
     Test that the Publish Map button is NOT visible for a user with only read+write scope

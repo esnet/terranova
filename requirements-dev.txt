@@ -235,11 +235,13 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==9.0.2
+pytest==8.3.5
     # via
     #   -r requirements-dev.in
     #   pytest-base-url
     #   pytest-playwright
+pytest-asyncio==0.26.0
+    # via -r requirements-dev.in
 pytest-base-url==2.1.0
     # via
     #   -r requirements-dev.in

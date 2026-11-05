@@ -13,13 +13,13 @@ export function AddJWTModal({ visible, setVisible, onConfirm }: AddJwtModalProps
     const [jwtText, setJwtText] = React.useState("");
 
     const footer = (
-        <div className="flex gap-2">
-            <PktsButton variant="secondary" onClick={() => setVisible(false)}>
+        <div className="flex gap-2 justify-end">
+            <PktsButton className="w-fit!" variant="destructive" onClick={() => setVisible(false)}>
                 <span className="flex items-center gap-2">
                     <X /> Cancel
                 </span>
             </PktsButton>
-            <PktsButton variant="primary" onClick={() => onConfirm(jwtText)}>
+            <PktsButton className="w-fit!" variant="primary" onClick={() => onConfirm(jwtText)}>
                 <span className="flex items-center gap-2">
                     <Check /> Add JWT
                 </span>
@@ -35,7 +35,9 @@ export function AddJWTModal({ visible, setVisible, onConfirm }: AddJwtModalProps
                     name="JWT"
                     placeholder="Enter JWT here"
                     value={jwtText}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setJwtText(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                        setJwtText(e.target.value)
+                    }
                 />
             </PktsInputRow>
         </ModalDialog>

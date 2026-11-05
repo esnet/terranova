@@ -347,9 +347,9 @@ export function MapEditorPageComponent() {
                                     LAYER_LIMIT && (
                                     <button
                                         onClick={addLayerConfig}
-                                        className="cursor-pointer w-full"
+                                        className="block cursor-pointer w-full h-fit rounded-lg hover:text-dark-primary transition duration-150"
                                     >
-                                        <Card className="flex justify-center items-center gap-2 hover:shadow-md hover:text-dark-primary transition duration-300">
+                                        <Card className="flex justify-center items-center gap-2">
                                             <Plus className="mb-0.5" />
                                             Add Topology Layer
                                         </Card>
