@@ -240,6 +240,8 @@ pytest==9.0.2
     #   -r requirements-dev.in
     #   pytest-base-url
     #   pytest-playwright
+pytest-asyncio==0.24.0
+    # via -r requirements-dev.in
 pytest-base-url==2.1.0
     # via
     #   -r requirements-dev.in
