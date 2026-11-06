@@ -59,10 +59,11 @@ export const DatasetEditorTopbar = ({
                         variant="destructive"
                         disabled={loading}
                         onClick={() => window.location.reload()}
+                        className="whitespace-pre px-8"
                     >
                         Discard Changes
                     </PktsButton>
-                    <PktsButton variant="primary" disabled={loading} onClick={onSave}>
+                    <PktsButton variant="primary" disabled={loading} onClick={onSave} className="whitespace-pre">
                         Save Changes
                     </PktsButton>
                 </div>
