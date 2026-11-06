@@ -32,6 +32,7 @@ setup(
         "backends": "terranova/backends",
         "api": "terranova/api",
         "output": "terranova/output",
+        "checkpoint": "terranova/checkpoint",
     },
     setup_requires=requirements,
     install_requires=requirements,

@@ -40,6 +40,36 @@ def test_change_svg_preview(page, create_test_node):
         expect(preview_svg.locator("rect")).to_be_visible()
 
 
+def test_create_template_button_disabled_during_submit(page, login):
+    """
+    Verify that the Create button on the node template creator is disabled
+    while the form submission is in-flight, preventing double-submissions
+    (fix/submit-state PR).
+    """
+    import threading
+
+    page.goto(f"{FRONTEND_BASE}/template/new")
+    page.get_by_role("textbox", name="Name").fill("Submit State Test Template")
+    page.get_by_role("textbox", name="SVG Code").fill('<circle cx="0" cy="0" r="4"/>')
+
+    resume = threading.Event()
+
+    def pause_post(route):
+        resume.wait(timeout=5)
+        route.continue_()
+
+    page.route("**/template/", pause_post)
+
+    page.get_by_role("button", name="Create", exact=True).click()
+
+    btn = page.get_by_role("button", name="Create", exact=True)
+    expect(btn).to_be_disabled(timeout=3000)
+
+    resume.set()
+    page.unroute("**/template/")
+    expect(page).to_have_url(re.compile(r".*/template/\w{7}$"), timeout=10000)
+
+
 def test_create_template_navigates_to_editor(page, login):
     """
     Test that creating a new node template navigates to the template editor page

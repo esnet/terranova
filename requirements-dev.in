@@ -7,6 +7,7 @@
 pip-tools
 pre-commit
 pytest
+pytest-asyncio
 pytest-base-url
 pytest-playwright
 playwright

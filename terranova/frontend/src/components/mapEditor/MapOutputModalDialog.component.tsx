@@ -100,10 +100,14 @@ export const MapOutputModalDialog = (props: MapOutputModalDialogProps) => {
             case "html-svg":
                 return (
                     <>
-                        <p className="text-text-wrap break-all min-h-32 p-2 monospace rounded-lg bg-light-surface_1">
+                        <p className="text-wrap break-all min-h-32 p-2 monospace rounded-lg bg-light-surface_1">
                             {output}
                         </p>
-                        <PktsButton variant="secondary" onClick={() => copyToClipboard(output)}>
+                        <PktsButton
+                            className="mx-auto w-fit!"
+                            variant="secondary"
+                            onClick={() => copyToClipboard(output)}
+                        >
                             Copy to Clipboard
                         </PktsButton>
                     </>

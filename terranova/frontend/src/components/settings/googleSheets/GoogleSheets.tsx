@@ -41,10 +41,13 @@ export function GoogleSheetsSettings() {
     async function confirmAddJWT(jwtText: string) {
         setConfirmAddToken(false);
         const headers = setAuthHeaders({ "Content-Type": "application/json" });
-        await fetch(`${API_URL}/sheets/credentials/?jwt_credential=${encodeURIComponent(jwtText)}`, {
-            headers,
-            method: "POST",
-        });
+        await fetch(
+            `${API_URL}/sheets/credentials/?jwt_credential=${encodeURIComponent(jwtText)}`,
+            {
+                headers,
+                method: "POST",
+            },
+        );
         fetchSheetsDatasources();
     }
 
@@ -81,18 +84,16 @@ export function GoogleSheetsSettings() {
 
             <Accordion header="Google Sheets Access Tokens">
                 <fieldset className="w-full">
+                    <legend className="text-lg">Manage Access Tokens for Google Sheets.</legend>
                     <div className="mb-4 tn-text">
-                        Manage Access Tokens for Google Sheets.{" "}
-                        <label>
-                            A datasource will be configured for each Sheet that conforms to the{" "}
-                            <a
-                                href="https://docs.google.com/spreadsheets/d/191BuMoWa2CooMXJQzyNtBRlNLHamBmh-8PCoIGDELxA/edit"
-                                target="_new"
-                            >
-                                Terranova Topology Format
-                            </a>
-                            . Sheets will be cached hourly.
-                        </label>
+                        A datasource will be configured for each Sheet that conforms to the{" "}
+                        <a
+                            href="https://docs.google.com/spreadsheets/d/191BuMoWa2CooMXJQzyNtBRlNLHamBmh-8PCoIGDELxA/edit"
+                            target="_new"
+                        >
+                            Terranova Topology Format
+                        </a>
+                        . Sheets are cached hourly.
                     </div>
 
                     <form id="sheets-datasources-form" onSubmit={submitForm}>
@@ -103,22 +104,25 @@ export function GoogleSheetsSettings() {
                                     accessToken={accessToken}
                                     dynamicConfiguration={dynamicConfiguration}
                                     onReconfigure={() => setConfirmAddToken(true)}
-                                    onDelete={() => { setTokenToDelete(accessToken); setConfirmDeleteToken(true); }}
+                                    onDelete={() => {
+                                        setTokenToDelete(accessToken);
+                                        setConfirmDeleteToken(true);
+                                    }}
                                 />
                             ))}
 
                             {dynamicConfiguration && (
                                 <button
                                     type="button"
-                                    className="block h-fit"
+                                    className="block cursor-pointer w-full h-fit rounded-lg hover:text-dark-primary transition duration-150"
                                     onClick={() => setConfirmAddToken(true)}
                                 >
-                                    <Card className="flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-sm transition duration-150">
+                                    <Card className="flex flex-col items-center justify-center gap-2">
                                         <div className="flex gap-2 text-lg font-medium">
                                             <Plus />
                                             Add Google Sheets Datasource
                                         </div>
-                                        <p className="text-gray-500">Using JWT Token</p>
+                                        <span className="text-inherit/80">Using JWT Token</span>
                                     </Card>
                                 </button>
                             )}

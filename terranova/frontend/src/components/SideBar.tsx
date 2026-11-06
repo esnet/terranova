@@ -89,7 +89,7 @@ export function Sidebar() {
         <div
             className={`fixed sm:relative z-1000 h-full flex flex-col gap-2 sm:bg-light-surface_1 sm:shadow-lg ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto p-4" : "w-0 p-0 shadow-md"}`}
         >
-            <div className={`bottom-3 fixed ${open ? "right-4 sm:left-46" : "left-4"}`}>
+            <div className={`bottom-4 fixed ${open ? "right-4 sm:left-50" : "left-4"}`}>
                 <PktsIconButton
                     onClick={toggleSidebar}
                     variant="secondary"
@@ -119,20 +119,20 @@ export function Sidebar() {
                                 </ResponsiveLink>
                             </li>
                             {showTemplates && (
-                            <li>
-                                <ResponsiveLink closeSidebar={closeSidebar} to="/template/new">
-                                    <CirclePlus size={16} /> Node SVG Builder
-                                </ResponsiveLink>
-                            </li>
+                                <li>
+                                    <ResponsiveLink closeSidebar={closeSidebar} to="/template/new">
+                                        <CirclePlus size={16} /> Node SVG Builder
+                                    </ResponsiveLink>
+                                </li>
                             )}
                         </ul>
                         <h5 className="flex gap-1 items-center">
                             <FolderOpen /> Libraries
                         </h5>
                         <ul className="list-none mb-4">
-                            <h6 className='ml-[-1rem]'>
+                            <h6 className="ml-[-1rem]">
                                 <ResponsiveLink closeSidebar={closeSidebar} to="/library/datasets">
-                                    <Library size={16} className='mb-1' /> Datasets
+                                    <Library size={16} className="mb-1" /> Datasets
                                 </ResponsiveLink>
                             </h6>
                             <ul className="pl-0 list-none">
@@ -148,9 +148,9 @@ export function Sidebar() {
                                     </li>
                                 ))}
                             </ul>
-                            <h6 className='ml-[-1rem]'>
+                            <h6 className="ml-[-1rem]">
                                 <ResponsiveLink closeSidebar={closeSidebar} to="/library/maps">
-                                    <Library size={16} className='mb-1' /> Maps
+                                    <Library size={16} className="mb-1" /> Maps
                                 </ResponsiveLink>
                             </h6>
                             <ul className="pl-0 list-none">
@@ -168,12 +168,12 @@ export function Sidebar() {
                             </ul>
                             {showTemplates && (
                                 <>
-                                    <h6 className='ml-[-1rem]'>
+                                    <h6 className="ml-[-1rem]">
                                         <ResponsiveLink
                                             closeSidebar={closeSidebar}
                                             to="/library/templates"
                                         >
-                                            <Library size={16} className='mb-1' /> Node Templates
+                                            <Library size={16} className="mb-1" /> Node Templates
                                         </ResponsiveLink>
                                     </h6>
                                     <ul className="pl-0 list-none">

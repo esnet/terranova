@@ -286,17 +286,6 @@ export function MapLayerOptionsPanel(props: any) {
                             }
                         />
                     </PktsInputRow>
-                    <PktsInputRow label="Highlight Color">
-                        <InputColor
-                            defaultValue={thisLayer?.nodeHighlight}
-                            onChange={(e) =>
-                                handleConfigChange(
-                                    `layers[${props.layerId}].nodeHighlight`,
-                                    e.target.value,
-                                )
-                            }
-                        />
-                    </PktsInputRow>
                     <PktsInputRow label="Size">
                         <InputRange
                             name={`layer[${props.layerId}].nodewidth`}

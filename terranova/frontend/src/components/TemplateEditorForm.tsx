@@ -21,6 +21,7 @@ export function TemplateEditorForm(props: any) {
     const { templateId } = useParams();
     const create = templateId === undefined;
     const [updating, setUpdating] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const { controller } = useContext(TemplateDataController) as DataControllerContextType;
 
 
@@ -40,10 +41,16 @@ export function TemplateEditorForm(props: any) {
         controller.fetch();
     };
 
-    const save = (e: any) => {
+    const save = async (e: any) => {
         e.preventDefault();
+        if (submitting) return;
+        setSubmitting(true);
         setUpdating(false);
-        props.persistTemplate(e);
+        try {
+            await props.persistTemplate(e);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -67,15 +74,15 @@ export function TemplateEditorForm(props: any) {
                     />
                 </PktsInputRow>
                 {create ? (
-                    <PktsButton onClick={save} variant="primary">
+                    <PktsButton onClick={save} variant="primary" disabled={submitting}>
                         Create <Save />
                     </PktsButton>
                 ) : (
                     <div className="flex gap-4">
-                        <PktsButton disabled={!updating} variant="destructive" onClick={discard}>
+                        <PktsButton disabled={!updating || submitting} variant="destructive" onClick={discard}>
                             Discard <X />
                         </PktsButton>
-                        <PktsButton disabled={!updating} onClick={save} variant="primary">
+                        <PktsButton disabled={!updating || submitting} onClick={save} variant="primary">
                             Save Changes <Save />
                         </PktsButton>
                     </div>

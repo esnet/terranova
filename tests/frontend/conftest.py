@@ -89,6 +89,7 @@ def setup_server_processes(request):
     api_env = os.environ.copy()
     api_env["TERRANOVA_CONF"] = test_config_path
     api_env["MOCKS"] = "tests.frontend.mock.mocks"
+    api_env["TERRANOVA_CORS_ORIGINS"] = FRONTEND_BASE
     api_proc = subprocess.Popen(
         [venv_python_path, "-m", "uvicorn", "terranova.api:app",
          "--port", str(API_PORT)],

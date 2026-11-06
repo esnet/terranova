@@ -144,6 +144,36 @@ def test_map_library(page, create_test_map):
     expect(page.get_by_role("link", name="Generated Test Map:").first).to_be_visible()
 
 
+def test_create_map_button_disabled_during_submit(page, login):
+    """
+    Verify that the Create Map button is disabled while the form submission
+    is in-flight, preventing double-submissions (fix/submit-state PR).
+    Uses request interception to hold the POST long enough to observe
+    the disabled state before the response arrives.
+    """
+    import threading
+
+    page.goto(f"{FRONTEND_BASE}/map/new")
+    page.get_by_role("textbox", name="Name*").fill("Submit State Test Map")
+
+    resume = threading.Event()
+
+    def pause_post(route):
+        resume.wait(timeout=5)
+        route.continue_()
+
+    page.route("**/map/", pause_post)
+
+    page.get_by_role("button", name="Create Map").click()
+
+    btn = page.get_by_role("button", name="Create Map")
+    expect(btn).to_be_disabled(timeout=3000)
+
+    resume.set()
+    page.unroute("**/map/")
+    expect(page).to_have_url(re.compile(r".*/map/\w+"), timeout=10000)
+
+
 def test_map_library_filter(page, create_test_map):
     page.goto(f"{FRONTEND_BASE}/library/maps")
     expect(page.get_by_text("Map Library")).to_be_visible()

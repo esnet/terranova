@@ -54,8 +54,9 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
     const footer =
         status !== "success" ? (
             <>
-                <div className="flex gap-2">
+                <div className="flex justify-end gap-2">
                     <PktsButton
+                        className="w-fit! px-6!"
                         variant="destructive"
                         onClick={props.dismiss}
                         disabled={status === "loading"}
@@ -64,6 +65,7 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
                         Cancel
                     </PktsButton>
                     <PktsButton
+                        className="w-fit! px-6!"
                         variant="primary"
                         onClick={publishMap}
                         disabled={status === "loading"}
@@ -74,9 +76,11 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
                 </div>
             </>
         ) : (
-            <PktsButton variant="branded" onClick={props.dismiss}>
-                Close
-            </PktsButton>
+            <div className="flex justify-end">
+                <PktsButton className="w-fit! px-6!" variant="branded" onClick={props.dismiss}>
+                    Close
+                </PktsButton>
+            </div>
         );
 
     const renderMessage = () => {
@@ -105,8 +109,8 @@ export const MapPublishModalDialog = (props: MapPublishModalDialogProps) => {
             <div className="flex flex-col mr-2 p-6">
                 <p>Please confirm that you'd like to publish this map.</p>
                 <p>
-                    This action will make the current saved version of the map,
-                    coordinates of all visible objects, and the results of dataset(s) used in the map {" "}
+                    This action will make the current saved version of the map, coordinates of all
+                    visible objects, and the results of dataset(s) used in the map{" "}
                     <span className="text-red-500">
                         visible to the public internet with no password protection.
                     </span>
