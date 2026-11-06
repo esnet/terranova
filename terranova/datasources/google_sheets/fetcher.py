@@ -276,9 +276,14 @@ def fetch():
                         # the key order of DATATYPES guarantees
                         # that we'll compile the list of nodes first
                         if datatype == "edges":
+                            def _get_or_create_node(name):
+                                if name not in data["nodes"]:
+                                    logger.warning("Node '%s' not found in sheet; creating placeholder at 0,0", name)
+                                    data["nodes"][name] = {"name": name, "latitude": 0, "longitude": 0}
+                                return data["nodes"][name]
                             doc["endpoints"] = [
-                                data["nodes"][row[column_positions["source"][0]]],
-                                data["nodes"][row[column_positions["destination"][0]]],
+                                _get_or_create_node(row[column_positions["source"][0]]),
+                                _get_or_create_node(row[column_positions["destination"][0]]),
                             ]
                             if "source" in doc:
                                 del doc["source"]
