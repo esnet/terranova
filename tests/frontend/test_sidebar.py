@@ -166,6 +166,40 @@ def test_sidebar_maps_count_and_order(page, login):
         assert map_name in sidebar_text, f"Expected '{map_name}' in sidebar"
 
 
+def test_sidebar_survives_missing_lastUpdatedOn(page, login):
+    """
+    Regression test for crash when sidebar items are missing lastUpdatedOn.
+    Injects a poisoned globalLastEdited cache entry with a null lastUpdatedOn
+    into localStorage, then reloads the page and verifies the sidebar renders
+    without throwing a TypeError.
+    """
+    page.goto(f"{FRONTEND_BASE}/")
+    sidebar = page.locator("#sidebar")
+    expect(sidebar).to_be_visible()
+
+    # Inject a cache entry containing one item with lastUpdatedOn=null
+    # and one normal item, to trigger the sort comparison bug.
+    import json, time
+    cache_duration = 60  # matches CACHE_DURATION_IN_SECONDS default
+    time_key = int(time.time() / cache_duration)
+    poisoned = [
+        {"mapId": "aaa1111", "name": "Normal Map", "lastUpdatedOn": "2024-01-01T00:00:00"},
+        {"mapId": "bbb2222", "name": "Broken Map"},  # no lastUpdatedOn
+    ]
+    page.evaluate(
+        f"localStorage.setItem('globalLastEdited.maps.{time_key}', JSON.stringify({json.dumps(poisoned)}))"
+    )
+
+    # Reload — the sidebar useEffect will now sort the poisoned cache data
+    page.reload()
+    expect(sidebar).to_be_visible()
+
+    # If the bug is present, the page crashes and sidebar disappears / shows error
+    # Verify no crash by checking the sidebar is still functional
+    expect(page.locator("#root")).not_to_contain_text("Cannot read properties of undefined")
+    expect(sidebar).to_be_visible()
+
+
 def test_sidebar_templates_count_and_order(page, login):
     """
     Test that the sidebar shows at most 3 node templates, in order of most recently
