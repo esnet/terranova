@@ -637,4 +637,18 @@ button.warning {
         text-decoration: none;
     }
     h2, h3 { font-weight: 600; }
+    [class*="PktsInputTypeahead-module_optionsAndInputWrapper"] {
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        padding-left: 6px;
+    }
+    [class*="PktsInputTypeahead-module_searchInput"] {
+        min-width: 220px;
+    }
+    [class*="PktsInputTypeahead-module_selectedOptionsWrapper"] {
+        width: auto;
+        margin-bottom: auto;
+        margin-top: auto;
+        padding: 0;
+    }
 }
