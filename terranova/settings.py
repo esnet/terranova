@@ -55,17 +55,28 @@ ELASTIC_INDICES = {
         "read": ELASTIC.get("indices", {}).get("userdata", {}).get("read"),
         "write": ELASTIC.get("indices", {}).get("userdata", {}).get("write"),
     },
+    "checkpoint_schedule": {
+        "read": ELASTIC.get("indices", {}).get("checkpoint_schedule", {}).get("read"),
+        "write": ELASTIC.get("indices", {}).get("checkpoint_schedule", {}).get("write"),
+    },
+    "notification_config": {
+        "read": ELASTIC.get("indices", {}).get("notification_config", {}).get("read"),
+        "write": ELASTIC.get("indices", {}).get("notification_config", {}).get("write"),
+    },
 }
 
-# Only validate Elasticsearch indices if using elasticsearch backend
+# Core indices required for ES deployments; checkpoint/notification are optional
+_REQUIRED_ELASTIC_INDICES = ["template", "map", "dataset", "userdata"]
+
 if STORAGE_BACKEND == "elasticsearch":
-    for index, value in ELASTIC_INDICES.items():
+    for index in _REQUIRED_ELASTIC_INDICES:
+        value = ELASTIC_INDICES[index]
         for name, endpoint in value.items():
             if endpoint is None:
                 raise RuntimeError(
                     "Misconfiguration in elastic.indices. Please provide a read and write index for %s.\n\n Current values: \n%s"
                     % (
-                        ", ".join([k for k in ELASTIC_INDICES.keys()]),
+                        ", ".join(_REQUIRED_ELASTIC_INDICES),
                         yaml.safe_dump(ELASTIC.get("indices")),
                     )
                 )
@@ -93,6 +104,20 @@ TOKEN_SCOPES = {
 # OpenTelemetry Configuration
 OTLP_ENDPOINT = OTLP.get("endpoint")
 OTLP_SECRET = OTLP.get("secret_key")
+
+# Checkpoint / notification configuration
+_CHECKPOINTS = config.get("checkpoints", {}) or {}
+CHECKPOINTS_ENABLED = _CHECKPOINTS.get("enabled", False)
+CHECKPOINTS_DEFAULT_INTERVAL = _CHECKPOINTS.get("default_interval_minutes", 360)
+
+_NOTIFICATIONS = config.get("notifications", {}) or {}
+NOTIFICATIONS_SMTP_HOST = _NOTIFICATIONS.get("smtp_host")
+NOTIFICATIONS_SMTP_PORT = _NOTIFICATIONS.get("smtp_port", 587)
+NOTIFICATIONS_SMTP_USER = _NOTIFICATIONS.get("smtp_user")
+NOTIFICATIONS_SMTP_PASS = _NOTIFICATIONS.get("smtp_pass")
+NOTIFICATIONS_SMTP_FROM = _NOTIFICATIONS.get("smtp_from", "terranova@localhost")
+NOTIFICATIONS_SLACK_WEBHOOK_URL = _NOTIFICATIONS.get("slack_webhook_url")
+NOTIFICATIONS_BASE_URL = _NOTIFICATIONS.get("base_url", "")
 
 # Only used for unit testing, generates a random "key" for signing
 # of the JWTs used for auth

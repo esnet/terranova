@@ -118,3 +118,48 @@ CREATE_STATEMENTS = {
         "meta": {"description": "Terranova User Data"},
     },
 }
+
+# Optional indices — only populated when checkpoint indices are configured
+_checkpoint_write = ELASTIC_INDICES.get("checkpoint_schedule", {}).get("write")
+_notification_write = ELASTIC_INDICES.get("notification_config", {}).get("write")
+
+if _checkpoint_write and ELASTIC_INDICES["checkpoint_schedule"]["read"]:
+    CREATE_STATEMENTS[_checkpoint_write] = {
+        "name": ELASTIC_INDICES["checkpoint_schedule"]["read"],
+        "index_patterns": ["%s*" % _checkpoint_write],
+        "template": {
+            "mappings": {
+                "properties": {
+                    "scheduleId": {"type": "keyword"},
+                    "datasetId": {"type": "keyword"},
+                    "name": {"type": "keyword"},
+                    "createdBy": {"type": "keyword"},
+                    "createdOn": {"type": "date"},
+                    "lastRunOn": {"type": "date"},
+                    "enabled": {"type": "boolean"},
+                }
+            }
+        },
+        "composed_of": [],
+        "priority": 500,
+        "meta": {"description": "Terranova Checkpoint Schedules"},
+    }
+
+if _notification_write and ELASTIC_INDICES["notification_config"]["read"]:
+    CREATE_STATEMENTS[_notification_write] = {
+        "name": ELASTIC_INDICES["notification_config"]["read"],
+        "index_patterns": ["%s*" % _notification_write],
+        "template": {
+            "mappings": {
+                "properties": {
+                    "configId": {"type": "keyword"},
+                    "scheduleId": {"type": "keyword"},
+                    "createdBy": {"type": "keyword"},
+                    "createdOn": {"type": "date"},
+                }
+            }
+        },
+        "composed_of": [],
+        "priority": 500,
+        "meta": {"description": "Terranova Notification Configs"},
+    }

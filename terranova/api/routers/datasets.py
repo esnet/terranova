@@ -15,6 +15,7 @@ from terranova.models import (
     TerranovaNotFoundException,
     TerranovaVersion,
 )
+from terranova.checkpoint.differ import compute_delta, hash_results
 
 router = APIRouter(tags=["Terranova Datasets"])
 
@@ -67,12 +68,72 @@ def datasets(
 @router.get("/dataset/id/{datasetId}/", summary="Gets a single dataset by its ID")
 @version(1)
 def dataset_by_id(
-    datasetId: str, user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]])
+    datasetId: str,
+    version: TerranovaVersion = Depends(),
+    user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
 ) -> Dataset:
-    result = storage_backend.get_datasets(dataset_id=datasetId)
+    result = storage_backend.get_datasets(dataset_id=datasetId, version=version)
     if len(result) < 1:
         raise HTTPException(status_code=404, detail="Dataset with id %s not found" % datasetId)
     return result[0]
+
+
+@router.get(
+    "/dataset/id/{datasetId}/versions/",
+    summary="Lists all versions of a dataset, optionally filtered by checkpoint flag",
+)
+@version(1)
+def dataset_versions(
+    datasetId: str,
+    checkpoint: bool | None = Query(None, description="Filter to checkpoint-only or user-only versions"),
+    user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
+) -> List[dict[str, Any]]:
+    # Fetch all versions
+    all_version = TerranovaVersion(version="all")  # type: ignore[call-arg]
+    results = storage_backend.get_datasets(
+        dataset_id=datasetId,
+        fields=["datasetId", "name", "version", "lastUpdatedBy", "lastUpdatedOn", "checkpoint"],
+        version=all_version,
+    )
+    if not results:
+        raise HTTPException(status_code=404, detail="Dataset with id %s not found" % datasetId)
+    if checkpoint is not None:
+        results = [r for r in results if bool(r.get("checkpoint")) == checkpoint]
+    return results
+
+
+@router.get(
+    "/dataset/id/{datasetId}/diff/{v1}/{v2}/",
+    summary="Returns the diff between two versions of a dataset",
+)
+@version(1)
+def dataset_diff(
+    datasetId: str,
+    v1: int,
+    v2: int,
+    user: User = Security(auth_check, scopes=[TOKEN_SCOPES["read"]]),
+) -> dict:
+    def _fetch(v: int):
+        tv = TerranovaVersion(version=v)  # type: ignore[call-arg]
+        res = storage_backend.get_datasets(dataset_id=datasetId, version=tv)
+        if not res:
+            raise HTTPException(
+                status_code=404,
+                detail="Dataset %s version %d not found" % (datasetId, v),
+            )
+        return res[0]
+
+    ds1 = _fetch(v1)
+    ds2 = _fetch(v2)
+    delta = compute_delta(ds1.get("results") or [], ds2.get("results") or [])
+    return {
+        "datasetId": datasetId,
+        "fromVersion": v1,
+        "toVersion": v2,
+        "fromHash": hash_results(ds1.get("results") or []),
+        "toHash": hash_results(ds2.get("results") or []),
+        "delta": delta,
+    }
 
 
 @router.put(

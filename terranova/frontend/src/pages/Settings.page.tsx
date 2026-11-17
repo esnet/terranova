@@ -2,6 +2,7 @@ import { BasicAuthUserGrid } from "../components/settings/user/BasicAuthUserGrid
 import { AUTH_BACKEND } from "../../static/settings";
 import { SettingsTopbar } from "../components/settings/SettingsTopbar";
 import { GoogleSheetsSettings } from "../components/settings/googleSheets/GoogleSheets";
+import { CheckpointSettings } from "../components/checkpoints/CheckpointSettings";
 
 export function SettingsPageComponent() {
     return (
@@ -9,6 +10,7 @@ export function SettingsPageComponent() {
             <SettingsTopbar />
             {AUTH_BACKEND == "basic" && <BasicAuthUserGrid />}
             <GoogleSheetsSettings />
+            <CheckpointSettings />
         </main>
     );
 }

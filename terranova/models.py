@@ -178,8 +178,8 @@ class Dataset(BaseModel):
     lastUpdatedOn: datetime
     query: DatasetQuery
     results: List[Any] | None = None  # only set for Datasets with valid query filters
-    # this will grant e.g. read and write privs to a particular group (Keycloak Workgroup)
-    # group: str
+    # True when this version was written by the scheduler; None/False for user saves
+    checkpoint: bool | None = None
 
 
 class DatasetRevision(BaseModel):
@@ -340,6 +340,50 @@ class PublicMapFilters:
                 yield (k, v.default)
             else:
                 yield (k, v)
+
+
+class RetentionPolicy(BaseModel):
+    # Keep the N most recent checkpoint versions; None means keep all
+    keep_last_n: int | None = None
+    # Beyond keep_last_n, retain every Nth checkpoint (e.g. 10 = keep v10, v20, ...)
+    keep_every_nth: int | None = None
+
+
+class CheckpointSchedule(BaseModel):
+    scheduleId: str  # 7-char alphanumeric
+    datasetId: str
+    name: str
+    intervalMinutes: int
+    enabled: bool = True
+    retention: RetentionPolicy = RetentionPolicy()
+    createdBy: str
+    createdOn: datetime
+    lastRunOn: datetime | None = None
+    lastRunStatus: str | None = None  # "ok" | "changed" | "error"
+    lastError: str | None = None
+
+
+class CheckpointScheduleRevision(BaseModel):
+    datasetId: str
+    name: str
+    intervalMinutes: int
+    enabled: bool = True
+    retention: RetentionPolicy = RetentionPolicy()
+
+
+class NotificationConfig(BaseModel):
+    configId: str  # 7-char alphanumeric
+    scheduleId: str
+    emailRecipients: List[str] = []
+    slackWebhookUrl: str | None = None
+    createdBy: str
+    createdOn: datetime
+
+
+class NotificationConfigRevision(BaseModel):
+    scheduleId: str
+    emailRecipients: List[str] = []
+    slackWebhookUrl: str | None = None
 
 
 @dataclass
