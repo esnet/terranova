@@ -637,6 +637,12 @@ button.warning {
         text-decoration: none;
     }
     h2, h3 { font-weight: 600; }
+
+    .tn-timestamp-legend { font-size: 11px; line-height: 1.4; }
+    .tn-timestamp-layer { margin-bottom: 6px; }
+    .tn-timestamp-layer:last-child { margin-bottom: 0; }
+    .tn-timestamp-layer p { margin: 1px 0; }
+    .tn-timestamp-layer em { opacity: 0.7; }
     [class*="PktsInputTypeahead-module_optionsAndInputWrapper"] {
         flex-direction: row-reverse;
         justify-content: flex-end;
