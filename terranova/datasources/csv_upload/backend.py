@@ -55,6 +55,7 @@ class CSVMetadata(Base):
     csv_name = Column(String)
     columns = Column(sqlite.JSON)
     types = Column(sqlite.JSON)
+    last_fetched = Column(String, nullable=True)  # ISO8601 timestamp of upload
 
     def to_dict(self):
         return {col.name: getattr(self, col.name) for col in type(self).__table__.columns}
@@ -117,11 +118,13 @@ class CSVBackend(SQLiteCacheDatasource):
             return []
 
     def insert_dataset(self, csv_id, csv_name, edges, columns, types):
+        from datetime import datetime, timezone
         meta = CSVMetadata(
             csv_id=csv_id,
             csv_name=csv_name,
             columns=columns,
             types=types,
+            last_fetched=datetime.now(timezone.utc).isoformat(),
         )
         self.session.merge(meta)
         for edge in edges:
@@ -263,6 +266,10 @@ class CSVBackend(SQLiteCacheDatasource):
         topo["layer"] = "tail"
         topo["name"] = dataset.name
         topo["pathLayout"] = path_layout
+
+        if csv_id:
+            meta = self.session.query(CSVMetadata).filter_by(csv_id=csv_id).first()
+            topo["last_sync_time"] = meta.last_fetched if meta else None
 
         return Topology(**topo)
 
