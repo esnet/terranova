@@ -71,6 +71,7 @@ class SheetMetadata(Base):
     sheet_name = Column(String)
     columns = Column(sqlite.JSON)
     types = Column(sqlite.JSON)
+    last_fetched = Column(String, nullable=True)  # ISO8601 timestamp of last successful fetch
 
     def to_dict(self):
         return {column.name: getattr(self, column.name) for column in type(self).__table__.columns}
@@ -392,11 +393,13 @@ class GoogleSheetsBackend(SQLiteCacheDatasource):
 
         topo = self._render_geographic(circuit_data, node_template, node_group_criteria)
 
-        # TODO - These all should come from somewhere. XXX: Need to modify the data model?
-        # 'type': curveCardinal is now actually really important
         topo["layer"] = "tail"
         topo["name"] = dataset.name
         topo["pathLayout"] = path_layout
+
+        if sheet_id:
+            meta = self.session.query(SheetMetadata).filter_by(sheet_id=sheet_id).first()
+            topo["last_sync_time"] = meta.last_fetched if meta else None
 
         return Topology(**topo)
 
