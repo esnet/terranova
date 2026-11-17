@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { API_URL } from "../../../static/settings";
-import { DataController } from "../../DataController";
+import { DataController, setAuthHeaders } from "../../DataController";
 import { DataControllerType, DataControllerContextType } from "../../types/mapeditor";
 import { Favorites } from "../../context/FavoritesContextProvider";
 import { UserDataController } from "../../context/UserDataContextProvider";
@@ -14,13 +14,15 @@ import {
     PktsInputOption,
     PktsInputRow,
 } from "@esnet/packets-ui-react";
-import { Plus, Star } from "lucide-react";
+import { Plus, Star, Trash2, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ModalDialog } from "../ModalDialog";
 
 export function DatasetLibrary() {
     const [datasetList, setDatasetList] = useState([]);
     const [filterText, setFilterText] = useState("");
     const [loading, setLoading] = useState(true);
+    const [datasetToDelete, setDatasetToDelete] = useState<any>(null);
 
     const favorites = useContext(Favorites);
     const { controller: userDataController, instance: userdata } = useContext(
@@ -63,8 +65,38 @@ export function DatasetLibrary() {
         }, {}),
     );
 
+    async function handleDeleteDataset() {
+        if (!datasetToDelete) return;
+        const headers = setAuthHeaders({ "Content-Type": "application/json" });
+        await fetch(`${API_URL}/dataset/id/${datasetToDelete.datasetId}/`, { headers, method: "DELETE" });
+        setDatasetToDelete(null);
+        await controller.fetch();
+    }
+
+    const deleteModal = datasetToDelete && (
+        <ModalDialog
+            visible={!!datasetToDelete}
+            setVisible={(v) => { if (!v) setDatasetToDelete(null); }}
+            header="Delete Dataset"
+            footer={
+                <div className="flex justify-end gap-2 w-full">
+                    <PktsButton variant="secondary" onClick={() => setDatasetToDelete(null)}>
+                        <span className="flex items-center gap-2"><X /> Cancel</span>
+                    </PktsButton>
+                    <PktsButton variant="primary" onClick={handleDeleteDataset}>
+                        <span className="flex items-center gap-2"><Trash2 /> Delete Forever</span>
+                    </PktsButton>
+                </div>
+            }
+        >
+            <h4>Delete Dataset</h4>
+            <div className="mb-12">Dataset '{datasetToDelete.name}' and all its versions will be permanently deleted.</div>
+        </ModalDialog>
+    );
+
     return (
         <div className="flex flex-col gap-4">
+        {deleteModal}
             <div className="flex flex-row justify-between items-center">
                 <Link to="/dataset/new" className="contents">
                     <PktsButton variant="secondary" className="w-fit" append={<Plus />}>
@@ -136,6 +168,16 @@ export function DatasetLibrary() {
                                         {new Date(primary.lastUpdatedOn).toLocaleString()}
                                     </span>
                                     <span>Last Updated By: {primary.lastUpdatedBy}</span>
+                                </div>
+                                <div className="flex justify-start mt-2">
+                                    <PktsButton
+                                        variant="destructive"
+                                        className="w-fit!"
+                                        prepend={<Trash2 />}
+                                        onClick={() => setDatasetToDelete(primary)}
+                                    >
+                                        Delete
+                                    </PktsButton>
                                 </div>
                             </Card>
                         );

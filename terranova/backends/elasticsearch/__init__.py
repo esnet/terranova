@@ -188,6 +188,16 @@ class ElasticSearchBackend:
     ):
         return self.get_maps(map_id, fields, filters, version)
 
+    def delete_map(self, map_id: str):
+        """Delete all versions of a map by mapId"""
+        query = {"bool": {"filter": [{"term": {"mapId": map_id}}]}}
+        return self.delete_by_query(ELASTIC_INDICES["map"]["write"], query, max_docs=10000)
+
+    def delete_dataset(self, dataset_id: str):
+        """Delete all versions of a dataset by datasetId"""
+        query = {"bool": {"filter": [{"term": {"datasetId": dataset_id}}]}}
+        return self.delete_by_query(ELASTIC_INDICES["dataset"]["write"], query, max_docs=10000)
+
     def create_map(self, map_revision: MapRevision, user: User):
         map_id = self.generate_id()
         to_create = {

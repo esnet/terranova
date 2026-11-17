@@ -1,20 +1,22 @@
 import React, { useEffect, useState, useContext } from "react";
 import { API_URL } from "../../../static/settings";
 import { InputCopy } from "../InputCopy";
-import { DataController } from "../../DataController";
+import { DataController, setAuthHeaders } from "../../DataController";
 import { DataControllerType, DataControllerContextType } from "../../types/mapeditor";
 import { Favorites } from "../../context/FavoritesContextProvider";
 import { UserDataController } from "../../context/UserDataContextProvider";
 import { markFavorite } from "./utils";
 import Card from "../Card";
 import { PktsInputRow, PktsInputText, PktsButton, PktsSpinner } from "@esnet/packets-ui-react";
-import { Plus, Star } from "lucide-react";
+import { Plus, Star, Trash2, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ModalDialog } from "../ModalDialog";
 
 export function MapLibrary() {
     const [mapList, setMapList] = useState([]);
     const [filterText, setFilterText] = useState("");
     const [loading, setLoading] = useState(true);
+    const [mapToDelete, setMapToDelete] = useState<any>(null);
 
     const favorites = useContext(Favorites);
     const { controller: userDataController, instance: userdata } = useContext(
@@ -51,8 +53,38 @@ export function MapLibrary() {
         }, {}),
     );
 
+    async function handleDeleteMap() {
+        if (!mapToDelete) return;
+        const headers = setAuthHeaders({ "Content-Type": "application/json" });
+        await fetch(`${API_URL}/map/id/${mapToDelete.mapId}/`, { headers, method: "DELETE" });
+        setMapToDelete(null);
+        await controller.fetch();
+    }
+
+    const deleteModal = mapToDelete && (
+        <ModalDialog
+            visible={!!mapToDelete}
+            setVisible={(v) => { if (!v) setMapToDelete(null); }}
+            header="Delete Map"
+            footer={
+                <div className="flex justify-end gap-2 w-full">
+                    <PktsButton variant="secondary" onClick={() => setMapToDelete(null)}>
+                        <span className="flex items-center gap-2"><X /> Cancel</span>
+                    </PktsButton>
+                    <PktsButton variant="primary" onClick={handleDeleteMap}>
+                        <span className="flex items-center gap-2"><Trash2 /> Delete Forever</span>
+                    </PktsButton>
+                </div>
+            }
+        >
+            <h4>Delete Map</h4>
+            <div className="mb-12">Map '{mapToDelete.name}' and all its versions will be permanently deleted.</div>
+        </ModalDialog>
+    );
+
     return (
         <div className="flex flex-col gap-4">
+        {deleteModal}
             <div className="flex flex-row justify-between items-center">
                 <Link to="/map/new" className="contents">
                     <PktsButton variant="secondary" className="w-fit" append={<Plus />}>
@@ -105,6 +137,16 @@ export function MapLibrary() {
                                     Last Updated: {new Date(map.lastUpdatedOn).toLocaleString()}
                                 </span>
                                 <span>Last Updated By: {map.lastUpdatedBy}</span>
+                            </div>
+                            <div className="flex justify-start mt-2">
+                                <PktsButton
+                                    variant="destructive"
+                                    className="w-fit!"
+                                    prepend={<Trash2 />}
+                                    onClick={() => setMapToDelete(map)}
+                                >
+                                    Delete
+                                </PktsButton>
                             </div>
                         </Card>
                     ))

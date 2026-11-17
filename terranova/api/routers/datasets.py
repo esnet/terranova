@@ -163,3 +163,15 @@ def create_dataset(
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
 ):
     return storage_backend.create_dataset(datasetRevision, user)
+
+
+@router.delete("/dataset/id/{datasetId}/", summary="Deletes a dataset and all its versions")
+@version(1)
+def delete_dataset(
+    datasetId: str,
+    user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
+):
+    result = storage_backend.get_datasets(dataset_id=datasetId)
+    if len(result) < 1:
+        raise HTTPException(status_code=404, detail="Dataset with id %s not found" % datasetId)
+    return storage_backend.delete_dataset(datasetId)
