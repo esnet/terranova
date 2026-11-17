@@ -30,6 +30,26 @@ export const MapController = createContext<DataControllerContextType | null>(nul
 export const DatasetListController = createContext<DataControllerContextType | null>(null);
 export const TemplateListController = createContext<DataControllerContextType | null>(null);
 
+function buildTimestampLegendHTML(
+    layers: Array<{name: string; render_time: string | null; last_sync_time: string | null; datasource_version: string | null}>
+): string {
+    const sections = layers
+        .filter(l => l.render_time || l.last_sync_time || l.datasource_version)
+        .map(l => {
+            const renderTime = l.render_time ? new Date(l.render_time).toLocaleString() : null;
+            const syncTime = l.last_sync_time ? new Date(l.last_sync_time).toLocaleString() : null;
+            const lines = [
+                `<p><em>${l.name}</em></p>`,
+                renderTime && `<p><strong>Rendered:</strong> ${renderTime}</p>`,
+                syncTime && `<p><strong>Last sync:</strong> ${syncTime}</p>`,
+                l.datasource_version && `<p><strong>Mode:</strong> ${l.datasource_version}</p>`,
+            ].filter(Boolean).join("");
+            return `<div class="tn-timestamp-layer">${lines}</div>`;
+        });
+    if (!sections.length) return "";
+    return `<div class="tn-timestamp-legend">${sections.join("")}</div>`;
+}
+
 export function MapEditorPageComponent() {
     const { mapId } = useParams();
     const q = new URLSearchParams(window.location.search);
@@ -283,14 +303,28 @@ export function MapEditorPageComponent() {
                 }
                 let output = await response.json();
                 output = JSON.parse(JSON.stringify(output));
+                const layerTimestamps: Array<{name: string; render_time: string | null; last_sync_time: string | null; datasource_version: string | null}> = [];
                 let topology = output.configuration.layers.map((layer, idx) => {
                     let parsed = JSON.parse(layer.mapjson);
                     if (!parsed) {
                         parsed = { nodes: [], edges: [] };
                     }
+                    layerTimestamps.push({
+                        name: layer.name || `Layer ${idx + 1}`,
+                        render_time: parsed.render_time || null,
+                        last_sync_time: parsed.last_sync_time || null,
+                        datasource_version: parsed.datasource_version || null,
+                    });
                     output.configuration.layers[idx].mapjson = null;
                     return parsed;
                 });
+
+                const timestampLegendHtml = buildTimestampLegendHTML(layerTimestamps);
+                if (timestampLegendHtml) {
+                    output.configuration.customLegend = true;
+                    output.configuration.customLegendValue = timestampLegendHtml;
+                }
+
                 output.configuration.enableEditing = true;
                 output.configuration.topologySource = "json";
                 let editMode = mapCanvas.current.lastValue(signals.EDITING_SET);
