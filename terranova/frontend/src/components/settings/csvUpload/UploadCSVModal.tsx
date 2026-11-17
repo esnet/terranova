@@ -3,6 +3,9 @@ import { PktsButton, PktsInputRow, PktsInputText, PktsAlert } from "@esnet/packe
 import { Upload, X } from "lucide-react";
 import { ModalDialog } from "../../ModalDialog";
 
+const EXAMPLE_SHEET_URL =
+    "https://docs.google.com/spreadsheets/d/191BuMoWa2CooMXJQzyNtBRlNLHamBmh-8PCoIGDELxA/edit";
+
 interface UploadCSVModalProps {
     visible: boolean;
     setVisible: React.Dispatch<React.SetStateAction<boolean>>;
@@ -90,6 +93,14 @@ export function UploadCSVModal({ visible, setVisible, onUpload }: UploadCSVModal
                     />
                 </PktsInputRow>
 
+                <p className="text-sm tn-text">
+                    See{" "}
+                    <a href={EXAMPLE_SHEET_URL} target="_blank" rel="noreferrer">
+                        example spreadsheet
+                    </a>{" "}
+                    for examples. (<em>File → Download → CSV</em> for both sheets.)
+                </p>
+
                 <PktsInputRow label="Nodes CSV">
                     <input
                         type="file"
@@ -97,10 +108,10 @@ export function UploadCSVModal({ visible, setVisible, onUpload }: UploadCSVModal
                         className="block w-full text-sm text-color-text file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-color-button-secondary file:text-white hover:file:bg-color-button-secondary-hover cursor-pointer"
                         onChange={(e) => setNodesFile(e.target.files?.[0] ?? null)}
                     />
-                    <p className="text-xs text-color-text-alt mt-1">
-                        Required columns: Name, Latitude, Longitude, Description
-                    </p>
                 </PktsInputRow>
+                <p className="text-sm text-color-text-alt">
+                    Required columns: Name, Latitude, Longitude, Description
+                </p>
 
                 <PktsInputRow label="Edges CSV">
                     <input
@@ -109,10 +120,10 @@ export function UploadCSVModal({ visible, setVisible, onUpload }: UploadCSVModal
                         className="block w-full text-sm text-color-text file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-color-button-secondary file:text-white hover:file:bg-color-button-secondary-hover cursor-pointer"
                         onChange={(e) => setEdgesFile(e.target.files?.[0] ?? null)}
                     />
-                    <p className="text-xs text-color-text-alt mt-1">
-                        Required columns: Name, Description, Source, Destination
-                    </p>
                 </PktsInputRow>
+                <p className="text-sm text-color-text-alt">
+                    Required columns: Name, Description, Source, Destination
+                </p>
             </div>
         </ModalDialog>
     );

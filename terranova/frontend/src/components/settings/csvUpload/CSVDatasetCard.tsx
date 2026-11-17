@@ -15,7 +15,7 @@ export function CSVDatasetCard({ dataset, onDelete }: CSVDatasetCardProps) {
                 {dataset.edge_count !== undefined && (
                     <p className="text-sm text-color-text-alt">{dataset.edge_count} edges</p>
                 )}
-                <div className="flex justify-end">
+                <div className="flex justify-start">
                     <PktsButton
                         className="w-fit!"
                         variant="destructive"

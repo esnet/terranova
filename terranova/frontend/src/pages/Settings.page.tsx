@@ -9,10 +9,16 @@ export function SettingsPageComponent() {
     return (
         <main className="flex flex-col gap-4 p-4 min-w-0 min-h-full">
             <SettingsTopbar />
-            {AUTH_BACKEND == "basic" && <BasicAuthUserGrid />}
-            <GoogleSheetsSettings />
-            <CSVUploadSettings />
-            <CheckpointSettings />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+                <div className="flex flex-col gap-4">
+                    {AUTH_BACKEND == "basic" && <BasicAuthUserGrid />}
+                    <GoogleSheetsSettings />
+                </div>
+                <div className="flex flex-col gap-4">
+                    <CSVUploadSettings />
+                    <CheckpointSettings />
+                </div>
+            </div>
         </main>
     );
 }

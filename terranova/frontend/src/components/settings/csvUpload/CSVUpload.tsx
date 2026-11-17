@@ -8,9 +8,6 @@ import { CSVDatasetCard } from "./CSVDatasetCard";
 import { Plus } from "lucide-react";
 import Card from "../../Card";
 
-const EXAMPLE_SHEET_URL =
-    "https://docs.google.com/spreadsheets/d/191BuMoWa2CooMXJQzyNtBRlNLHamBmh-8PCoIGDELxA/edit";
-
 export function CSVUploadSettings() {
     const [datasets, setDatasets] = React.useState<any[]>([]);
     const [showUploadModal, setShowUploadModal] = React.useState(false);
@@ -77,20 +74,9 @@ export function CSVUploadSettings() {
 
             <Accordion header="CSV Upload Datasources">
                 <fieldset className="w-full">
-                    <legend className="text-lg">Upload CSV topology data.</legend>
+                    <legend className="text-lg">Upload CSV topology data</legend>
                     <div className="mb-4 tn-text">
-                        Upload two CSV files — one for Nodes and one for Edges — to create a
-                        datasource. Each uploaded dataset appears in the datasource dropdown
-                        when creating a dataset.{" "}
-                        <a href={EXAMPLE_SHEET_URL} target="_blank" rel="noreferrer">
-                            View example spreadsheet
-                        </a>{" "}
-                        (File → Download → CSV for each sheet).
-                    </div>
-                    <div className="mb-2 text-sm text-color-text-alt">
-                        <strong>Nodes CSV</strong> required columns: Name, Latitude, Longitude, Description
-                        &nbsp;·&nbsp;
-                        <strong>Edges CSV</strong> required columns: Name, Description, Source, Destination
+                        <p>Create a datasource by uploading a Nodes CSV and an Edges CSV.</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
