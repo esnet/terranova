@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build-css": "tailwindcss --input src/index.css --output dist/terranova.css --config tailwind.config.js",
-        "build-static-overwrites": "echo 'copy static files...' && rm -Rf dist/static && mkdir dist/static && cp node_modules/esnet-networkmap-panel/src/components/lib/* dist/static",
+        "build-static-overwrites": "echo 'copy static files...' && rm -Rf dist/static && mkdir dist/static && cp node_modules/esnet-networkmap-panel/src/components/lib/* dist/static && cp public/static/custom-theme.css dist/static/custom-theme.css",
         "build": "vite build --mode=production && pnpm run build-static-overwrites",
         "build-test-static-overwrites": "echo 'copy static files to dist-test...' && rm -Rf dist-test/static && mkdir dist-test/static && cp node_modules/esnet-networkmap-panel/src/components/lib/* dist-test/static && cp static/settings.js dist-test/static/settings.js",
         "build-test": "vite build -c vite.config.test.ts --mode=production && pnpm run build-test-static-overwrites"
