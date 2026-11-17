@@ -97,7 +97,8 @@ class CacheWriter:
             (sheet_id TEXT PRIMARY KEY,
              sheet_name TEXT,
              columns TEXT,
-             types TEXT)
+             types TEXT,
+             last_fetched TEXT)
             """
             % GOOGLE_SHEETS_META_TABLE_NAME,
         ]
@@ -105,16 +106,27 @@ class CacheWriter:
             logger.debug("Creating table %s" % create)
             self.conn.execute(create)
 
+        # Add last_fetched column to existing tables that predate this schema change
+        try:
+            self.conn.execute(
+                "ALTER TABLE %s ADD COLUMN last_fetched TEXT" % GOOGLE_SHEETS_META_TABLE_NAME
+            )
+        except Exception:
+            pass  # column already exists
+
         self.conn.commit()
 
     def insert_metadata(self, sheet_id, sheet_name, columns, types):
+        from datetime import datetime, timezone
         cur = self.conn.cursor()
         insert = (
-            """INSERT INTO %s (sheet_id, sheet_name, columns, types) VALUES (?, ?, ?, ?)"""
+            """INSERT INTO %s (sheet_id, sheet_name, columns, types, last_fetched)
+               VALUES (?, ?, ?, ?, ?)"""
             % (GOOGLE_SHEETS_META_TABLE_NAME)
         )
+        last_fetched = datetime.now(timezone.utc).isoformat()
         logger.info("Setting metadata for Sheet [%s] to %s", sheet_id, json.dumps(columns))
-        cur.execute(insert, (sheet_id, sheet_name, orjson.dumps(columns), orjson.dumps(types)))
+        cur.execute(insert, (sheet_id, sheet_name, orjson.dumps(columns), orjson.dumps(types), last_fetched))
         self.conn.commit()
         cur.close()
 

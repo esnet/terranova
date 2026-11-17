@@ -90,6 +90,8 @@ def dataset_output(
         template_id=template, geographic=layout in [TerranovaLayout.geographic, "geographic"]
     )
 
+    render_time = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
     topology = datasources[endpoint].backend.render_topology(
         dataset,
         path_layout=path_layout,
@@ -99,6 +101,13 @@ def dataset_output(
     )
 
     topology = datasources[endpoint].backend.apply_layout(layout, topology, node_template)
+
+    topology.render_time = render_time
+    topology.datasource_version = "snapshot" if use_snapshot else "realtime"
+    _snapshot_dt = dataset.lastUpdatedOn
+    if use_snapshot and _snapshot_dt.tzinfo is None:
+        _snapshot_dt = _snapshot_dt.replace(tzinfo=datetime.timezone.utc)
+    topology.snapshot_time = _snapshot_dt.isoformat() if use_snapshot else render_time
 
     if output_type == TerranovaOutputType.svg:
         return Response(render_svg(topology), media_type="image/svg+xml")

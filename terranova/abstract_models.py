@@ -74,6 +74,10 @@ class Topology(BaseModel):
     layer: str = "tail"
     name: str
     pathLayout: Dict[str, Any]
+    render_time: str | None = None        # ISO8601 — when this render was produced
+    snapshot_time: str | None = None      # ISO8601 — time of data used; equals render_time for live
+    last_sync_time: str | None = None     # ISO8601 — last upstream fetch for this datasource
+    datasource_version: str | None = None # "realtime", "latest", or a snapshot version id
 
 
 class BaseDatasource(ABC):
