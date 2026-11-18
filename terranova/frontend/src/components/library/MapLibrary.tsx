@@ -5,9 +5,10 @@ import { DataController, setAuthHeaders } from "../../DataController";
 import { DataControllerType, DataControllerContextType } from "../../types/mapeditor";
 import { Favorites } from "../../context/FavoritesContextProvider";
 import { UserDataController } from "../../context/UserDataContextProvider";
+import { GlobalLastEditedRefresh } from "../../context/GlobalLastEditedContextProvider";
 import { markFavorite } from "./utils";
 import Card from "../Card";
-import { PktsInputRow, PktsInputText, PktsButton, PktsSpinner } from "@esnet/packets-ui-react";
+import { PktsInputRow, PktsInputText, PktsButton, PktsIconButton, PktsSpinner } from "@esnet/packets-ui-react";
 import { Plus, Star, Trash2, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ModalDialog } from "../ModalDialog";
@@ -22,6 +23,7 @@ export function MapLibrary() {
     const { controller: userDataController, instance: userdata } = useContext(
         UserDataController,
     ) as DataControllerContextType;
+    const refreshGlobal = useContext(GlobalLastEditedRefresh);
 
     const fieldsetString =
         "?fields=mapId&fields=name&fields=version" +
@@ -57,8 +59,17 @@ export function MapLibrary() {
         if (!mapToDelete) return;
         const headers = setAuthHeaders({ "Content-Type": "application/json" });
         await fetch(`${API_URL}/map/id/${mapToDelete.mapId}/`, { headers, method: "DELETE" });
+        // Clear both sidebar caches so deleted item disappears immediately
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key?.startsWith("lastEdited.") || key?.startsWith("globalLastEdited.")) {
+                localStorage.removeItem(key);
+            }
+        }
         setMapToDelete(null);
         await controller.fetch();
+        await userDataController.fetch();
+        refreshGlobal?.();
     }
 
     const deleteModal = mapToDelete && (
@@ -71,7 +82,7 @@ export function MapLibrary() {
                     <PktsButton variant="secondary" onClick={() => setMapToDelete(null)}>
                         <span className="flex items-center gap-2"><X /> Cancel</span>
                     </PktsButton>
-                    <PktsButton variant="primary" onClick={handleDeleteMap}>
+                    <PktsButton variant="destructive" onClick={handleDeleteMap}>
                         <span className="flex items-center gap-2"><Trash2 /> Delete Forever</span>
                     </PktsButton>
                 </div>
@@ -101,7 +112,7 @@ export function MapLibrary() {
                 />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {loading ? (
                     <div className="col-span-2 mx-auto py-8">
                         <PktsSpinner />
@@ -129,13 +140,14 @@ export function MapLibrary() {
                                         {map.name}
                                     </Link>
                                 </div>
-                                <button
-                                    className="flex-shrink-0 p-1 rounded text-color-text-alt hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                <PktsIconButton
+                                    variant="tertiary"
                                     onClick={() => setMapToDelete(map)}
                                     title="Delete map"
+                                    className="tn-hover-destructive"
                                 >
-                                    <Trash2 size={16} />
-                                </button>
+                                    <Trash2 />
+                                </PktsIconButton>
                             </div>
                             <PktsInputRow label="URL">
                                 <InputCopy defaultValue={`${API_URL}/output/map/${map.mapId}`} />

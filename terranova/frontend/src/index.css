@@ -638,6 +638,13 @@ button.warning {
     }
     h2, h3 { font-weight: 600; }
 
+    .pkts-icon-button.tn-hover-destructive:hover,
+    .pkts-icon-button.tn-hover-destructive:focus {
+        color: var(--esnet-color-core-white-200, #f2f2f2) !important;
+        border-color: var(--esnet-color-core-red-800, #8a0416) !important;
+        background-color: var(--esnet-color-core-red-600, #d61200) !important;
+    }
+
     .tn-timestamp-legend { font-size: 11px; line-height: 1.4; }
     .tn-timestamp-layer { margin-bottom: 6px; }
     .tn-timestamp-layer:last-child { margin-bottom: 0; }

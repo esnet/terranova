@@ -4,11 +4,13 @@ import { DataController, setAuthHeaders } from "../../DataController";
 import { DataControllerType, DataControllerContextType } from "../../types/mapeditor";
 import { Favorites } from "../../context/FavoritesContextProvider";
 import { UserDataController } from "../../context/UserDataContextProvider";
+import { GlobalLastEditedRefresh } from "../../context/GlobalLastEditedContextProvider";
 import { markFavorite } from "./utils";
 import Card from "../Card";
 import {
     PktsInputText,
     PktsButton,
+    PktsIconButton,
     PktsSpinner,
     PktsInputSelect,
     PktsInputOption,
@@ -28,6 +30,7 @@ export function DatasetLibrary() {
     const { controller: userDataController, instance: userdata } = useContext(
         UserDataController,
     ) as DataControllerContextType;
+    const refreshGlobal = useContext(GlobalLastEditedRefresh);
 
     const fieldsetString =
         "?fields=datasetId&fields=name&fields=version" +
@@ -69,8 +72,17 @@ export function DatasetLibrary() {
         if (!datasetToDelete) return;
         const headers = setAuthHeaders({ "Content-Type": "application/json" });
         await fetch(`${API_URL}/dataset/id/${datasetToDelete.datasetId}/`, { headers, method: "DELETE" });
+        // Clear both sidebar caches so deleted item disappears immediately
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key?.startsWith("lastEdited.") || key?.startsWith("globalLastEdited.")) {
+                localStorage.removeItem(key);
+            }
+        }
         setDatasetToDelete(null);
         await controller.fetch();
+        await userDataController.fetch();
+        refreshGlobal?.();
     }
 
     const deleteModal = datasetToDelete && (
@@ -83,7 +95,7 @@ export function DatasetLibrary() {
                     <PktsButton variant="secondary" onClick={() => setDatasetToDelete(null)}>
                         <span className="flex items-center gap-2"><X /> Cancel</span>
                     </PktsButton>
-                    <PktsButton variant="primary" onClick={handleDeleteDataset}>
+                    <PktsButton variant="destructive" onClick={handleDeleteDataset}>
                         <span className="flex items-center gap-2"><Trash2 /> Delete Forever</span>
                     </PktsButton>
                 </div>
@@ -113,7 +125,7 @@ export function DatasetLibrary() {
                 />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {loading ? (
                     <div className="col-span-2 mx-auto py-8">
                         <PktsSpinner />
@@ -144,13 +156,14 @@ export function DatasetLibrary() {
                                             {primary.name}
                                         </Link>
                                     </div>
-                                    <button
-                                        className="flex-shrink-0 p-1 rounded text-color-text-alt hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                    <PktsIconButton
+                                        variant="tertiary"
                                         onClick={() => setDatasetToDelete(primary)}
                                         title="Delete dataset"
+                                        className="tn-hover-destructive"
                                     >
-                                        <Trash2 size={16} />
-                                    </button>
+                                        <Trash2 />
+                                    </PktsIconButton>
                                 </div>
 
                                 <PktsInputRow label="Versions" className="flex-1">
