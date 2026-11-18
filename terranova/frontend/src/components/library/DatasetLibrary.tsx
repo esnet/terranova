@@ -124,25 +124,33 @@ export function DatasetLibrary() {
 
                         return (
                             <Card key={primary.datasetId} className="flex flex-col gap-2">
-                                <div className="text-xl font-bold flex gap-2">
-                                    <Star
-                                        className={`cursor-pointer stroke-light-primary ${userdata?.favorites?.datasets?.includes(primary.datasetId) ? "fill-light-primary" : ""}`}
-                                        onClick={() =>
-                                            markFavorite(
-                                                userDataController,
-                                                favorites,
-                                                "datasets",
-                                                primary.datasetId,
-                                            )
-                                        }
-                                    />
-
-                                    <Link
-                                        className="text-nowrap overflow-hidden text-truncate"
-                                        to={`/dataset/${primary.datasetId}`}
+                                <div className="text-xl font-bold flex gap-2 items-center justify-between">
+                                    <div className="flex gap-2 items-center min-w-0">
+                                        <Star
+                                            className={`cursor-pointer stroke-light-primary flex-shrink-0 ${userdata?.favorites?.datasets?.includes(primary.datasetId) ? "fill-light-primary" : ""}`}
+                                            onClick={() =>
+                                                markFavorite(
+                                                    userDataController,
+                                                    favorites,
+                                                    "datasets",
+                                                    primary.datasetId,
+                                                )
+                                            }
+                                        />
+                                        <Link
+                                            className="text-nowrap overflow-hidden text-truncate"
+                                            to={`/dataset/${primary.datasetId}`}
+                                        >
+                                            {primary.name}
+                                        </Link>
+                                    </div>
+                                    <button
+                                        className="flex-shrink-0 p-1 rounded text-color-text-alt hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                        onClick={() => setDatasetToDelete(primary)}
+                                        title="Delete dataset"
                                     >
-                                        {primary.name}
-                                    </Link>
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
 
                                 <PktsInputRow label="Versions" className="flex-1">
@@ -168,16 +176,6 @@ export function DatasetLibrary() {
                                         {new Date(primary.lastUpdatedOn).toLocaleString()}
                                     </span>
                                     <span>Last Updated By: {primary.lastUpdatedBy}</span>
-                                </div>
-                                <div className="flex justify-start mt-2">
-                                    <PktsButton
-                                        variant="destructive"
-                                        className="w-fit!"
-                                        prepend={<Trash2 />}
-                                        onClick={() => setDatasetToDelete(primary)}
-                                    >
-                                        Delete
-                                    </PktsButton>
                                 </div>
                             </Card>
                         );

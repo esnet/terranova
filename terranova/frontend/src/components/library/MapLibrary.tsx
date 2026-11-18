@@ -109,25 +109,33 @@ export function MapLibrary() {
                 ) : uniqueMaps.length > 0 ? (
                     uniqueMaps.map((map: any) => (
                         <Card key={map.mapId} className="flex flex-col gap-2">
-                            <div className="text-xl font-bold flex gap-2">
-                                <Star
-                                    className={`cursor-pointer stroke-light-primary ${userdata?.favorites?.maps?.includes(map.mapId) ? "fill-light-primary" : ""}`}
-                                    onClick={() =>
-                                        markFavorite(
-                                            userDataController,
-                                            favorites,
-                                            "maps",
-                                            map.mapId,
-                                        )
-                                    }
-                                />
-
-                                <Link
-                                    className="text-nowrap overflow-hidden text-truncate"
-                                    to={`/map/${map.mapId}`}
+                            <div className="text-xl font-bold flex gap-2 items-center justify-between">
+                                <div className="flex gap-2 items-center min-w-0">
+                                    <Star
+                                        className={`cursor-pointer stroke-light-primary flex-shrink-0 ${userdata?.favorites?.maps?.includes(map.mapId) ? "fill-light-primary" : ""}`}
+                                        onClick={() =>
+                                            markFavorite(
+                                                userDataController,
+                                                favorites,
+                                                "maps",
+                                                map.mapId,
+                                            )
+                                        }
+                                    />
+                                    <Link
+                                        className="text-nowrap overflow-hidden text-truncate"
+                                        to={`/map/${map.mapId}`}
+                                    >
+                                        {map.name}
+                                    </Link>
+                                </div>
+                                <button
+                                    className="flex-shrink-0 p-1 rounded text-color-text-alt hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                    onClick={() => setMapToDelete(map)}
+                                    title="Delete map"
                                 >
-                                    {map.name}
-                                </Link>
+                                    <Trash2 size={16} />
+                                </button>
                             </div>
                             <PktsInputRow label="URL">
                                 <InputCopy defaultValue={`${API_URL}/output/map/${map.mapId}`} />
@@ -137,16 +145,6 @@ export function MapLibrary() {
                                     Last Updated: {new Date(map.lastUpdatedOn).toLocaleString()}
                                 </span>
                                 <span>Last Updated By: {map.lastUpdatedBy}</span>
-                            </div>
-                            <div className="flex justify-start mt-2">
-                                <PktsButton
-                                    variant="destructive"
-                                    className="w-fit!"
-                                    prepend={<Trash2 />}
-                                    onClick={() => setMapToDelete(map)}
-                                >
-                                    Delete
-                                </PktsButton>
                             </div>
                         </Card>
                     ))
