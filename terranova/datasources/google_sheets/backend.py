@@ -77,6 +77,25 @@ class SheetMetadata(Base):
         return {column.name: getattr(self, column.name) for column in type(self).__table__.columns}
 
 
+def _ensure_columns(eng, model):
+    """Add any columns defined on the SQLAlchemy model that are missing from the live table."""
+    from sqlalchemy import text, inspect as sa_inspect
+    table_name = model.__tablename__
+    with eng.connect() as conn:
+        existing = {row[1] for row in conn.execute(text(f"PRAGMA table_info({table_name})"))}
+        for col in model.__table__.columns:
+            if col.name not in existing:
+                col_type = col.type.compile(dialect=eng.dialect)
+                try:
+                    conn.execute(text(
+                        f"ALTER TABLE {table_name} ADD COLUMN {col.name} {col_type}"
+                    ))
+                    conn.commit()
+                    logger.info("Migrated %s: added column %s", table_name, col.name)
+                except Exception:
+                    pass  # race or already exists
+
+
 class GoogleSheetsBackend(SQLiteCacheDatasource):
     """
     This class is intended to be used as the interaction point between Terranova
@@ -86,6 +105,7 @@ class GoogleSheetsBackend(SQLiteCacheDatasource):
     def __init__(self):
         self.session = sessionmaker(bind=engine)()
         Base.metadata.create_all(engine)
+        _ensure_columns(engine, SheetMetadata)
 
     @property
     def record_model(self):

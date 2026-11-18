@@ -61,12 +61,31 @@ class CSVMetadata(Base):
         return {col.name: getattr(self, col.name) for col in type(self).__table__.columns}
 
 
+def _ensure_columns(eng, model):
+    """Add any columns defined on the SQLAlchemy model that are missing from the live table."""
+    from sqlalchemy import text
+    table_name = model.__tablename__
+    with eng.connect() as conn:
+        existing = {row[1] for row in conn.execute(text(f"PRAGMA table_info({table_name})"))}
+        for col in model.__table__.columns:
+            if col.name not in existing:
+                col_type = col.type.compile(dialect=eng.dialect)
+                try:
+                    conn.execute(text(
+                        f"ALTER TABLE {table_name} ADD COLUMN {col.name} {col_type}"
+                    ))
+                    conn.commit()
+                except Exception:
+                    pass  # race or already exists
+
+
 class CSVBackend(SQLiteCacheDatasource):
 
     def __init__(self, engine=None):
         _engine = engine or globals()["engine"]
         self.session = sessionmaker(bind=_engine)()
         Base.metadata.create_all(_engine)
+        _ensure_columns(_engine, CSVMetadata)
 
     @property
     def record_model(self):
