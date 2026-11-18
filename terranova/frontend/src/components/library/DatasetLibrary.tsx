@@ -72,16 +72,14 @@ export function DatasetLibrary() {
         if (!datasetToDelete) return;
         const headers = setAuthHeaders({ "Content-Type": "application/json" });
         await fetch(`${API_URL}/dataset/id/${datasetToDelete.datasetId}/`, { headers, method: "DELETE" });
-        // Clear both sidebar caches so deleted item disappears immediately
-        for (let i = localStorage.length - 1; i >= 0; i--) {
-            const key = localStorage.key(i);
-            if (key?.startsWith("lastEdited.") || key?.startsWith("globalLastEdited.")) {
-                localStorage.removeItem(key);
-            }
-        }
+        // Remove deleted ID from userdata.lastEdited and save to backend
+        const currentLastEdited = userDataController.instance?.lastEdited ?? {};
+        const newDatasets = (currentLastEdited.datasets ?? []).filter((id: string) => id !== datasetToDelete.datasetId);
+        userDataController.setProperty("lastEdited", { ...currentLastEdited, datasets: newDatasets });
+        await userDataController.update();
+        await userDataController.fetch();
         setDatasetToDelete(null);
         await controller.fetch();
-        await userDataController.fetch();
         refreshGlobal?.();
     }
 

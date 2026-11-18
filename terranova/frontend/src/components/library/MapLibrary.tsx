@@ -59,16 +59,14 @@ export function MapLibrary() {
         if (!mapToDelete) return;
         const headers = setAuthHeaders({ "Content-Type": "application/json" });
         await fetch(`${API_URL}/map/id/${mapToDelete.mapId}/`, { headers, method: "DELETE" });
-        // Clear both sidebar caches so deleted item disappears immediately
-        for (let i = localStorage.length - 1; i >= 0; i--) {
-            const key = localStorage.key(i);
-            if (key?.startsWith("lastEdited.") || key?.startsWith("globalLastEdited.")) {
-                localStorage.removeItem(key);
-            }
-        }
+        // Remove deleted ID from userdata.lastEdited and save to backend
+        const currentLastEdited = userDataController.instance?.lastEdited ?? {};
+        const newMaps = (currentLastEdited.maps ?? []).filter((id: string) => id !== mapToDelete.mapId);
+        userDataController.setProperty("lastEdited", { ...currentLastEdited, maps: newMaps });
+        await userDataController.update();
+        await userDataController.fetch();
         setMapToDelete(null);
         await controller.fetch();
-        await userDataController.fetch();
         refreshGlobal?.();
     }
 
