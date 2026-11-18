@@ -89,18 +89,20 @@ export function Sidebar() {
         <div
             className={`fixed sm:relative z-1000 h-full flex flex-col gap-2 sm:bg-light-surface_1 sm:shadow-lg ${open ? "bg-light-surface_1 w-full sm:min-w-64 sm:w-auto p-4" : "w-0 p-0 shadow-md"}`}
         >
-            <div className={`bottom-4 fixed ${open ? "right-4 sm:left-50" : "left-4"}`}>
-                <PktsIconButton
-                    onClick={toggleSidebar}
-                    variant="secondary"
-                    square
-                    aria-expanded={open}
-                    aria-controls="sidebar"
-                    aria-label={open ? "Close Sidebar" : "Open Sidebar"}
-                >
-                    {open ? <ChevronLeft /> : <Menu />}
-                </PktsIconButton>
-            </div>
+            {!open && (
+                <div className="bottom-4 fixed left-4">
+                    <PktsIconButton
+                        onClick={toggleSidebar}
+                        variant="secondary"
+                        square
+                        aria-expanded={false}
+                        aria-controls="sidebar"
+                        aria-label="Open Sidebar"
+                    >
+                        <Menu />
+                    </PktsIconButton>
+                </div>
+            )}
             {open && (
                 <nav id="sidebar" className="flex flex-col text-nowrap h-full overflow-hidden">
                     <div className="grow overflow-y-auto min-h-0">
@@ -209,16 +211,26 @@ export function Sidebar() {
                             </li>
                         </ul>
                     </div>
-                    {showSettings && (
-                        <div className="shrink-0 pt-4 pb-16 sm:pb-0">
-                            <h5 className="w-fit">
+                    <div className="shrink-0 pt-4 pb-4 flex items-center justify-between">
+                        {showSettings && (
+                            <h5 className="w-fit m-0">
                                 <ResponsiveLink closeSidebar={closeSidebar} to="/settings">
                                     <Settings />
                                     Settings
                                 </ResponsiveLink>
                             </h5>
-                        </div>
-                    )}
+                        )}
+                        <PktsIconButton
+                            onClick={toggleSidebar}
+                            variant="secondary"
+                            square
+                            aria-expanded={true}
+                            aria-controls="sidebar"
+                            aria-label="Close Sidebar"
+                        >
+                            <ChevronLeft />
+                        </PktsIconButton>
+                    </div>
                 </nav>
             )}
         </div>
