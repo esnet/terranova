@@ -21,6 +21,7 @@ import {
     PktsInputOption,
     PktsInputNumber,
     PktsInputText,
+    PktsInputSwitch,
 } from "@esnet/packets-ui-react";
 
 export const MapEditorSidebar = (props: any) => {
@@ -153,8 +154,8 @@ export const MapEditorSidebar = (props: any) => {
                     setShowPublishModal(false);
                 }}
             />
-            <fieldset className="pt-2">
-                <legend><strong>Map Output</strong></legend>
+            <details open className="tn-sidebar-section">
+                <summary><strong>Map Output</strong></summary>
                 <div className="flex flex-row">
                     {showPublishButton && (
                         <PktsButton
@@ -179,9 +180,9 @@ export const MapEditorSidebar = (props: any) => {
                     </PktsButton>
                 </div>
                 <div className="text-center">Current Version: {controller?.instance?.version}</div>
-            </fieldset>
-            <fieldset className="pt-2">
-                <legend><strong>Background & Tileset</strong></legend>
+            </details>
+            <details open className="tn-sidebar-section">
+                <summary><strong>Background & Tileset</strong></summary>
                 <PktsInputRow label="Background" className='mb-2'>
                     <PktsInputSelect
                         name="map-background"
@@ -233,10 +234,10 @@ export const MapEditorSidebar = (props: any) => {
                         />
                     </PktsInputRow>
                 )}
-            </fieldset>
+            </details>
 
-            <fieldset className="pt-3">
-                <legend><strong>Map Initial Position</strong></legend>
+            <details open className="tn-sidebar-section">
+                <summary><strong>Map Initial Position</strong></summary>
                 <PktsInputSelect
                     name="map-background-tiles"
                     onChange={(e) =>
@@ -452,7 +453,39 @@ export const MapEditorSidebar = (props: any) => {
                         </PktsInputRow>
                     </div>
                 )}
-            </fieldset>
+            </details>
+
+            <details className="tn-sidebar-section">
+                <summary><strong>Advanced</strong></summary>
+                <PktsInputRow label="Show Legend">
+                    <PktsInputSwitch
+                        key={`showLegend-${!!instance.configuration?.showLegend}`}
+                        name="showLegend"
+                        defaultChecked={!!instance.configuration?.showLegend}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                            if (e.target.checked && !controller.instance.configuration.legendPosition) {
+                                controller.setProperty("configuration.legendPosition", "bottomright");
+                            }
+                            handleConfigChange("showLegend", e.target.checked, null);
+                        }}
+                    />
+                </PktsInputRow>
+                {instance.configuration?.showLegend && (
+                    <PktsInputRow label="Legend Position">
+                        <select
+                            name="legendPosition"
+                            onChange={(e) =>
+                                handleConfigChange("legendPosition", e.target.value, null)
+                            }
+                            value={instance.configuration?.legendPosition ?? "bottomright"}
+                        >
+                            <option value="bottomleft">Bottom Left</option>
+                            <option value="bottomright">Bottom Right</option>
+                            <option value="topright">Top Right</option>
+                        </select>
+                    </PktsInputRow>
+                )}
+            </details>
         </div>
     );
 };

@@ -638,6 +638,26 @@ button.warning {
     }
     h2, h3 { font-weight: 600; }
 
+    details.tn-sidebar-section {
+        border: 1px solid var(--pkts-color-core-black-300, #5e5e5e);
+        border-radius: 4px;
+        padding: 4px 8px 8px;
+        margin-top: 8px;
+    }
+    details.tn-sidebar-section > summary {
+        cursor: pointer;
+        padding: 4px 0;
+        list-style: none;
+        user-select: none;
+    }
+    details.tn-sidebar-section > summary::-webkit-details-marker { display: none; }
+    details.tn-sidebar-section > summary::before {
+        content: "▶ ";
+        font-size: 0.65em;
+        opacity: 0.6;
+    }
+    details.tn-sidebar-section[open] > summary::before { content: "▼ "; }
+
     .pkts-icon-button.tn-hover-destructive:hover,
     .pkts-icon-button.tn-hover-destructive:focus {
         color: var(--esnet-color-core-white-200, #f2f2f2) !important;
