@@ -21,6 +21,7 @@ import {
     PktsInputOption,
     PktsInputNumber,
     PktsInputText,
+    PktsInputTextArea,
     PktsInputSwitch,
 } from "@esnet/packets-ui-react";
 
@@ -456,35 +457,87 @@ export const MapEditorSidebar = (props: any) => {
             </details>
 
             <details className="tn-sidebar-section">
-                <summary><strong>Advanced</strong></summary>
-                <PktsInputRow label="Show Legend">
-                    <PktsInputSwitch
-                        key={`showLegend-${!!instance.configuration?.showLegend}`}
-                        name="showLegend"
-                        defaultChecked={!!instance.configuration?.showLegend}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                            if (e.target.checked && !controller.instance.configuration.legendPosition) {
-                                controller.setProperty("configuration.legendPosition", "bottomright");
-                            }
-                            handleConfigChange("showLegend", e.target.checked, null);
-                        }}
-                    />
-                </PktsInputRow>
-                {instance.configuration?.showLegend && (
-                    <PktsInputRow label="Legend Position">
-                        <select
-                            name="legendPosition"
-                            onChange={(e) =>
-                                handleConfigChange("legendPosition", e.target.value, null)
-                            }
-                            value={instance.configuration?.legendPosition ?? "bottomright"}
-                        >
-                            <option value="bottomleft">Bottom Left</option>
-                            <option value="bottomright">Bottom Right</option>
-                            <option value="topright">Top Right</option>
-                        </select>
-                    </PktsInputRow>
-                )}
+                <summary><strong>Legend</strong></summary>
+                <div className="flex gap-2 items-start mt-1">
+                    <div className="w-4/12">
+                        <PktsInputRow label="Visible">
+                            <PktsInputSwitch
+                                key={`showLegend-${!!instance.configuration?.showLegend}`}
+                                name="showLegend"
+                                defaultChecked={!!instance.configuration?.showLegend}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    if (e.target.checked && !controller.instance.configuration.legendPosition) {
+                                        controller.setProperty("configuration.legendPosition", "bottomright");
+                                    }
+                                    handleConfigChange("showLegend", e.target.checked, null);
+                                }}
+                            />
+                        </PktsInputRow>
+                    </div>
+                    <div className="w-8/12">
+                        <PktsInputRow label="Position">
+                            <select
+                                name="legendPosition"
+                                onChange={(e) =>
+                                    handleConfigChange("legendPosition", e.target.value, null)
+                                }
+                                value={instance.configuration?.legendPosition ?? "bottomright"}
+                                disabled={!instance.configuration?.showLegend}
+                            >
+                                <option value="bottomleft">Bottom Left</option>
+                                <option value="bottomright">Bottom Right</option>
+                                <option value="topright">Top Right</option>
+                            </select>
+                        </PktsInputRow>
+                    </div>
+                </div>
+                {instance.configuration?.showLegend && (() => {
+                    const storedLegend = instance.configuration?.customLegendValue ?? "";
+                    const legendType = !instance.configuration?.customLegend
+                        ? "grafana"
+                        : storedLegend.includes('data-tn-legend="timestamps"')
+                        ? "timestamps"
+                        : "custom";
+                    return (
+                        <>
+                            <PktsInputRow label="Content">
+                                <select
+                                    name="legendType"
+                                    value={legendType}
+                                    onChange={(e) => {
+                                        const t = e.target.value;
+                                        if (t === "grafana") {
+                                            handleConfigChange("customLegend", false, null);
+                                            handleConfigChange("customLegendValue", "", null);
+                                        } else if (t === "timestamps") {
+                                            handleConfigChange("customLegend", true, null);
+                                            handleConfigChange("customLegendValue", `<div data-tn-legend="timestamps" class="tn-timestamp-legend">{% for layer in layers %}<div class="tn-timestamp-layer"><p><em>{{ layer.name }}</em></p>{% if layer.render_time %}<p><strong>Rendered:</strong> {{ layer.render_time }}</p>{% endif %}{% if layer.last_sync_time %}<p><strong>Last sync:</strong> {{ layer.last_sync_time }}</p>{% endif %}{% if layer.datasource_version %}<p><strong>Mode:</strong> {{ layer.datasource_version }}</p>{% endif %}</div>{% endfor %}</div>`, null);
+                                        } else {
+                                            handleConfigChange("customLegend", true, null);
+                                            handleConfigChange("customLegendValue", "", null);
+                                        }
+                                    }}
+                                >
+                                    <option value="timestamps">Last Edited Information</option>
+                                    <option value="grafana">Grafana-managed</option>
+                                    <option value="custom">Custom HTML</option>
+                                </select>
+                            </PktsInputRow>
+                            {legendType === "custom" && (
+                                <PktsInputRow label="HTML">
+                                    <PktsInputTextArea
+                                        name="customLegendValue"
+                                        className="h-24 font-mono text-xs"
+                                        value={storedLegend}
+                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                                            handleConfigChange("customLegendValue", e.target.value, null)
+                                        }
+                                    />
+                                </PktsInputRow>
+                            )}
+                        </>
+                    );
+                })()}
             </details>
         </div>
     );

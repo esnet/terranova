@@ -214,6 +214,7 @@ def get_map_output(
     # by default, results are ordered by lastEditedOn desc.
     map_obj = Map(**map_json[0])
     _normalize_map(map_obj, user)
+    _render_custom_legend(map_obj)
     if output_type == TerranovaOutputType.svg:
         return Response(
             render_map_svg(map_obj),
@@ -241,6 +242,7 @@ def output_public_map(
     # by default, results are ordered by lastEditedOn desc.
     map_obj = Map(**map_json[0])
     _normalize_map(map_obj)
+    _render_custom_legend(map_obj)
     return map_obj.configuration
 
 
@@ -263,6 +265,7 @@ def output_typed_public_map(
     # by default, results are ordered by lastEditedOn desc.
     map_obj = Map(**map_json[0])
     _normalize_map(map_obj)
+    _render_custom_legend(map_obj)
     if output_type == TerranovaOutputType.svg:
         return Response(
             render_map_svg(map_obj),
@@ -279,7 +282,34 @@ def output_map_patch(
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
 ) -> MapRevision:
     _normalize_map(map_revision, user)
+    _render_custom_legend(map_revision)
     return map_revision
+
+
+def _render_custom_legend(map_object: Map | MapRevision) -> None:
+    """Render customLegendValue as a Jinja2 template with layer topology data."""
+    cfg = map_object.configuration
+    if not getattr(cfg, "customLegend", False):
+        return
+    template_str = getattr(cfg, "customLegendValue", "") or ""
+    if not template_str:
+        return
+    try:
+        from jinja2 import Template as JinjaTemplate
+        layers = []
+        for layer in cfg.layers:
+            if layer.mapjson:
+                topo = json.loads(layer.mapjson) if isinstance(layer.mapjson, str) else layer.mapjson
+                layers.append({
+                    "name": layer.name or "",
+                    "render_time": topo.get("render_time"),
+                    "snapshot_time": topo.get("snapshot_time"),
+                    "last_sync_time": topo.get("last_sync_time"),
+                    "datasource_version": topo.get("datasource_version"),
+                })
+        cfg.customLegendValue = JinjaTemplate(template_str).render(layers=layers)
+    except Exception as e:
+        logger.warning("Failed to render customLegendValue template: %s", e)
 
 
 def _normalize_map(map_object: Map | MapRevision, user: User = None) -> None:
