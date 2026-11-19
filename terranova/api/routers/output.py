@@ -90,6 +90,8 @@ def dataset_output(
         template_id=template, geographic=layout in [TerranovaLayout.geographic, "geographic"]
     )
 
+    render_time = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
     topology = datasources[endpoint].backend.render_topology(
         dataset,
         path_layout=path_layout,
@@ -99,6 +101,13 @@ def dataset_output(
     )
 
     topology = datasources[endpoint].backend.apply_layout(layout, topology, node_template)
+
+    topology.render_time = render_time
+    topology.datasource_version = "snapshot" if use_snapshot else "realtime"
+    _snapshot_dt = dataset.lastUpdatedOn
+    if use_snapshot and _snapshot_dt.tzinfo is None:
+        _snapshot_dt = _snapshot_dt.replace(tzinfo=datetime.timezone.utc)
+    topology.snapshot_time = _snapshot_dt.strftime("%Y-%m-%dT%H:%M:%SZ") if use_snapshot else render_time
 
     if output_type == TerranovaOutputType.svg:
         return Response(render_svg(topology), media_type="image/svg+xml")
@@ -205,6 +214,7 @@ def get_map_output(
     # by default, results are ordered by lastEditedOn desc.
     map_obj = Map(**map_json[0])
     _normalize_map(map_obj, user)
+    _render_custom_legend(map_obj)
     if output_type == TerranovaOutputType.svg:
         return Response(
             render_map_svg(map_obj),
@@ -232,6 +242,7 @@ def output_public_map(
     # by default, results are ordered by lastEditedOn desc.
     map_obj = Map(**map_json[0])
     _normalize_map(map_obj)
+    _render_custom_legend(map_obj)
     return map_obj.configuration
 
 
@@ -254,6 +265,7 @@ def output_typed_public_map(
     # by default, results are ordered by lastEditedOn desc.
     map_obj = Map(**map_json[0])
     _normalize_map(map_obj)
+    _render_custom_legend(map_obj)
     if output_type == TerranovaOutputType.svg:
         return Response(
             render_map_svg(map_obj),
@@ -270,7 +282,47 @@ def output_map_patch(
     user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
 ) -> MapRevision:
     _normalize_map(map_revision, user)
+    _render_custom_legend(map_revision)
     return map_revision
+
+
+def _render_custom_legend(map_object: Map | MapRevision) -> None:
+    """Render customLegendValue as a Jinja2 template with layer topology data."""
+    cfg = map_object.configuration
+    if not getattr(cfg, "customLegend", False):
+        return
+    template_str = getattr(cfg, "customLegendValue", "") or ""
+    if not template_str:
+        return
+    try:
+        from jinja2 import Template as JinjaTemplate
+        def _parse_dt(s):
+            if not s:
+                return None
+            try:
+                return datetime.datetime.fromisoformat(s.replace("Z", "+00:00"))
+            except Exception:
+                return None
+
+        layers = []
+        for layer in cfg.layers:
+            if layer.mapjson:
+                raw = layer.mapjson
+                if isinstance(raw, (str, bytes)):
+                    topo = json.loads(raw)
+                else:
+                    topo = raw
+                layers.append({
+                    "name": layer.name or "",
+                    "render_time": _parse_dt(topo.get("render_time")),
+                    "snapshot_time": _parse_dt(topo.get("snapshot_time")),
+                    "last_sync_time": _parse_dt(topo.get("last_sync_time")),
+                    "datasource_version": topo.get("datasource_version"),
+                })
+        cfg.customLegendValue = JinjaTemplate(template_str).render(layers=layers)
+    except Exception as e:
+        import traceback
+        logger.warning("Failed to render customLegendValue template: %s\n%s", e, traceback.format_exc())
 
 
 def _normalize_map(map_object: Map | MapRevision, user: User = None) -> None:

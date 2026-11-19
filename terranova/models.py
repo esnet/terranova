@@ -102,6 +102,8 @@ class MapConfiguration(BaseModel):
     legendColumnLength: int | None = None
     legendPosition: str | None = None
     legendDefaultBehavior: str | None = None
+    customLegend: bool | None = None
+    customLegendValue: str | None = None
 
     # optional UI effects
     enableScrolling: bool

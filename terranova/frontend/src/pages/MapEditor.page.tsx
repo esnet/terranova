@@ -30,6 +30,7 @@ export const MapController = createContext<DataControllerContextType | null>(nul
 export const DatasetListController = createContext<DataControllerContextType | null>(null);
 export const TemplateListController = createContext<DataControllerContextType | null>(null);
 
+
 export function MapEditorPageComponent() {
     const { mapId } = useParams();
     const q = new URLSearchParams(window.location.search);
@@ -291,6 +292,7 @@ export function MapEditorPageComponent() {
                     output.configuration.layers[idx].mapjson = null;
                     return parsed;
                 });
+
                 output.configuration.enableEditing = true;
                 output.configuration.topologySource = "json";
                 let editMode = mapCanvas.current.lastValue(signals.EDITING_SET);

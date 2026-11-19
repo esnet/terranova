@@ -109,3 +109,15 @@ def public_maps(
     return storage_backend.get_public_maps(
         fields=[f.name for f in fields], filters=filters, version=version
     )
+
+
+@router.delete("/map/id/{mapId}/")
+@version(1)
+def delete_map(
+    mapId: str,
+    user: User = Security(auth_check, scopes=[TOKEN_SCOPES["write"]]),
+):
+    result = storage_backend.get_maps(map_id=mapId)
+    if len(result) < 1:
+        raise HTTPException(status_code=404, detail="Map with id %s not found" % mapId)
+    return storage_backend.delete_map(mapId)

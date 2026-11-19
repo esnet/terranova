@@ -152,5 +152,10 @@ SVG_OUTPUT_TEMPLATE = """
             </g>
         {% endfor %}
     {% endfor %}
+    {% if render_time %}
+    <text x="{{ viewbox["max"]["x"] }}" y="{{ viewbox["max"]["y"] }}"
+          text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10"
+          fill="#666666">Rendered: {{ render_time }}</text>
+    {% endif %}
     </svg>
 """

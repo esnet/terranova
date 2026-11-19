@@ -284,6 +284,26 @@ class SQLiteBackend:
         """Get public maps"""
         return self.get_maps(map_id, fields, filters, version)
 
+    def delete_map(self, map_id: str):
+        """Delete all versions of a map by mapId"""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "DELETE FROM map WHERE json_extract(document, '$.mapId') = ?", (map_id,)
+        )
+        deleted = cursor.rowcount
+        self.conn.commit()
+        return {"deleted": deleted}
+
+    def delete_dataset(self, dataset_id: str):
+        """Delete all versions of a dataset by datasetId"""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "DELETE FROM dataset WHERE json_extract(document, '$.datasetId') = ?", (dataset_id,)
+        )
+        deleted = cursor.rowcount
+        self.conn.commit()
+        return {"deleted": deleted}
+
     def create_map(self, map_revision: MapRevision, user: User):
         """Create a new map"""
         map_id = self.generate_id()

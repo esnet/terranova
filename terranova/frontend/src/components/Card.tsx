@@ -17,13 +17,13 @@ type CardProps = {
  */
 function Card({ icon, header, headerButton, children, className = "" }: CardProps) {
     return (
-        <div className={`surface p-6 rounded-2xl border border-dotted h-fit ${className}`}>
+        <div className={`surface p-4 rounded-2xl border border-dotted h-fit ${className}`}>
             {header && (
-                <div className="flex flex-row space-between">
-                    <h3 className="flex flex-row items-center gap-3 text-light-primary">
+                <div className="flex flex-row space-between mb-1">
+                    <h5 className="flex flex-row items-center gap-3 text-light-primary">
                         {icon && <div className="min-w-fit min-h-fit">{icon}</div>}
                         {header}
-                    </h3>
+                    </h5>
                     {headerButton && headerButton}
                 </div>
             )}
