@@ -54,7 +54,7 @@ select {
 }
 
 @layer base {
-    fieldset {
+    fieldset:not(esnet-map-canvas *) {
         @apply rounded border border-color-border-alt p-3 pt-0
     }
 }
@@ -215,10 +215,6 @@ button.warning {
     @apply text-esnetwhite-500 bg-teal-700 text-2xl border-none h-12 px-4 py-1 w-full flex fixed z-[1000] align-middle drop-shadow-md
 }
 
-/*nav {
-    @apply fixed w-full [z-index:1000] ;
-}*/
-
 .panel {
     @apply mb-6;
 }
@@ -265,12 +261,17 @@ button.warning {
 }
 /** -- Specific form overrides for map editor -- */
 .dialog-form.tight-form-func h2 { @apply text-xl py-0 }
-.dialog-form.tight-form-func textarea, 
-.dialog-form.tight-form-func select { @apply border border-color-border-alt }
-.dialog-form.tight-form-func input { @apply border border-color-border-alt }
+.dialog-form.tight-form-func textarea { @apply border border-color-border-alt text-sm px-1 py-1  }
+.dialog-form.tight-form-func select { @apply border border-color-border-alt pr-0 pt-0 text-sm }
+.dialog-form.tight-form-func input { @apply border border-color-border-alt px-2 }
 .dialog-form.tight-form-func td, 
-.dialog-form.tight-form-func tr { @apply py-0 }
+.dialog-form.tight-form-func tr { @apply py-0 whitespace-nowrap }
+#legend-container .heading { display: flex }
+#legend-container .heading svg.minimize { overflow:visible; }
 
+/* specifically reorder top bar w/r/t map z-indexes */
+esnet-map-editing-interface #dialog { z-index:800 }
+div.sticky.z-601  { z-index:801 }
 
 /* -- Library Card -- */
 /* TODO: This should probably be generalized */
@@ -649,6 +650,11 @@ button.warning {
         padding: 4px 0;
         list-style: none;
         user-select: none;
+        width: fit-content;
+        margin-top: -18px;
+        background-color: var(--esnet-color-core-white-400, #e3e3e3);
+        padding-left: 4px;
+        padding-right: 4px;
     }
     details.tn-sidebar-section > summary::-webkit-details-marker { display: none; }
     details.tn-sidebar-section > summary::before {
@@ -685,3 +691,8 @@ button.warning {
         padding: 0;
     }
 }
+
+/* Reset Terranova styles that bleed into the networkmap editing interface */
+/*esnet-map-editing-interface #add_node_form table tr * {
+    all: revert;
+}*/
