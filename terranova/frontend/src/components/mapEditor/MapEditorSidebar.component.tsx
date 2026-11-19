@@ -459,7 +459,7 @@ export const MapEditorSidebar = (props: any) => {
             <details className="tn-sidebar-section">
                 <summary><strong>Legend</strong></summary>
                 <div className="flex gap-2 items-start mt-1">
-                    <div className="w-4/12">
+                    <div className="w-2/12">
                         <PktsInputRow label="Visible">
                             <PktsInputSwitch
                                 key={`showLegend-${!!instance.configuration?.showLegend}`}
@@ -474,7 +474,7 @@ export const MapEditorSidebar = (props: any) => {
                             />
                         </PktsInputRow>
                     </div>
-                    <div className="w-8/12">
+                    <div className="w-5/12">
                         <PktsInputRow label="Position">
                             <select
                                 name="legendPosition"
@@ -487,6 +487,21 @@ export const MapEditorSidebar = (props: any) => {
                                 <option value="bottomleft">Bottom Left</option>
                                 <option value="bottomright">Bottom Right</option>
                                 <option value="topright">Top Right</option>
+                            </select>
+                        </PktsInputRow>
+                    </div>
+                    <div className="w-5/12">
+                        <PktsInputRow label="Start">
+                            <select
+                                name="legendDefaultBehavior"
+                                onChange={(e) =>
+                                    handleConfigChange("legendDefaultBehavior", e.target.value, null)
+                                }
+                                value={instance.configuration?.legendDefaultBehavior ?? "visible"}
+                                disabled={!instance.configuration?.showLegend}
+                            >
+                                <option value="visible">Visible</option>
+                                <option value="minimized">Minimized</option>
                             </select>
                         </PktsInputRow>
                     </div>
