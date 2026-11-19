@@ -506,16 +506,20 @@ export const MapEditorSidebar = (props: any) => {
                                     value={legendType}
                                     onChange={(e) => {
                                         const t = e.target.value;
+                                        const TIMESTAMPS_TEMPLATE = `<div data-tn-legend="timestamps" class="tn-timestamp-legend">{% for layer in layers %}<div class="tn-timestamp-layer"><p><em>{{ layer.name }}</em></p>{% if layer.render_time %}<p><strong>Rendered:</strong> {{ layer.render_time.strftime("%-I:%M %p, %b %-d %Y") }}</p>{% endif %}{% if layer.last_sync_time %}<p><strong>Last sync:</strong> {{ layer.last_sync_time.strftime("%-I:%M %p, %b %-d %Y") }}</p>{% endif %}{% if layer.datasource_version %}<p><strong>Mode:</strong> {{ layer.datasource_version }}</p>{% endif %}</div>{% endfor %}</div>`;
+                                        // Mutate both props in one shot to avoid double renderCount increment
+                                        const cfg = controller.instance.configuration;
                                         if (t === "grafana") {
-                                            handleConfigChange("customLegend", false, null);
-                                            handleConfigChange("customLegendValue", "", null);
+                                            cfg.customLegend = false;
+                                            cfg.customLegendValue = "";
                                         } else if (t === "timestamps") {
-                                            handleConfigChange("customLegend", true, null);
-                                            handleConfigChange("customLegendValue", `<div data-tn-legend="timestamps" class="tn-timestamp-legend">{% for layer in layers %}<div class="tn-timestamp-layer"><p><em>{{ layer.name }}</em></p>{% if layer.render_time %}<p><strong>Rendered:</strong> {{ layer.render_time }}</p>{% endif %}{% if layer.last_sync_time %}<p><strong>Last sync:</strong> {{ layer.last_sync_time }}</p>{% endif %}{% if layer.datasource_version %}<p><strong>Mode:</strong> {{ layer.datasource_version }}</p>{% endif %}</div>{% endfor %}</div>`, null);
+                                            cfg.customLegend = true;
+                                            cfg.customLegendValue = TIMESTAMPS_TEMPLATE;
                                         } else {
-                                            handleConfigChange("customLegend", true, null);
-                                            handleConfigChange("customLegendValue", "", null);
+                                            cfg.customLegend = true;
+                                            cfg.customLegendValue = "";
                                         }
+                                        controller.setProperty("configuration", { ...cfg });
                                     }}
                                 >
                                     <option value="timestamps">Last Edited Information</option>

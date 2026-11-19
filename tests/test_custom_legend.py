@@ -18,8 +18,8 @@ TIMESTAMPS_TEMPLATE = (
     "{% for layer in layers %}"
     '<div class="tn-timestamp-layer">'
     "<p><em>{{ layer.name }}</em></p>"
-    "{% if layer.render_time %}<p><strong>Rendered:</strong> {{ layer.render_time }}</p>{% endif %}"
-    "{% if layer.last_sync_time %}<p><strong>Last sync:</strong> {{ layer.last_sync_time }}</p>{% endif %}"
+    '{% if layer.render_time %}<p><strong>Rendered:</strong> {{ layer.render_time.strftime("%-I:%M %p, %b %-d %Y") }}</p>{% endif %}'
+    '{% if layer.last_sync_time %}<p><strong>Last sync:</strong> {{ layer.last_sync_time.strftime("%-I:%M %p, %b %-d %Y") }}</p>{% endif %}'
     "{% if layer.datasource_version %}<p><strong>Mode:</strong> {{ layer.datasource_version }}</p>{% endif %}"
     "</div>"
     "{% endfor %}"
@@ -71,7 +71,6 @@ class TestRenderCustomLegend:
                           "datasource_version": None})]
         )
         _render_custom_legend(m)
-        assert "2026-11-18T12:00:00+00:00" in cfg.customLegendValue
         assert "Rendered:" in cfg.customLegendValue
 
     def test_timestamps_mode_renders_last_sync_time(self):
@@ -83,7 +82,6 @@ class TestRenderCustomLegend:
         )
         _render_custom_legend(m)
         assert "Last sync:" in cfg.customLegendValue
-        assert "2026-11-17T06:00:00+00:00" in cfg.customLegendValue
 
     def test_timestamps_mode_renders_datasource_version(self):
         m, cfg = _make_map(

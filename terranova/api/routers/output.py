@@ -90,7 +90,7 @@ def dataset_output(
         template_id=template, geographic=layout in [TerranovaLayout.geographic, "geographic"]
     )
 
-    render_time = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    render_time = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     topology = datasources[endpoint].backend.render_topology(
         dataset,
@@ -107,7 +107,7 @@ def dataset_output(
     _snapshot_dt = dataset.lastUpdatedOn
     if use_snapshot and _snapshot_dt.tzinfo is None:
         _snapshot_dt = _snapshot_dt.replace(tzinfo=datetime.timezone.utc)
-    topology.snapshot_time = _snapshot_dt.isoformat() if use_snapshot else render_time
+    topology.snapshot_time = _snapshot_dt.strftime("%Y-%m-%dT%H:%M:%SZ") if use_snapshot else render_time
 
     if output_type == TerranovaOutputType.svg:
         return Response(render_svg(topology), media_type="image/svg+xml")
@@ -296,20 +296,33 @@ def _render_custom_legend(map_object: Map | MapRevision) -> None:
         return
     try:
         from jinja2 import Template as JinjaTemplate
+        def _parse_dt(s):
+            if not s:
+                return None
+            try:
+                return datetime.datetime.fromisoformat(s.replace("Z", "+00:00"))
+            except Exception:
+                return None
+
         layers = []
         for layer in cfg.layers:
             if layer.mapjson:
-                topo = json.loads(layer.mapjson) if isinstance(layer.mapjson, str) else layer.mapjson
+                raw = layer.mapjson
+                if isinstance(raw, (str, bytes)):
+                    topo = json.loads(raw)
+                else:
+                    topo = raw
                 layers.append({
                     "name": layer.name or "",
-                    "render_time": topo.get("render_time"),
-                    "snapshot_time": topo.get("snapshot_time"),
-                    "last_sync_time": topo.get("last_sync_time"),
+                    "render_time": _parse_dt(topo.get("render_time")),
+                    "snapshot_time": _parse_dt(topo.get("snapshot_time")),
+                    "last_sync_time": _parse_dt(topo.get("last_sync_time")),
                     "datasource_version": topo.get("datasource_version"),
                 })
         cfg.customLegendValue = JinjaTemplate(template_str).render(layers=layers)
     except Exception as e:
-        logger.warning("Failed to render customLegendValue template: %s", e)
+        import traceback
+        logger.warning("Failed to render customLegendValue template: %s\n%s", e, traceback.format_exc())
 
 
 def _normalize_map(map_object: Map | MapRevision, user: User = None) -> None:

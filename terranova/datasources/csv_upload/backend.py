@@ -143,7 +143,7 @@ class CSVBackend(SQLiteCacheDatasource):
             csv_name=csv_name,
             columns=columns,
             types=types,
-            last_fetched=datetime.now(timezone.utc).isoformat(),
+            last_fetched=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
         self.session.merge(meta)
         for edge in edges:

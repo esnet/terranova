@@ -124,7 +124,7 @@ class CacheWriter:
                VALUES (?, ?, ?, ?, ?)"""
             % (GOOGLE_SHEETS_META_TABLE_NAME)
         )
-        last_fetched = datetime.now(timezone.utc).isoformat()
+        last_fetched = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         logger.info("Setting metadata for Sheet [%s] to %s", sheet_id, json.dumps(columns))
         cur.execute(insert, (sheet_id, sheet_name, orjson.dumps(columns), orjson.dumps(types), last_fetched))
         self.conn.commit()
