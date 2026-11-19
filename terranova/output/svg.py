@@ -136,9 +136,18 @@ def render_map_svg(map_instance: Map):
         viewbox["delta"]["x"] = viewbox["max"]["x"] - viewbox["min"]["x"]
         layer["edge_stroke_width"] = configuration["layers"][layer["index"]]["edgeWidth"]
         layer["node_stroke_width"] = 1
+
+    # Extract render_time from first layer that has it (all layers share the same render time)
+    render_time = None
+    for layer in layers:
+        if layer.get("render_time"):
+            render_time = layer["render_time"]
+            break
+
     return templ.render(
         layers=layers,
         viewbox=viewbox,
         configuration=configuration,
         node_scale_factor=1,
+        render_time=render_time,
     )

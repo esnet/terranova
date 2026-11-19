@@ -1,31 +1,36 @@
 import React, { useEffect, useState, useContext } from "react";
 import { API_URL } from "../../../static/settings";
-import { DataController } from "../../DataController";
+import { DataController, setAuthHeaders } from "../../DataController";
 import { DataControllerType, DataControllerContextType } from "../../types/mapeditor";
 import { Favorites } from "../../context/FavoritesContextProvider";
 import { UserDataController } from "../../context/UserDataContextProvider";
+import { GlobalLastEditedRefresh } from "../../context/GlobalLastEditedContextProvider";
 import { markFavorite } from "./utils";
 import Card from "../Card";
 import {
     PktsInputText,
     PktsButton,
+    PktsIconButton,
     PktsSpinner,
     PktsInputSelect,
     PktsInputOption,
     PktsInputRow,
 } from "@esnet/packets-ui-react";
-import { Plus, Star } from "lucide-react";
+import { Plus, Star, Trash2, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ModalDialog } from "../ModalDialog";
 
 export function DatasetLibrary() {
     const [datasetList, setDatasetList] = useState([]);
     const [filterText, setFilterText] = useState("");
     const [loading, setLoading] = useState(true);
+    const [datasetToDelete, setDatasetToDelete] = useState<any>(null);
 
     const favorites = useContext(Favorites);
     const { controller: userDataController, instance: userdata } = useContext(
         UserDataController,
     ) as DataControllerContextType;
+    const refreshGlobal = useContext(GlobalLastEditedRefresh);
 
     const fieldsetString =
         "?fields=datasetId&fields=name&fields=version" +
@@ -63,8 +68,45 @@ export function DatasetLibrary() {
         }, {}),
     );
 
+    async function handleDeleteDataset() {
+        if (!datasetToDelete) return;
+        const headers = setAuthHeaders({ "Content-Type": "application/json" });
+        await fetch(`${API_URL}/dataset/id/${datasetToDelete.datasetId}/`, { headers, method: "DELETE" });
+        // Remove deleted ID from userdata.lastEdited and save to backend
+        const currentLastEdited = userDataController.instance?.lastEdited ?? {};
+        const newDatasets = (currentLastEdited.datasets ?? []).filter((id: string) => id !== datasetToDelete.datasetId);
+        userDataController.setProperty("lastEdited", { ...currentLastEdited, datasets: newDatasets });
+        await userDataController.update();
+        await userDataController.fetch();
+        setDatasetToDelete(null);
+        await controller.fetch();
+        refreshGlobal?.();
+    }
+
+    const deleteModal = datasetToDelete && (
+        <ModalDialog
+            visible={!!datasetToDelete}
+            setVisible={(v) => { if (!v) setDatasetToDelete(null); }}
+            header="Delete Dataset"
+            footer={
+                <div className="flex justify-end gap-2 w-full">
+                    <PktsButton variant="secondary" onClick={() => setDatasetToDelete(null)}>
+                        <span className="flex items-center gap-2"><X /> Cancel</span>
+                    </PktsButton>
+                    <PktsButton variant="destructive" onClick={handleDeleteDataset}>
+                        <span className="flex items-center gap-2"><Trash2 /> Delete Forever</span>
+                    </PktsButton>
+                </div>
+            }
+        >
+            <h4>Delete Dataset</h4>
+            <div className="mb-12">Dataset '{datasetToDelete.name}' and all its versions will be permanently deleted.</div>
+        </ModalDialog>
+    );
+
     return (
         <div className="flex flex-col gap-4">
+        {deleteModal}
             <div className="flex flex-row justify-between items-center">
                 <Link to="/dataset/new" className="contents">
                     <PktsButton variant="secondary" className="w-fit" append={<Plus />}>
@@ -81,7 +123,7 @@ export function DatasetLibrary() {
                 />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {loading ? (
                     <div className="col-span-2 mx-auto py-8">
                         <PktsSpinner />
@@ -92,25 +134,34 @@ export function DatasetLibrary() {
 
                         return (
                             <Card key={primary.datasetId} className="flex flex-col gap-2">
-                                <div className="text-xl font-bold flex gap-2">
-                                    <Star
-                                        className={`cursor-pointer stroke-light-primary ${userdata?.favorites?.datasets?.includes(primary.datasetId) ? "fill-light-primary" : ""}`}
-                                        onClick={() =>
-                                            markFavorite(
-                                                userDataController,
-                                                favorites,
-                                                "datasets",
-                                                primary.datasetId,
-                                            )
-                                        }
-                                    />
-
-                                    <Link
-                                        className="text-nowrap overflow-hidden text-truncate"
-                                        to={`/dataset/${primary.datasetId}`}
+                                <div className="text-xl font-bold flex gap-2 items-center justify-between">
+                                    <div className="flex gap-2 items-center min-w-0">
+                                        <Star
+                                            className={`cursor-pointer stroke-light-primary flex-shrink-0 ${userdata?.favorites?.datasets?.includes(primary.datasetId) ? "fill-light-primary" : ""}`}
+                                            onClick={() =>
+                                                markFavorite(
+                                                    userDataController,
+                                                    favorites,
+                                                    "datasets",
+                                                    primary.datasetId,
+                                                )
+                                            }
+                                        />
+                                        <Link
+                                            className="text-nowrap overflow-hidden text-truncate"
+                                            to={`/dataset/${primary.datasetId}`}
+                                        >
+                                            {primary.name}
+                                        </Link>
+                                    </div>
+                                    <PktsIconButton
+                                        variant="tertiary"
+                                        onClick={() => setDatasetToDelete(primary)}
+                                        title="Delete dataset"
+                                        className="tn-hover-destructive"
                                     >
-                                        {primary.name}
-                                    </Link>
+                                        <Trash2 />
+                                    </PktsIconButton>
                                 </div>
 
                                 <PktsInputRow label="Versions" className="flex-1">

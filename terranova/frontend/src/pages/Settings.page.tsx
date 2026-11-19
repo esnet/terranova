@@ -2,13 +2,23 @@ import { BasicAuthUserGrid } from "../components/settings/user/BasicAuthUserGrid
 import { AUTH_BACKEND } from "../../static/settings";
 import { SettingsTopbar } from "../components/settings/SettingsTopbar";
 import { GoogleSheetsSettings } from "../components/settings/googleSheets/GoogleSheets";
+import { CSVUploadSettings } from "../components/settings/csvUpload/CSVUpload";
+import { CheckpointSettings } from "../components/checkpoints/CheckpointSettings";
 
 export function SettingsPageComponent() {
     return (
         <main className="flex flex-col gap-4 p-4 min-w-0 min-h-full">
             <SettingsTopbar />
-            {AUTH_BACKEND == "basic" && <BasicAuthUserGrid />}
-            <GoogleSheetsSettings />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+                <div className="flex flex-col gap-4">
+                    {AUTH_BACKEND == "basic" && <BasicAuthUserGrid />}
+                    <GoogleSheetsSettings />
+                </div>
+                <div className="flex flex-col gap-4">
+                    <CSVUploadSettings />
+                    <CheckpointSettings />
+                </div>
+            </div>
         </main>
     );
 }

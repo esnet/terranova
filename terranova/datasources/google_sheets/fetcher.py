@@ -97,7 +97,8 @@ class CacheWriter:
             (sheet_id TEXT PRIMARY KEY,
              sheet_name TEXT,
              columns TEXT,
-             types TEXT)
+             types TEXT,
+             last_fetched TEXT)
             """
             % GOOGLE_SHEETS_META_TABLE_NAME,
         ]
@@ -105,16 +106,27 @@ class CacheWriter:
             logger.debug("Creating table %s" % create)
             self.conn.execute(create)
 
+        # Add last_fetched column to existing tables that predate this schema change
+        try:
+            self.conn.execute(
+                "ALTER TABLE %s ADD COLUMN last_fetched TEXT" % GOOGLE_SHEETS_META_TABLE_NAME
+            )
+        except Exception:
+            pass  # column already exists
+
         self.conn.commit()
 
     def insert_metadata(self, sheet_id, sheet_name, columns, types):
+        from datetime import datetime, timezone
         cur = self.conn.cursor()
         insert = (
-            """INSERT INTO %s (sheet_id, sheet_name, columns, types) VALUES (?, ?, ?, ?)"""
+            """INSERT INTO %s (sheet_id, sheet_name, columns, types, last_fetched)
+               VALUES (?, ?, ?, ?, ?)"""
             % (GOOGLE_SHEETS_META_TABLE_NAME)
         )
+        last_fetched = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         logger.info("Setting metadata for Sheet [%s] to %s", sheet_id, json.dumps(columns))
-        cur.execute(insert, (sheet_id, sheet_name, orjson.dumps(columns), orjson.dumps(types)))
+        cur.execute(insert, (sheet_id, sheet_name, orjson.dumps(columns), orjson.dumps(types), last_fetched))
         self.conn.commit()
         cur.close()
 
@@ -276,9 +288,14 @@ def fetch():
                         # the key order of DATATYPES guarantees
                         # that we'll compile the list of nodes first
                         if datatype == "edges":
+                            def _get_or_create_node(name):
+                                if name not in data["nodes"]:
+                                    logger.warning("Node '%s' not found in sheet; creating placeholder at 0,0", name)
+                                    data["nodes"][name] = {"name": name, "latitude": 0, "longitude": 0}
+                                return data["nodes"][name]
                             doc["endpoints"] = [
-                                data["nodes"][row[column_positions["source"][0]]],
-                                data["nodes"][row[column_positions["destination"][0]]],
+                                _get_or_create_node(row[column_positions["source"][0]]),
+                                _get_or_create_node(row[column_positions["destination"][0]]),
                             ]
                             if "source" in doc:
                                 del doc["source"]

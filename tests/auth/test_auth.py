@@ -27,6 +27,10 @@ public_routes = {
         "HEAD": {"status_code": 200},
         "GET": {"status_code": 200},
     },
+    "/csv/{csv_id}/filterable_columns/": {
+        "HEAD": {"status_code": 200},
+        "GET": {"status_code": 200},
+    },
 }
 
 

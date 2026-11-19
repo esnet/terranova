@@ -54,7 +54,7 @@ select {
 }
 
 @layer base {
-    fieldset {
+    fieldset:not(esnet-map-canvas *) {
         @apply rounded border border-color-border-alt p-3 pt-0
     }
 }
@@ -215,10 +215,6 @@ button.warning {
     @apply text-esnetwhite-500 bg-teal-700 text-2xl border-none h-12 px-4 py-1 w-full flex fixed z-[1000] align-middle drop-shadow-md
 }
 
-/*nav {
-    @apply fixed w-full [z-index:1000] ;
-}*/
-
 .panel {
     @apply mb-6;
 }
@@ -265,12 +261,17 @@ button.warning {
 }
 /** -- Specific form overrides for map editor -- */
 .dialog-form.tight-form-func h2 { @apply text-xl py-0 }
-.dialog-form.tight-form-func textarea, 
-.dialog-form.tight-form-func select { @apply border border-color-border-alt }
-.dialog-form.tight-form-func input { @apply border border-color-border-alt }
+.dialog-form.tight-form-func textarea { @apply border border-color-border-alt text-sm px-1 py-1  }
+.dialog-form.tight-form-func select { @apply border border-color-border-alt pr-0 pt-0 text-sm }
+.dialog-form.tight-form-func input { @apply border border-color-border-alt px-2 }
 .dialog-form.tight-form-func td, 
-.dialog-form.tight-form-func tr { @apply py-0 }
+.dialog-form.tight-form-func tr { @apply py-0 whitespace-nowrap }
+#legend-container .heading { display: flex }
+#legend-container .heading svg.minimize { overflow:visible; }
 
+/* specifically reorder top bar w/r/t map z-indexes */
+esnet-map-editing-interface #dialog { z-index:800 }
+div.sticky.z-601  { z-index:801 }
 
 /* -- Library Card -- */
 /* TODO: This should probably be generalized */
@@ -637,4 +638,61 @@ button.warning {
         text-decoration: none;
     }
     h2, h3 { font-weight: 600; }
+
+    details.tn-sidebar-section {
+        border: 1px solid var(--pkts-color-core-black-300, #5e5e5e);
+        border-radius: 4px;
+        padding: 4px 8px 8px;
+        margin-top: 8px;
+    }
+    details.tn-sidebar-section > summary {
+        cursor: pointer;
+        padding: 4px 0;
+        list-style: none;
+        user-select: none;
+        width: fit-content;
+        margin-top: -18px;
+        background-color: var(--esnet-color-core-white-400, #e3e3e3);
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+    details.tn-sidebar-section > summary::-webkit-details-marker { display: none; }
+    details.tn-sidebar-section > summary::before {
+        content: "▶ ";
+        font-size: 0.65em;
+        opacity: 0.6;
+    }
+    details.tn-sidebar-section[open] > summary::before { content: "▼ "; }
+
+    .pkts-icon-button.tn-hover-destructive:hover,
+    .pkts-icon-button.tn-hover-destructive:focus {
+        color: var(--esnet-color-core-white-200, #f2f2f2) !important;
+        border-color: var(--esnet-color-core-red-800, #8a0416) !important;
+        background-color: var(--esnet-color-core-red-600, #d61200) !important;
+    }
+
+    .tn-timestamp-legend { font-size: 11px; line-height: 1.4; }
+    .tn-timestamp-layer { margin-bottom: 6px; }
+    .tn-timestamp-layer:last-child { margin-bottom: 0; }
+    .tn-timestamp-layer p { margin: 1px 0; }
+    .tn-timestamp-layer em { opacity: 0.7; }
+    [class*="PktsInputTypeahead-module_optionsAndInputWrapper"] {
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        padding-left: 6px;
+    }
+    [class*="PktsInputTypeahead-module_searchInput"] {
+        min-width: 220px;
+    }
+    [class*="PktsInputTypeahead-module_selectedOptionsWrapper"] {
+        width: auto;
+        margin-bottom: auto;
+        margin-top: auto;
+        padding: 0;
+    }
 }
+
+/* Reset Terranova styles that bleed into the networkmap editing interface */
+/*esnet-map-editing-interface #add_node_form table tr * {
+    all: revert;
+}*/
