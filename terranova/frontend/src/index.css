@@ -612,7 +612,7 @@ div.sticky.z-601  { z-index:801 }
     .pkts-icon-button.small-icon {
         padding: 2px 4px;
         min-height: 26px;
-        border: 1px solid #333;
+        border: 1px solid var(--pkts-color-core-black-700);
         border-radius: 9px;
         background: #FFFFFF80;
     }
@@ -630,9 +630,9 @@ div.sticky.z-601  { z-index:801 }
     }
     .tn-accordion textarea {
         border-width: 1px;
-        border-color: #666666;
-        background-color: #FFFFFF;
-        stroke: #565657;
+        border-color: var(--pkts-color-core-black-500);
+        background-color: var(--pkts-color-core-white-100);
+        stroke: var(--pkts-color-core-black-400);
     }
     .tn-accordion button {
         text-decoration: none;
