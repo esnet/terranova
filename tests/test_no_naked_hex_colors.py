@@ -30,7 +30,7 @@ HEX_ALLOWLIST = {
     # Pure white/black (structural, not brand colors)
     "#fff", "#ffffff", "#000", "#000000",
     # Alpha white/black variants used for overlay surfaces
-    "#ffffff80", "#ffffffbf", "#fff6",
+    "#ffffff80", "#ffffffbf", "#fff6", "#fffffff2",
     # Packets-internal: disabled button states use alpha hex that packets-ui-css
     # generates internally — not Terranova source, cannot be changed here.
     "#0088b599",  # blue-600 @ 60% — primary disabled background
