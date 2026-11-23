@@ -48,8 +48,7 @@ export const ModalDialog = ({
                     />
                 </div>
                 <div className={`w-full p-4 bg-light-surface_2 ${className ?? ""}`}>{children}</div>
-                {/* same slate color as accordion component */}
-                <div className="w-full p-2 bg-[#6a6e7a] min-h-10">{footer}</div>
+                <div className="w-full p-2 bg-slate-500 min-h-10">{footer}</div>
             </div>
         </div>
     );
